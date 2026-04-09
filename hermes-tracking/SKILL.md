@@ -34,9 +34,9 @@ cd openclaw-skills/hermes-tracking
 ### 2. System-Abhängigkeiten installieren
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install tesseract-ocr tesseract-ocr-deu
+# Ubuntu/Debian (im Docker ohne sudo)
+apt-get update
+apt-get install tesseract-ocr tesseract-ocr-deu
 
 # Tesseract überprüfen
 tesseract --version
@@ -114,8 +114,8 @@ which tesseract
 # Deutsche Sprachdaten?
 tesseract --list-langs  # Sollte 'deu' enthalten
 
-# Nachinstallation:
-sudo apt-get install tesseract-ocr-deu
+# Nachinstallation (im Docker ohne sudo):
+apt-get install tesseract-ocr-deu
 ```
 
 ### Seite lädt nicht
