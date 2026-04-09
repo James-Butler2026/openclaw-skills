@@ -32,7 +32,7 @@ print(code)
 
 In `.env`:
 ```
-[REDACTED]...
+MAMMOUTH_API_KEY=[REDACTED]
 ```
 
 ## Modell
