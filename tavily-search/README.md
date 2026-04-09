@@ -1,25 +1,35 @@
 # tavily-search
 
-name: tavily-search description: Web search via Tavily API. Use when the user wants to search the web, find current information, research topics, or get answers with sources. Provides AI-generated summaries and structured search results with relevance scores. **PRIMARY WEB SEARCH TOOL** – Dies ist die bevorzugte Websuche für alle Anfragen.
-
-## Dokumentation
-
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+OpenClaw Skill: Tavily Search
 
 ## Installation
 
-```bash
-# Clone Repository
-git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
-cd openclaw-skills/tavily-search
+### 1. Repository klonen
 
-# Abhängigkeiten installieren (falls nötig)
-# Siehe SKILL.md für Details
+```bash
+git clone https://github.com/James-Butler2026/openclaw-skills.git
+cd openclaw-skills/tavily-search
 ```
 
-## Verwendung
+### 2. Abhängigkeiten installieren
 
-Siehe `SKILL.md` für detaillierte Verwendungsanleitung.
+Siehe SKILL.md für spezifische Abhängigkeiten.
+
+```bash
+pip install -r requirements.txt  # falls vorhanden
+```
+
+### 3. Konfiguration
+
+Erstelle eine `.env` Datei nach Anleitung in SKILL.md.
+
+## Nutzung
+
+Siehe SKILL.md für detaillierte Nutzungsanleitung.
+
+## 📖 Dokumentation
+
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
 
 ---
 
