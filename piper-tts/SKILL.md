@@ -15,43 +15,77 @@ Deutsche Text-to-Speech mit der Thorsten-Stimme. Lokal auf dem Server, keine API
 - 🔊 **Direktes Abspielen** – Sofort anhören
 - 📱 **Voice-Messages** – Als Telegram-Sprachnachricht senden
 
-## Voraussetzungen
+## Installation
 
-Piper TTS ist bereits installiert auf dem Server:
-- **Pfad:** `/usr/local/bin/piper`
-- **Stimme:** `/usr/local/share/piper-voices/de_DE-thorsten-medium.onnx`
-- **Format:** WAV (44.1kHz, 16-bit)
+### 1. Repository klonen
+
+```bash
+git clone https://github.com/James-Butler2026/openclaw-skills.git
+cd openclaw-skills/piper-tts
+```
+
+### 2. Piper TTS installieren
+
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install piper-tts
+
+# Oder via pip
+pip install piper-tts
+
+# Stimmen-Download (Thorsten, Deutsch)
+mkdir -p ~/.local/share/piper-tts
+cd ~/.local/share/piper-tts
+wget https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/de/de_DE-thorsten-medium.onnx
+wget https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/de/de_DE-thorsten-medium.onnx.json
+```
+
+### 3. Python-Abhängigkeiten
+
+```bash
+pip install pyTelegramBotAPI
+```
+
+### 4. Konfiguration
+
+Erstelle eine `.env` Datei:
+
+```bash
+# Optional: Pfade konfigurieren
+PIPER_MODEL_PATH=~/.local/share/piper-tts/
+```
 
 ## Schnellstart
 
 ### Text zu Audio-Datei
 ```bash
 # Einfache Sprachnachricht
-python3 skills/piper-tts/scripts/piper_tts.py "Hallo Welt"
+python3 scripts/piper_tts.py "Hallo Welt"
 
 # Ausgabe in bestimmte Datei
-python3 skills/piper-tts/scripts/piper_tts.py "Guten Morgen" -o ~/morgen.wav
+python3 scripts/piper_tts.py "Guten Morgen" -o ~/morgen.wav
 
 # Mit Text aus Datei
-python3 skills/piper-tts/scripts/piper_tts.py -f nachricht.txt
+python3 scripts/piper_tts.py -f nachricht.txt
 ```
 
 ### Direkt abspielen
 ```bash
 # Erzeugen UND sofort abspielen
-python3 skills/piper-tts/scripts/piper_tts.py "Das ist ein Test" --play
+python3 scripts/piper_tts.py "Das ist ein Test" --play
 
 # Kurzform
-python3 skills/piper-tts/scripts/piper_tts.py "Hallo" -p
+python3 scripts/piper_tts.py "Hallo" -p
 ```
 
 ### Als Telegram-Voice senden
 ```bash
-# An Standard-Chat (Eure Lordschaft)
-python3 skills/piper-tts/scripts/piper_tts.py "Ihre Nachricht ist angekommen" --send
+# An Standard-Chat
+python3 scripts/piper_tts.py "Ihre Nachricht ist angekommen" --send
 
 # Kurzform
-python3 skills/piper-tts/scripts/piper_tts.py "Erinnerung: Termin um 15 Uhr" -s
+python3 scripts/piper_tts.py "Erinnerung: Termin um 15 Uhr" -s
 ```
 
 ## Parameter
@@ -64,12 +98,11 @@ python3 skills/piper-tts/scripts/piper_tts.py "Erinnerung: Termin um 15 Uhr" -s
 | `--play` | `-p` | Direkt abspielen nach Generierung |
 | `--send` | `-s` | Als Telegram-Voice senden |
 | `--speed` | - | Sprechgeschwindigkeit (0.5-2.0, Default: 1.0) |
-| `--speaker` | - | Sprecher-ID (falls mehrere Stimmen) |
 
 ## Python API
 
 ```python
-from skills.piper_tts.scripts.piper_tts import generate_speech, play_audio, send_voice
+from scripts.piper_tts import generate_speech, play_audio, send_voice
 
 # Nur generieren
 audio_path = generate_speech("Hallo Welt")
@@ -80,95 +113,23 @@ audio_path = generate_speech("Guten Tag", play=True)
 
 # Generieren und als Voice senden
 audio_path = generate_speech("Ihre Nachricht", send_voice=True)
-
-# Mit Optionen
-audio_path = generate_speech(
-    text="Dies ist ein längerer Text",
-    output_path="/tmp/custom.wav",
-    speed=1.2
-)
-```
-
-## Beispiele
-
-### Morgenansage
-```bash
-python3 skills/piper-tts/scripts/piper_tts.py \
-    "Guten Morgen! Es ist 7 Uhr. Das Wetter ist sonnig." \
-    --play
-```
-
-### Erinnerung
-```bash
-python3 skills/piper-tts/scripts/piper_tts.py \
-    "Erinnerung: Arzttermin bei Dr. Kaufmann um 16 Uhr 30" \
-    --send
-```
-
-### Aus Datei
-```bash
-# Erstelle Textdatei
-echo "Ihre tägliche Zusammenfassung ist fertig" > /tmp/nachricht.txt
-
-# Zu Sprache machen
-python3 skills/piper-tts/scripts/piper_tts.py \
-    -f /tmp/nachricht.txt \
-    -o ~/nachricht.wav \
-    --play
-```
-
-### In Scripts verwenden
-```bash
-#!/bin/bash
-# Im Cron-Job für Erinnerungen
-
-python3 skills/piper-tts/scripts/piper_tts.py \
-    "Es ist Zeit für die tägliche Übung" \
-    --send
 ```
 
 ## Technische Details
 
-### Piper TTS Einstellungen
 - **Modell:** Thorsten (medium)
 - **Sprache:** Deutsch (de_DE)
 - **Auflösung:** 22050 Hz
 - **Format:** WAV PCM 16-bit
-- **Geschwindigkeit:** Anpassbar (0.5x - 2.0x)
-
-### Dateigröße
-| Textlänge | Geschätzte Größe |
-|-----------|------------------|
-| Kurz (10 Wörter) | ~50-100 KB |
-| Mittel (50 Wörter) | ~200-300 KB |
-| Lang (200 Wörter) | ~800 KB - 1 MB |
-
-### Einschränkungen
-- Nur **Deutsch** unterstützt (Thorsten-Stimme)
-- Keine anderen Sprachen verfügbar (ohne weitere Modelle)
-- SSML/Markup nicht unterstützt (nur reiner Text)
-- Sehr lange Texte (>500 Wörter) können langsam sein
 
 ## Troubleshooting
 
 | Problem | Lösung |
 |---------|--------|
-| "piper: command not found" | Piper ist installiert unter `/usr/local/bin/piper` |
-| Kein Sound | Lautstärke prüfen (`alsamixer`), Lautsprecher verbunden? |
+| "piper: command not found" | `pip install piper-tts` oder `apt-get install piper-tts` |
+| Kein Sound | Lautstärke prüfen (`alsamixer`) |
 | "Voice send failed" | Telegram Token prüfen, Chat-ID prüfen |
-| Zu langsam | `--speed 1.2` für schnelleres Sprechen |
-| Roboter-Stimme | Normal bei Thorsten medium – ist qualitativ hochwertig |
-
-## Vergleich mit Online-TTS
-
-| Feature | Piper (lokal) | Google TTS | ElevenLabs |
-|---------|--------------|------------|------------|
-| Kosten | ✅ Kostenlos | ⚠️ Limitiert | ❌ Bezahlt |
-| Internet | ❌ Nicht nötig | ✅ Nötig | ✅ Nötig |
-| Latenz | ⭐⭐⭐ Sehr gering | ⭐⭐ Mittel | ⭐⭐⭐ Sehr gering |
-| Qualität | ⭐⭐⭐ Gut | ⭐⭐⭐⭐ Sehr gut | ⭐⭐⭐⭐⭐ Exzellent |
-| Datenschutz | ✅ Lokal | ❌ Cloud | ❌ Cloud |
 
 ---
 
-*Piper TTS – Lokale, kostenlose deutsche Sprachsynthese für Eure Lordschaft!* 🎙️🎩
+*Piper TTS – Lokale, kostenlose deutsche Sprachsynthese!* 🎙️🎩
