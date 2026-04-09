@@ -8,12 +8,12 @@
 
 ## 🇩🇪 Deutsch
 
-Eine Sammlung automatisierter Skills für OpenClaw - persönliche Produktivität und KI-Tools.
+Eine Sammlung automatisierter Skills für OpenClaw.
 
 ### Installation
 
 ```bash
-git clone https://github.com/{USERNAME}/openclaw-skills.git
+git clone https://github.com/James-Butler2026/openclaw-skills.git
 cd openclaw-skills
 ```
 
@@ -21,40 +21,31 @@ cd openclaw-skills
 
 | Skill | Beschreibung |
 |-------|--------------|
-| **audio-transcription** | name: audio-transcription |
-| **backup-manager** | Kombiniertes Backup-Tool für den Workspace. Ersetzt `backup_tool.py` und `git_auto_backup.py`. |
-| **dhl-tracking** | name: dhl-tracking |
-| **email-sender** | name: email-sender |
-| **github-manager** | name: github-manager |
-| **hermes-tracking** | Automatisierte Hermes-Paketverfolgung mit Browser-Automation, Screenshot und OCR. |
-| **image-generation** | name: image-generation |
-| **mammouth-coding** | Verwendet mammouth.ai API mit Claude Opus 4-6 NUR für Code-Generierung. |
-| **newsletter-monitor** | KI-gestützte Überwachung von Web.de Newsletter auf Fleisch- und Wurst-Angebote mit SQLite-Datenbank. |
-| **piper-tts** | name: piper-tts |
-| **self-improving** | name: Proactive + Self-Improving Agent |
-| **superdata-youtube-transcript** | name: supadata-youtube-transcript |
-| **tavily-search** | name: tavily-search |
-| **wordpress-manager** | name: wordpress-manager |
-
-### Verwendung
-
-Jeder Skill hat eine eigene README mit Installationsanleitung:
-
-```bash
-cd skills/<skill-name>
-cat README.md
-```
+| **audio-transcription** | Siehe Skill-Ordner |
+| **backup-manager** | Siehe Skill-Ordner |
+| **dhl-tracking** | Siehe Skill-Ordner |
+| **email-sender** | Siehe Skill-Ordner |
+| **github-manager** | Siehe Skill-Ordner |
+| **hermes-tracking** | Siehe Skill-Ordner |
+| **image-generation** | Siehe Skill-Ordner |
+| **mammouth-coding** | Siehe Skill-Ordner |
+| **newsletter-monitor** | Siehe Skill-Ordner |
+| **piper-tts** | Siehe Skill-Ordner |
+| **self-improving** | Siehe Skill-Ordner |
+| **superdata-youtube-transcript** | Siehe Skill-Ordner |
+| **tavily-search** | Siehe Skill-Ordner |
+| **wordpress-manager** | Siehe Skill-Ordner |
 
 ---
 
 ## 🇬🇧 English
 
-A collection of automated skills for OpenClaw - personal productivity and AI tools.
+A collection of automated skills for OpenClaw.
 
 ### Installation
 
 ```bash
-git clone https://github.com/{USERNAME}/openclaw-skills.git
+git clone https://github.com/James-Butler2026/openclaw-skills.git
 cd openclaw-skills
 ```
 
@@ -62,34 +53,25 @@ cd openclaw-skills
 
 | Skill | Description |
 |-------|-------------|
-| **audio-transcription** | name: audio-transcription |
-| **backup-manager** | Kombiniertes Backup-Tool für den Workspace. Ersetzt `backup_tool.py` und `git_auto_backup.py`. |
-| **dhl-tracking** | name: dhl-tracking |
-| **email-sender** | name: email-sender |
-| **github-manager** | name: github-manager |
-| **hermes-tracking** | Automatisierte Hermes-Paketverfolgung mit Browser-Automation, Screenshot und OCR. |
-| **image-generation** | name: image-generation |
-| **mammouth-coding** | Verwendet mammouth.ai API mit Claude Opus 4-6 NUR für Code-Generierung. |
-| **newsletter-monitor** | KI-gestützte Überwachung von Web.de Newsletter auf Fleisch- und Wurst-Angebote mit SQLite-Datenbank. |
-| **piper-tts** | name: piper-tts |
-| **self-improving** | name: Proactive + Self-Improving Agent |
-| **superdata-youtube-transcript** | name: supadata-youtube-transcript |
-| **tavily-search** | name: tavily-search |
-| **wordpress-manager** | name: wordpress-manager |
-
-### Usage
-
-Each skill has its own README with installation instructions:
-
-```bash
-cd skills/<skill-name>
-cat README.md
-```
+| **audio-transcription** | See skill folder |
+| **backup-manager** | See skill folder |
+| **dhl-tracking** | See skill folder |
+| **email-sender** | See skill folder |
+| **github-manager** | See skill folder |
+| **hermes-tracking** | See skill folder |
+| **image-generation** | See skill folder |
+| **mammouth-coding** | See skill folder |
+| **newsletter-monitor** | See skill folder |
+| **piper-tts** | See skill folder |
+| **self-improving** | See skill folder |
+| **superdata-youtube-transcript** | See skill folder |
+| **tavily-search** | See skill folder |
+| **wordpress-manager** | See skill folder |
 
 ---
 
 ## 📋 Lizenz / License
 
-MIT License - Siehe [LICENSE](LICENSE)
+MIT License - See [LICENSE](LICENSE)
 
-*Generiert am: 2026-04-09*
+*Last updated: 2026-04-09*
