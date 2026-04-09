@@ -18,24 +18,42 @@ Der Tracker erkennt folgende Status-Meldungen:
 | Status | Bedeutung |
 |--------|-----------|
 | "Die Sendung wurde an der Empfangsadresse zugestellt" | ✅ Paket zugestellt |
-| "Die Sendung wurde ins Zustellfahrzeug geladen und wird voraussichtlich heute zugestellt" | 🚚 Unterwegs (heute) |
-| "Die Sendung wurde im Paketshop abgeholt" | 📦 Abgeholt |
-| "Die Sendung liegt in der Filiale bereit zur Abholung" | 🏪 Abholbereit |
+| "Die Sendung wurde ins Zustellfahrzeug geladen" | 🚚 Unterwegs (heute) |
+| "Die Sendung liegt in der Filiale bereit" | 🏪 Abholbereit |
 | "Die Sendung wurde vom Absender an Hermes übergeben" | 📤 Versendet |
 
 ## Installation
 
-### Voraussetzungen
-
-Tesseract und Playwright müssen auf Systemebene installiert sein (Docker-Image bereits vorkonfiguriert):
+### 1. Repository klonen
 
 ```bash
-# System-Pakete (im Docker-Image bereits vorhanden)
-# tesseract-ocr tesseract-ocr-deu
+git clone https://github.com/James-Butler2026/openclaw-skills.git
+cd openclaw-skills/hermes-tracking
+```
 
-# Python-Pakete installieren
+### 2. System-Abhängigkeiten installieren
+
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install tesseract-ocr tesseract-ocr-deu
+
+# Tesseract überprüfen
+tesseract --version
+tesseract --list-langs  # Sollte 'deu' enthalten
+```
+
+### 3. Python-Abhängigkeiten installieren
+
+```bash
 pip install playwright pytesseract Pillow
 playwright install chromium
+```
+
+### 4. Playwright überprüfen
+
+```bash
+python3 -c "from playwright.sync_api import sync_playwright; print('Playwright OK')"
 ```
 
 ## Automatisches Tracking-Setup
@@ -59,21 +77,6 @@ Eure Lordschaft gibt mir die Tracking-Nummer – ich erledige den Rest:
    - Paket als "geliefert" markiert
    - Keine weiteren Checks nötig
 
-### Datenbank-Schema (gemeinsam mit DHL):
-
-```sql
-CREATE TABLE packages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tracking_code TEXT NOT NULL UNIQUE,
-    carrier TEXT NOT NULL,  -- 'hermes' oder 'dhl'
-    description TEXT,
-    status TEXT,
-    active BOOLEAN DEFAULT 1,  -- 0 wenn zugestellt
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
 ## Nutzung
 
 ### Direkt
@@ -83,45 +86,16 @@ CREATE TABLE packages (
 python3 scripts/hermes_tracker.py H1003660401590901036
 
 # Mit voller URL
-python3 scripts/hermes_tracker.py "https://www.myhermes.de/empfangen/sendungsverfolgung/sendungsinformation#H1003660401590901036"
+python3 scripts/hermes_tracker.py "https://www.myhermes.de/...#H1003660401590901036"
 
 # Mit sichtbarem Browser (für Debugging)
 python3 scripts/hermes_tracker.py H1003660401590901036 --show-browser
-
-# Screenshot an benutzerdefiniertem Ort
-python3 scripts/hermes_tracker.py H1003660401590901036 -o ~/tracking/paket_123.png
 ```
-
-### Python-Modul
-
-```python
-from scripts.hermes_tracker import extract_tracking_code
-
-# Tracking-Code aus URL extrahieren
-code = extract_tracking_code("https://...#H1003660401590901036")
-# -> H1003660401590901036
-```
-
-## Ausgabe
-
-Das Skript gibt:
-- ✅ Erkannten Status (sofern gefunden)
-- 📦 Tracking-Nummer
-- 🕐 Zeitstempel
-- 📅 Gefundene Daten im Text
-- 📁 Pfad zum Screenshot
-
-## Screenshot-Speicherort
-
-Standard: `/tmp/hermes_{TRACKINGCODE}_{ZEITSTEMPEL}.png`
-
-Beispiel: `/tmp/hermes_H1003660401590901036_20250324_114530.png`
 
 ## Hinweise
 
 - **Headless-Modus**: Standardmäßig unsichtbar (schneller)
 - **Timeout**: 30 Sekunden für Seitenladezeit
-- **Cookie-Banner**: Wird automatisch akzeptiert (falls erkannt)
 - **OCR**: Deutsche Sprache (deu) für optimale Erkennung
 
 ## Troubleshooting
@@ -133,8 +107,16 @@ playwright install chromium
 ```
 
 ### "OCR fehlgeschlagen"
-- Tesseract installiert? `which tesseract`
-- Deutsche Sprachdaten? `tesseract --list-langs` (sollte `deu` enthalten)
+```bash
+# Tesseract installiert?
+which tesseract
+
+# Deutsche Sprachdaten?
+tesseract --list-langs  # Sollte 'deu' enthalten
+
+# Nachinstallation:
+sudo apt-get install tesseract-ocr-deu
+```
 
 ### Seite lädt nicht
 - `--show-browser` verwenden um zu sehen was passiert
