@@ -1,25 +1,26 @@
 # dhl-tracking
 
-name: dhl-tracking description: DHL Paketverfolgung via REST API. Überwacht Sendungen automatisch. Automatisierte DHL-Paketverfolgung via offizieller API.
+name: dhl-tracking
 
-## Dokumentation
+## 📜 Script
 
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+Das Hauptscript befindet sich unter:
+- `scripts/dhl_tracker.py`
 
-## Installation
+## 📖 Dokumentation
+
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation und Verwendungsanleitung.
+
+## 🚀 Schnellstart
 
 ```bash
 # Clone Repository
 git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
 cd openclaw-skills/dhl-tracking
 
-# Abhängigkeiten installieren (falls nötig)
-# Siehe SKILL.md für Details
+# Script ausführen (siehe SKILL.md für Details)
+python3 scripts/dhl_tracker.py
 ```
-
-## Verwendung
-
-Siehe `SKILL.md` für detaillierte Verwendungsanleitung.
 
 ---
 
