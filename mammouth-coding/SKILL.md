@@ -32,7 +32,7 @@ print(code)
 
 In `.env`:
 ```
-MAMMOUTH_API_KEY=sk-mammouth-...
+[REDACTED]...
 ```
 
 ## Modell
