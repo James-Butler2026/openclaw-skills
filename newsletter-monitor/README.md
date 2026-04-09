@@ -5,7 +5,7 @@ KI-gestützte Überwachung von Web.de Newsletter auf Fleisch- und Wurst-Angebote
 ## 📜 Script
 
 Das Hauptscript befindet sich unter:
-- `scripts/newsletter_monitor.py`
+- `scripts/webde_newsletter_monitor.py`
 
 ## 📖 Dokumentation
 
@@ -19,7 +19,7 @@ git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
 cd openclaw-skills/newsletter-monitor
 
 # Script ausführen (siehe SKILL.md für Details)
-python3 scripts/newsletter_monitor.py
+python3 scripts/webde_newsletter_monitor.py
 ```
 
 ---
