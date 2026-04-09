@@ -1,25 +1,36 @@
 # audio-transcription
 
-name: audio-transcription description: Transcribe audio files (MP3, OGG, WAV, etc.) to text using faster-whisper. Use when the user needs to convert voice messages, audio recordings, podcasts, or any audio content into written text. Supports multiple languages (auto-detection or specified), various Whisper models (tiny to large-v3), and common audio formats. Transcribe audio files to text using OpenAI's Whisper (via faster-whisper).
-
-## Dokumentation
-
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+OpenClaw Skill: Audio Transcription
 
 ## Installation
 
-```bash
-# Clone Repository
-git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
-cd openclaw-skills/audio-transcription
+### 1. Repository klonen
 
-# Abhängigkeiten installieren (falls nötig)
-# Siehe SKILL.md für Details
+```bash
+git clone https://github.com/{USERNAME}/openclaw-skills.git
+cd openclaw-skills/audio-transcription
 ```
 
-## Verwendung
+### 2. Abhängigkeiten installieren
 
-Siehe `SKILL.md` für detaillierte Verwendungsanleitung.
+```bash
+pip install faster-whisper
+```
+
+Optional: Für GPU-Beschleunigung:
+```bash
+pip install torch torchvision torchaudio
+```
+
+## Nutzung
+
+```bash
+python3 scripts/transcribe.py audio.mp3 --language de
+```
+
+## 📖 Dokumentation
+
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
 
 ---
 
