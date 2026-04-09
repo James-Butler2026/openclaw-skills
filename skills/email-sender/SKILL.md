@@ -13,7 +13,7 @@ Einfaches Versenden von E-Mails via SMTP. Nutzt konfigurierte Accounts aus der .
 
 ```bash
 # Web.de Beispiel
-WEBDE_EMAIL=j_butler@web.de
+WEBDE_EMAIL=[REDACTED]
 WEBDE_PASSWORD=dein_passwort
 WEBDE_SMTP_SERVER=smtp.web.de
 WEBDE_SMTP_PORT=587
