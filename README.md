@@ -2,68 +2,44 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Deutsch** | **English**
+Eine Kuratierte Sammlung automatisierter Skills für OpenClaw.
 
----
-
-## 🇩🇪 Deutsch
-
-Eine kuratierte Sammlung automatisierter Skills für OpenClaw.
-
-### Installation
-
-```bash
-git clone https://github.com/James-Butler2026/openclaw-skills.git
-cd openclaw-skills
-```
-
-### Verfügbare Skills
+## 📦 Verfügbare Skills
 
 | Skill | Beschreibung |
 |-------|--------------|
-| **audio-transcription** | Audio zu Text Transkription |
-| **dhl-tracking** | DHL Paketverfolgung |
-| **hermes-tracking** | Hermes Paketverfolgung |
-| **image-generation** | Kostenlose KI-Bildgenerierung |
-| **mammouth-coding** | Code-Generierung mit Claude |
-| **newsletter-monitor** | Newsletter Überwachung |
-| **piper-tts** | Deutsche Sprachsynthese |
-| **superdata-youtube-transcript** | YouTube Transkription |
-| **tavily-search** | Websuche mit KI |
-| **wordpress-manager** | WordPress Blog-Verwaltung |
+| **audio-transcription** | Siehe Skill-Ordner |
+| **dhl-tracking** | Siehe Skill-Ordner |
+| **hermes-tracking** | Siehe Skill-Ordner |
+| **image-generation** | Siehe Skill-Ordner |
+| **mammouth-coding** | Siehe Skill-Ordner |
+| **piper-tts** | Siehe Skill-Ordner |
+| **superdata-youtube-transcript** | Siehe Skill-Ordner |
+| **tavily-search** | Siehe Skill-Ordner |
+| **wordpress-manager** | Siehe Skill-Ordner |
 
----
-
-## 🇬🇧 English
-
-A curated collection of automated skills for OpenClaw.
-
-### Installation
+## 🚀 Installation
 
 ```bash
 git clone https://github.com/James-Butler2026/openclaw-skills.git
 cd openclaw-skills
 ```
 
-### Available Skills
+## 📖 Verwendung
 
-| Skill | Description |
-|-------|-------------|
-| **audio-transcription** | Audio to text transcription |
-| **dhl-tracking** | DHL package tracking |
-| **hermes-tracking** | Hermes package tracking |
-| **image-generation** | Free AI image generation |
-| **mammouth-coding** | Code generation with Claude |
-| **newsletter-monitor** | Newsletter monitoring |
-| **piper-tts** | German text-to-speech |
-| **superdata-youtube-transcript** | YouTube transcription |
-| **tavily-search** | AI-powered web search |
-| **wordpress-manager** | WordPress blog management |
+Jeder Skill hat eine eigene README.md mit Installationsanleitung:
+
+```bash
+cd <skill-name>
+cat README.md
+```
+
+## 📋 Lizenz
+
+MIT License - Siehe [LICENSE](LICENSE)
+
+*Last updated: 2026-04-09*
 
 ---
 
-## 📋 Lizenz / License
-
-MIT License - See [LICENSE](LICENSE)
-
-*Last updated: 2026-04-09*
+**⚠️ Sicherheitshinweis:** Alle Skills verwenden `.env` Dateien für sensible Daten. Keine Credentials sind im Repository enthalten.
