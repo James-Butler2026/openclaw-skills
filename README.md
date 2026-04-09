@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Eine Kuratierte Sammlung automatisierter Skills für OpenClaw.
+Eine kuratierte Sammlung automatisierter Skills für OpenClaw.
 
 ## 📦 Verfügbare Skills
 
@@ -39,7 +39,3 @@ cat README.md
 MIT License - Siehe [LICENSE](LICENSE)
 
 *Last updated: 2026-04-09*
-
----
-
-**⚠️ Sicherheitshinweis:** Alle Skills verwenden `.env` Dateien für sensible Daten. Keine Credentials sind im Repository enthalten.
