@@ -27,9 +27,9 @@ cd openclaw-skills/piper-tts
 ### 2. Piper TTS installieren
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install piper-tts
+# Ubuntu/Debian (im Docker ohne sudo)
+apt-get update
+apt-get install piper-tts
 
 # Oder via pip
 pip install piper-tts
