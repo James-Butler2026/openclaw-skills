@@ -8,7 +8,7 @@
 1. WordPress Admin → Benutzer → Profil
 2. "Application Passwords" ausklappen
 3. Name eingeben: "OpenClaw"
-4. Passwort kopieren (sieht aus wie: `WS25 cuTO Tlga gduz 5DuJ 8UjM`)
+4. Passwort kopieren (sieht aus wie: `[REDACTED]`)
 
 ### 2. OpenClaw konfigurieren
 
