@@ -15,8 +15,8 @@ KI-gestützte Überwachung von Web.de Newsletter auf Fleisch- und Wurst-Angebote
 
 ### 1. .env Konfiguration
 ```bash
-WEBDE_EMAIL=j_butler@web.de
-WEBDE_PASSWORD=hgkuzg&(899JGVgf
+WEBDE_EMAIL=[REDACTED]
+WEBDE_PASSWORD=[REDACTED]
 WEBDE_IMAP_SERVER=imap.web.de
 WEBDE_IMAP_PORT=993
 WEBDE_USE_SSL=true
