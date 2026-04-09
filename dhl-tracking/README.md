@@ -1,26 +1,35 @@
 # dhl-tracking
 
-name: dhl-tracking
+OpenClaw Skill: Dhl Tracking
 
-## 📜 Script
+## Installation
 
-Das Hauptscript befindet sich unter:
-- `scripts/dhl_tracker.py`
+### 1. Repository klonen
+
+```bash
+git clone https://github.com/James-Butler2026/openclaw-skills.git
+cd openclaw-skills/dhl-tracking
+```
+
+### 2. Abhängigkeiten installieren
+
+Siehe SKILL.md für spezifische Abhängigkeiten.
+
+```bash
+pip install -r requirements.txt  # falls vorhanden
+```
+
+### 3. Konfiguration
+
+Erstelle eine `.env` Datei nach Anleitung in SKILL.md.
+
+## Nutzung
+
+Siehe SKILL.md für detaillierte Nutzungsanleitung.
 
 ## 📖 Dokumentation
 
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation und Verwendungsanleitung.
-
-## 🚀 Schnellstart
-
-```bash
-# Clone Repository
-git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
-cd openclaw-skills/dhl-tracking
-
-# Script ausführen (siehe SKILL.md für Details)
-python3 scripts/dhl_tracker.py
-```
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
 
 ---
 
