@@ -1,25 +1,26 @@
 # hermes-tracking
 
-Automatisierte Hermes-Paketverfolgung mit Browser-Automation, Screenshot und OCR. - **Browser-Automation** via Playwright (Chromium) - **OCR-Textextraktion** mit Tesseract
+Automatisierte Hermes-Paketverfolgung mit Browser-Automation, Screenshot und OCR.
 
-## Dokumentation
+## 📜 Script
 
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+Das Hauptscript befindet sich unter:
+- `scripts/hermes_tracker.py`
 
-## Installation
+## 📖 Dokumentation
+
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation und Verwendungsanleitung.
+
+## 🚀 Schnellstart
 
 ```bash
 # Clone Repository
 git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
 cd openclaw-skills/hermes-tracking
 
-# Abhängigkeiten installieren (falls nötig)
-# Siehe SKILL.md für Details
+# Script ausführen (siehe SKILL.md für Details)
+python3 scripts/hermes_tracker.py
 ```
-
-## Verwendung
-
-Siehe `SKILL.md` für detaillierte Verwendungsanleitung.
 
 ---
 
