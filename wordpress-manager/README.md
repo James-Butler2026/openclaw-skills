@@ -1,25 +1,35 @@
 # wordpress-manager
 
-name: wordpress-manager description: Verwaltet WordPress-Beiträge via REST API – Beiträge erstellen, bearbeiten, löschen und verwalten. Cloudflare-kompatibel. Verwaltet WordPress-Beiträge via REST API – Beiträge erstellen, bearbeiten, löschen und verwalten.
-
-## Dokumentation
-
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+OpenClaw Skill: Wordpress Manager
 
 ## Installation
 
-```bash
-# Clone Repository
-git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
-cd openclaw-skills/wordpress-manager
+### 1. Repository klonen
 
-# Abhängigkeiten installieren (falls nötig)
-# Siehe SKILL.md für Details
+```bash
+git clone https://github.com/James-Butler2026/openclaw-skills.git
+cd openclaw-skills/wordpress-manager
 ```
 
-## Verwendung
+### 2. Abhängigkeiten installieren
 
-Siehe `SKILL.md` für detaillierte Verwendungsanleitung.
+Siehe SKILL.md für spezifische Abhängigkeiten.
+
+```bash
+pip install -r requirements.txt  # falls vorhanden
+```
+
+### 3. Konfiguration
+
+Erstelle eine `.env` Datei nach Anleitung in SKILL.md.
+
+## Nutzung
+
+Siehe SKILL.md für detaillierte Nutzungsanleitung.
+
+## 📖 Dokumentation
+
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
 
 ---
 
