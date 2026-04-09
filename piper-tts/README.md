@@ -1,25 +1,46 @@
 # piper-tts
 
-name: piper-tts description: German Text-to-Speech using Piper TTS with Thorsten voice. Generate audio files from text, play directly, or send as voice messages. No API keys needed - runs locally with high quality German voice synthesis. Deutsche Text-to-Speech mit der Thorsten-Stimme. Lokal auf dem Server, keine API-Keys, keine Kosten!
-
-## Dokumentation
-
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+OpenClaw Skill: Piper Tts
 
 ## Installation
 
-```bash
-# Clone Repository
-git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
-cd openclaw-skills/piper-tts
+### 1. Repository klonen
 
-# Abhängigkeiten installieren (falls nötig)
-# Siehe SKILL.md für Details
+```bash
+git clone https://github.com/{USERNAME}/openclaw-skills.git
+cd openclaw-skills/piper-tts
 ```
 
-## Verwendung
+### 2. Abhängigkeiten installieren
 
-Siehe `SKILL.md` für detaillierte Verwendungsanleitung.
+Piper muss auf dem System installiert sein:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install piper-tts
+
+# Oder aus dem Piper Repository
+pip install piper-tts
+```
+
+### 3. Konfiguration
+
+Erstelle eine `.env` Datei:
+
+```bash
+# Optional: Pfade konfigurieren
+PIPER_MODEL_PATH=/usr/local/share/piper-voices/
+```
+
+## Nutzung
+
+```bash
+python3 scripts/piper_tts.py "Hallo Welt"
+```
+
+## 📖 Dokumentation
+
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
 
 ---
 
