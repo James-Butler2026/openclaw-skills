@@ -29,7 +29,7 @@ def load_config():
     
     token = os.getenv('GITHUB_TOKEN')
     username = os.getenv('GITHUB_USERNAME')
-    email = os.getenv('GITHUB_EMAIL', 'j_butler@web.de')
+    email = os.getenv('GITHUB_EMAIL', '[REDACTED]')
     
     if not token:
         raise ValueError(
