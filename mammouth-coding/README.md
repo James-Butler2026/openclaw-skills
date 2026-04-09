@@ -1,25 +1,26 @@
 # mammouth-coding
 
-Verwendet mammouth.ai API mit Claude Opus 4-6 NUR für Code-Generierung. ```bash python3 scripts/mammouth_coder.py "Erstelle ein Script für..."
+Verwendet mammouth.ai API mit Claude Opus 4-6 NUR für Code-Generierung.
 
-## Dokumentation
+## 📜 Script
 
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+Das Hauptscript befindet sich unter:
+- `scripts/mammouth_coder.py`
 
-## Installation
+## 📖 Dokumentation
+
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation und Verwendungsanleitung.
+
+## 🚀 Schnellstart
 
 ```bash
 # Clone Repository
 git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
 cd openclaw-skills/mammouth-coding
 
-# Abhängigkeiten installieren (falls nötig)
-# Siehe SKILL.md für Details
+# Script ausführen (siehe SKILL.md für Details)
+python3 scripts/mammouth_coder.py
 ```
-
-## Verwendung
-
-Siehe `SKILL.md` für detaillierte Verwendungsanleitung.
 
 ---
 
