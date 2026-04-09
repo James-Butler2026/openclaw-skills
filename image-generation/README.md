@@ -1,25 +1,35 @@
 # image-generation
 
-name: image-generation description: Kostenlose Bildgenerierung via Pollinations.ai API. Kein API-Key nötig. Use when the user wants to generate images, create AI art, or needs image generation without paid APIs like DALL-E or Midjourney. Supports custom dimensions, seeds for reproducibility, and watermark-free output. Kostenlose Bildgenerierung via Pollinations.ai – keine Registrierung, kein API-Key, keine Rate-Limits bekannt.
-
-## Dokumentation
-
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+OpenClaw Skill: Image Generation
 
 ## Installation
 
-```bash
-# Clone Repository
-git clone https://github.com/YOUR_USERNAME/openclaw-skills.git
-cd openclaw-skills/image-generation
+### 1. Repository klonen
 
-# Abhängigkeiten installieren (falls nötig)
-# Siehe SKILL.md für Details
+```bash
+git clone https://github.com/James-Butler2026/openclaw-skills.git
+cd openclaw-skills/image-generation
 ```
 
-## Verwendung
+### 2. Abhängigkeiten installieren
 
-Siehe `SKILL.md` für detaillierte Verwendungsanleitung.
+Siehe SKILL.md für spezifische Abhängigkeiten.
+
+```bash
+pip install -r requirements.txt  # falls vorhanden
+```
+
+### 3. Konfiguration
+
+Erstelle eine `.env` Datei nach Anleitung in SKILL.md.
+
+## Nutzung
+
+Siehe SKILL.md für detaillierte Nutzungsanleitung.
+
+## 📖 Dokumentation
+
+Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
 
 ---
 
