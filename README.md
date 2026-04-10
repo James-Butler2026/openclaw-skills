@@ -8,15 +8,16 @@ Eine kuratierte Sammlung automatisierter Skills für OpenClaw.
 
 | Skill | Beschreibung |
 |-------|--------------|
-| **audio-transcription** | Siehe Skill-Ordner |
-| **dhl-tracking** | Siehe Skill-Ordner |
-| **hermes-tracking** | Siehe Skill-Ordner |
-| **image-generation** | Siehe Skill-Ordner |
-| **mammouth-coding** | Siehe Skill-Ordner |
-| **piper-tts** | Siehe Skill-Ordner |
-| **superdata-youtube-transcript** | Siehe Skill-Ordner |
-| **tavily-search** | Siehe Skill-Ordner |
-| **wordpress-manager** | Siehe Skill-Ordner |
+| **audio-transcription** | Audio-Dateien (MP3, OGG, WAV) zu Text transkribieren mit Whisper |
+| **dhl-tracking** | DHL Paketverfolgung via REST API mit automatischen Updates |
+| **hermes-tracking** | Hermes Sendungsverfolgung via Browser-Automation |
+| **image-generation** | Kostenlose Bildgenerierung via Pollinations.ai API |
+| **mammouth-coding** | Code-Generierung via Mammouth.ai mit Claude Opus |
+| **meme-architekt** | 🎨 Context-Aware Meme Generator mit imgflip API Integration |
+| **piper-tts** | Deutsche Text-to-Speech mit Thorsten Voice (lokal) |
+| **superdata-youtube-transcript** | YouTube Transkripte via Supadata API mit Zusammenfassung |
+| **tavily-search** | Websuche via Tavily API mit KI-Zusammenfassungen |
+| **wordpress-manager** | WordPress Beiträge verwalten via REST API |
 
 ## 🚀 Installation
 
@@ -38,4 +39,4 @@ cat README.md
 
 MIT License - Siehe [LICENSE](LICENSE)
 
-*Last updated: 2026-04-09*
+*Last updated: 2026-04-10*
