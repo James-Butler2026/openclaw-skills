@@ -13,7 +13,7 @@ Eine kuratierte Sammlung automatisierter Skills für OpenClaw.
 | **hermes-tracking** | Hermes Sendungsverfolgung via Browser-Automation |
 | **image-generation** | Kostenlose Bildgenerierung via Pollinations.ai API |
 | **mammouth-coding** | Code-Generierung via Mammouth.ai mit Claude Opus |
-| **meme-architekt** | 🎨 Context-Aware Meme Generator mit imgflip API Integration |
+| **meme-architekt** | Context-Aware Meme Generator mit imgflip API Integration |
 | **piper-tts** | Deutsche Text-to-Speech mit Thorsten Voice (lokal) |
 | **superdata-youtube-transcript** | YouTube Transkripte via Supadata API mit Zusammenfassung |
 | **tavily-search** | Websuche via Tavily API mit KI-Zusammenfassungen |
