@@ -36,12 +36,14 @@ pip install Pillow
 
 ### Schritt 3: Konfiguration
 
-Erstelle eine `.env` Datei im Projekt-Root:
+Füge zu deiner `.env` Datei hinzu:
 
 ```bash
 IMGFLIP_USERNAME=dein_username
 IMGFLIP_PASSWORD=dein_passwort
 ```
+
+Die `.env` Datei sollte bereits existieren (von anderen Skills). Falls nicht, erstelle sie im Projekt-Root.
 
 ## 📖 Nutzung
 
