@@ -1,36 +1,45 @@
-# dhl-tracking
+# DHL Tracking Skill
 
-OpenClaw Skill: Dhl Tracking
+Automatisierte DHL-Paketverfolgung via offizieller REST API.
 
-## Installation
+## Features
 
-### 1. Repository klonen
+- 🔌 Direkte API-Abfrage – Kein Browser nötig
+- ✅ Überwachte Status-Erkennung
+- 🕐 Automatische Checks um 10:00 und 16:00 Uhr
+- 📊 JSON-Output für Weiterverarbeitung
 
-```bash
-git clone https://github.com/James-Butler2026/openclaw-skills.git
-cd openclaw-skills/dhl-tracking
-```
-
-### 2. Abhängigkeiten installieren
-
-Siehe SKILL.md für spezifische Abhängigkeiten.
+## Schnellstart
 
 ```bash
-pip install -r requirements.txt  # falls vorhanden
+# Einzelnes Paket tracken
+python3 scripts/dhl_tracker.py 00340434886241560288
+
+# Nur bei relevantem Status ausgeben (für Cron)
+python3 scripts/dhl_tracker.py 00340434886241560288 --quiet
+
+# JSON-Output
+python3 scripts/dhl_tracker.py 00340434886241560288 --json
 ```
 
-### 3. Konfiguration
+## Überwachte Status
 
-Erstelle eine `.env` Datei nach Anleitung in SKILL.md.
+| Status | Bedeutung |
+|--------|-----------|
+| "in das Zustellfahrzeug geladen" | 🚚 Heute Zustellung |
+| "Zustellung erfolgreich" | ✅ Paket angekommen |
+| "Briefzentrum bearbeitet" | 📦 In Bearbeitung |
 
-## Nutzung
+## Konfiguration
 
-Siehe SKILL.md für detaillierte Nutzungsanleitung.
+Keine API-Keys nötig – DHL API ist öffentlich verfügbar!
 
-## 📖 Dokumentation
+## Hinweise
 
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+- Tracking-Nummern: Exakt 20 Ziffern
+- API: DHL interner Endpoint (keine Auth nötig)
+- Sprache: Deutsch (language=de)
 
 ---
 
-*Part of OpenClaw Skills Collection*
+*Teil der OpenClaw Skills Collection* 🎩

@@ -1,38 +1,65 @@
-# hermes-tracking
+# Hermes Tracking Skill
 
-OpenClaw Skill: Hermes Tracking
+Automatisierte Hermes-Paketverfolgung mit Browser-Automation.
 
-## Installation
+## Features
 
-### 1. Repository klonen
+- 🎭 Browser-Automation via Playwright (Chromium)
+- 🔍 OCR-Textextraktion mit Tesseract
+- ✅ Status-Erkennung für wichtige Zustell-Events
+- 📸 Screenshot-Archivierung für Nachweis
+- 🔄 Automatische Cron-Verwaltung
+
+## Schnellstart
 
 ```bash
-git clone https://github.com/{USERNAME}/openclaw-skills.git
-cd openclaw-skills/hermes-tracking
+# Mit Tracking-Code
+python3 scripts/hermes_tracker.py H1003660401590901036
+
+# Mit voller URL
+python3 scripts/hermes_tracker.py "https://www.myhermes.de/...#H1003660401590901036"
+
+# Mit sichtbarem Browser (Debugging)
+python3 scripts/hermes_tracker.py H1003660401590901036 --show-browser
 ```
 
-### 2. Abhängigkeiten installieren
+## Status-Erkennung
+
+| Status | Bedeutung |
+|--------|-----------|
+| "an der Empfangsadresse zugestellt" | ✅ Paket zugestellt |
+| "ins Zustellfahrzeug geladen" | 🚚 Unterwegs (heute) |
+| "in der Filiale bereit" | 🏪 Abholbereit |
+| "vom Absender übergeben" | 📤 Versendet |
+
+## Konfiguration
+
+### System-Abhängigkeiten
 
 ```bash
+# Ubuntu/Debian
+apt-get update
+apt-get install tesseract-ocr tesseract-ocr-deu
+
+# Python-Abhängigkeiten
 pip install playwright pytesseract Pillow
 playwright install chromium
 ```
 
-System-Abhängigkeiten:
-```bash
-sudo apt-get install tesseract-ocr tesseract-ocr-deu
-```
-
-## Nutzung
+### Automatisches Tracking
 
 ```bash
-python3 scripts/hermes_tracker.py H1003660401590901036
+# Paket hinzufügen
+python3 scripts/package_manager.py add \
+    -c H1003660401590901036 \
+    -r hermes \
+    -d "Amazon Bestellung"
 ```
 
-## 📖 Dokumentation
-
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+- Speichert in SQLite-Datenbank (`data/james.db`)
+- Erstellt Cron-Jobs für 10:00 und 16:00 Uhr
+- Cron wird bei Zustellung automatisch gelöscht
 
 ---
 
-*Part of OpenClaw Skills Collection*
+*Teil der OpenClaw Skills Collection* 🎩

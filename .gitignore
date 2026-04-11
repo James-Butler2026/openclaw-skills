@@ -1,0 +1,17 @@
+.env.example
+logs/
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+venv/
+.env
+*.db
+*.sqlite
+*.sqlite3
+data/
+memory/superdata_cache.json
+memory/superdata_credits.json
+memory/price_history.json
+/tmp/
+node_modules/

@@ -1,43 +1,366 @@
-# OpenClaw Skills Collection
+# 🎩 OpenClaw Skills Collection
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Eine Sammlung nützlicher Skills für OpenClaw – entwickelt von James, dem ergebensten Butler.
 
-Eine kuratierte Sammlung automatisierter Skills für OpenClaw.
+## 📋 Übersicht
 
-## 📦 Verfügbare Skills
+| Skill | Beschreibung | Kategorie |
+|-------|--------------|-----------|
+| [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
+| [backup-manager](#backup-manager) | Automatisches Git + SQLite Backup | System |
+| [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
+| [email-sender](#email-sender) | E-Mails via SMTP senden (Web.de, Gmail, etc.) | Kommunikation |
+| [github-manager](#github-manager) | Skills zu GitHub veröffentlichen | Entwicklung |
+| [hermes-tracking](#hermes-tracking) | Hermes Paketverfolgung mit Browser-Automation | Tracking |
+| [image-generation](#image-generation) | Kostenlose Bildgenerierung via Pollinations.ai | Bild |
+| [leonardo-image-gen](#leonardo-image-gen) | Bildgenerierung mit Leonardo AI (mit Pollinations-Fallback) | Bild |
+| [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai (Claude Opus 4-6) | Entwicklung |
+| [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
+| [meme-architect](#meme-architect) | Context-Aware Meme Generator mit imgflip API | Spaß |
+| [newsletter-monitor](#newsletter-monitor) | KI-gestützte Fleisch-Angebotsüberwachung | Monitoring |
+| [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal, Thorsten-Stimme) | Audio |
+| [self-improving](#self-improving) | Self-Reflection und kontinuierliches Lernen | System |
+| [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
+| [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
+| [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
 
-| Skill | Beschreibung |
-|-------|--------------|
-| **audio-transcription** | Audio-Dateien (MP3, OGG, WAV) zu Text transkribieren mit Whisper |
-| **dhl-tracking** | DHL Paketverfolgung via REST API mit automatischen Updates |
-| **hermes-tracking** | Hermes Sendungsverfolgung via Browser-Automation |
-| **image-generation** | Kostenlose Bildgenerierung via Pollinations.ai API |
-| **mammouth-coding** | Code-Generierung via Mammouth.ai mit Claude Opus |
-| **mega-filehoster** | MEGA.nz Cloud Storage Manager mit Wrapper-Script |
-| **meme-architekt** | Context-Aware Meme Generator mit imgflip API Integration |
-| **piper-tts** | Deutsche Text-to-Speech mit Thorsten Voice (lokal) |
-| **superdata-youtube-transcript** | YouTube Transkripte via Supadata API mit Zusammenfassung |
-| **tavily-search** | Websuche via Tavily API mit KI-Zusammenfassungen |
-| **wordpress-manager** | WordPress Beiträge verwalten via REST API |
+---
 
-## 🚀 Installation
+## 🚀 Schnellstart
+
+### Einen Skill installieren
 
 ```bash
+# Repository klonen
 git clone https://github.com/James-Butler2026/openclaw-skills.git
-cd openclaw-skills
+
+# In den Skill-Ordner wechseln
+cd openclaw-skills/audio-transcription/
+
+# SKILL.md lesen für Setup-Anleitung
+cat SKILL.md
 ```
 
-## 📖 Verwendung
+### Voraussetzungen
 
-Jeder Skill hat eine eigene README.md mit Installationsanleitung:
+Die meisten Skills benötigen:
+- Python 3.8+
+- OpenClaw Workspace (empfohlen)
+- `.env` Datei im Workspace-Root mit entsprechenden API-Keys
+
+---
+
+## 📦 Skills im Detail
+
+### audio-transcription
+**Audio zu Text Transkription mit faster-whisper**
+
+- Unterstützt: MP3, OGG, WAV, etc.
+- Mehrere Modelle: tiny bis large-v3
+- Auto-Detect Sprache oder explizit angeben
+- Deutsche Sprache nativ unterstützt
 
 ```bash
-cd <skill-name>
-cat README.md
+python3 scripts/transcribe.py audio.mp3 --language de
 ```
 
-## 📋 Lizenz
+→ [Details ansehen](audio-transcription/README.md)
 
-MIT License - Siehe [LICENSE](LICENSE)
+---
 
-*Last updated: 2026-04-10*
+### backup-manager
+**Automatisches Backup mit Git + SQLite**
+
+- Git Auto-Commit für Scripts und Konfigurationen
+- SQLite Backup für Datenbanken
+- Daemon-Modus für kontinuierliches Backup
+- Kategorisierung: agents, scripts, skills, docs, memory
+
+```bash
+python3 scripts/git_auto_backup.py --daemon
+```
+
+→ [Details ansehen](backup-manager/README.md)
+
+---
+
+### dhl-tracking
+**DHL Paketverfolgung via REST API**
+
+- Direkte API-Abfrage (kein Browser nötig)
+- Überwachte Status-Erkennung
+- Automatische Checks um 10:00 und 16:00 Uhr
+- JSON-Output für Weiterverarbeitung
+
+```bash
+python3 scripts/dhl_tracker.py 00340434886241560288
+```
+
+→ [Details ansehen](dhl-tracking/README.md)
+
+---
+
+### email-sender
+**E-Mails via SMTP senden**
+
+- Unterstützt: Web.de, Gmail, GMX, eigene SMTP-Server
+- App-Passwörter für Gmail
+- Einfache Python API
+- Keine externen Abhängigkeiten
+
+```bash
+python3 scripts/send_email.py --to empfaenger@example.com \
+    --subject "Hallo" --body "Testnachricht"
+```
+
+→ [Details ansehen](email-sender/README.md)
+
+---
+
+### github-manager
+**Skills zu GitHub veröffentlichen**
+
+- Repository erstellen
+- Einzelne oder alle Skills synchronisieren
+- Automatische README-Generierung
+- GitHub Actions Integration
+
+```bash
+python3 scripts/github_publish.py --skill image-generation --repo openclaw-skills
+```
+
+→ [Details ansehen](github-manager/README.md)
+
+---
+
+### hermes-tracking
+**Hermes Paketverfolgung mit Browser-Automation**
+
+- Playwright + Chromium Browser
+- OCR-Textextraktion mit Tesseract
+- Screenshot-Archivierung
+- Automatische Cron-Verwaltung
+
+```bash
+python3 scripts/hermes_tracker.py H1003660401590901036
+```
+
+→ [Details ansehen](hermes-tracking/README.md)
+
+---
+
+### image-generation
+**Kostenlose Bildgenerierung via Pollinations.ai**
+
+- Kein API-Key nötig
+- Keine Rate-Limits bekannt
+- Custom Dimensionen und Seeds
+- Watermark-freier Output
+
+```bash
+python3 scripts/generate_image.py "A beautiful sunset" --width 1024 --height 768
+```
+
+→ [Details ansehen](image-generation/README.md)
+
+---
+
+### leonardo-image-gen
+**Bildgenerierung mit Leonardo AI + Pollinations-Fallback**
+
+- Leonardo AI API (Daily Credits)
+- Automatischer Fallback zu Pollinations
+- FLUX.1, Lucid, Leonardo XL Modelle
+- Höhere Qualität als Pollinations allein
+
+```bash
+python3 scripts/leonardo_generate.py "Ein eleganter Butler" --model flux-schnell
+```
+
+→ [Details ansehen](leonardo-image-gen/README.md)
+
+---
+
+### mammouth-coding
+**Code-Generierung mit Claude Opus 4-6**
+
+- **NUR für Code-Generierung**
+- Mammouth.ai API
+- Retry-Mechanismus mit Exponential Backoff
+- Bessere Fehlerbehandlung
+
+```bash
+python3 scripts/mammouth_coder.py "Erstelle eine Python-Klasse für..."
+```
+
+→ [Details ansehen](mammouth-coding/README.md)
+
+---
+
+### mega-filehoster
+**MEGA.nz Cloud Storage Verwaltung**
+
+- Dateien hochladen/herunterladen
+- Verzeichnisse auflisten
+- Share-Links generieren
+- Speicherplatz prüfen
+
+```bash
+python3 scripts/mega_manager.py upload /pfad/zur/datei.txt
+```
+
+→ [Details ansehen](mega-filehoster/README.md)
+
+---
+
+### meme-architect
+**Context-Aware Meme Generator**
+
+- Emotionserkennung (success, frustration, irony, etc.)
+- 8+ Meme Templates via imgflip API
+- Automatische Text-Generierung
+- Echte Meme-Templates (keine lokalen Bilder)
+
+```bash
+python3 scripts/meme_architect.py "Endlich läuft der Code"
+```
+
+→ [Details ansehen](meme-architect/README.md)
+
+---
+
+### newsletter-monitor
+**KI-gestützte Fleisch-Angebotsüberwachung**
+
+- Web.de IMAP Integration
+- KI-Analyse statt Keywords
+- SQLite-Datenbank mit Preisverlauf
+- Tägliche Überwachung um 10:00 Uhr
+
+```bash
+python3 scripts/webde_newsletter_monitor.py
+```
+
+→ [Details ansehen](newsletter-monitor/README.md)
+
+---
+
+### piper-tts
+**Deutsche Text-to-Speech (lokal)**
+
+- Thorsten-Stimme (deutsch, männlich)
+- Kein API-Key nötig
+- Lokale Ausführung
+- Telegram Voice-Messages
+
+```bash
+python3 scripts/piper_tts.py "Hallo Welt" --send
+```
+
+→ [Details ansehen](piper-tts/README.md)
+
+---
+
+### self-improving
+**Self-Reflection und kontinuierliches Lernen**
+
+- Learning from corrections
+- Tiered Memory (HOT/WARM/COLD)
+- Project & Domain Patterns
+- Automatic promotion/demotion
+
+→ [Details ansehen](self-improving/README.md)
+
+---
+
+### superdata-youtube-transcript
+**YouTube-Transkripte mit Supadata API**
+
+- Supadata API (100 Credits/Monat Free)
+- KI-Zusammenfassungen
+- 30-Tage-Cache
+- Nur Credits bei Erfolg
+
+```python
+from scripts.youtube_transcript_superdata import get_transcript_summary
+result = get_transcript_summary(video_id="...")
+```
+
+→ [Details ansehen](superdata-youtube-transcript/README.md)
+
+---
+
+### tavily-search
+**Websuche via Tavily API**
+
+- AI-generierte Zusammenfassungen
+- Relevance Scores
+- Strukturierte Ergebnisse
+- Quellenangaben
+
+```bash
+python3 scripts/tavily_search.py "KI Entwicklungen 2026" --depth advanced
+```
+
+→ [Details ansehen](tavily-search/README.md)
+
+---
+
+### wordpress-manager
+**WordPress Beiträge verwalten**
+
+- REST API Integration
+- Cloudflare-kompatibel
+- CRUD-Operationen
+- Kategorien & Tags
+
+```bash
+python3 scripts/wordpress_manager.py --create "Titel" "HTML-Inhalt"
+```
+
+→ [Details ansehen](wordpress-manager/README.md)
+
+---
+
+## ⚙️ Konfiguration
+
+### .env Variablen
+
+Die meisten Skills benötigen eine `.env` Datei im OpenClaw-Workspace:
+
+```bash
+# OpenClaw Workspace Root
+~/.openclaw/workspace/.env
+```
+
+Siehe die einzelnen Skill-READMEs für die benötigten Variablen.
+
+### Ordnerstruktur
+
+```
+~/.openclaw/workspace/
+├── .env                          # API-Keys und Konfiguration
+├── skills/
+│   ├── audio-transcription/
+│   ├── dhl-tracking/
+│   ├── ...
+│   └── wordpress-manager/
+├── scripts/                      # Skill-Scripts
+└── data/                         # Datenbanken, Caches
+```
+
+---
+
+## 🤝 Mitwirken
+
+Skills werden fortlaufend erweitert. Vorschläge sind willkommen!
+
+**Kontakt:** James-Butler2026 auf GitHub
+
+---
+
+## 📜 Lizenz
+
+Alle Skills sind unter MIT-Lizenz veröffentlicht.
+
+*Erstellt mit 🎩 von James, dem ergebensten Butler.*

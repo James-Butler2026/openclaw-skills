@@ -1,65 +1,57 @@
-# MEGA.nz Filehoster
+# MEGA.nz Filehoster Skill
 
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+Vollständige MEGA.nz Cloud Storage Verwaltung.
 
-Einfacher Python-Wrapper für MEGA.nz Cloud Storage.
+## Features
 
-## 🚀 Installation
+- 📤 **Dateien hochladen** - Lokale Dateien zu MEGA
+- 📥 **Dateien herunterladen** - MEGA → Lokal
+- 📁 **Verzeichnisse anzeigen** - Übersicht deiner Cloud
+- 🔗 **Share-Links** - Dateien teilen
+- 💾 **Speicherplatz** - Verfügbaren Platz prüfen
 
-```bash
-# megatools installieren
-sudo apt-get install megatools  # Debian/Ubuntu
-# oder: brew install megatools  # macOS
-```
-
-## ⚙️ Konfiguration
-
-**WICHTIG:** Credentials NIEMALS committen!
-
-1. Erstelle `.env` Datei (ist bereits in `.gitignore`):
-```bash
-MEGA_EMAIL=dein@email.com
-MEGA_PASSWORD=dein_passwort
-```
-
-2. Oder exportiere als Umgebungsvariablen:
-```bash
-export MEGA_EMAIL=dein@email.com
-export MEGA_PASSWORD=dein_passwort
-```
-
-## 📖 Nutzung
+## Schnellstart
 
 ```bash
-# Hochladen
+# Datei hochladen
 python3 scripts/mega_manager.py upload /pfad/zur/datei.txt
 
-# Herunterladen
-python3 scripts/mega_manager.py download /mega/datei.txt /lokal/
+# Datei herunterladen
+python3 scripts/mega_manager.py download /mega/pfad/datei.txt /lokal/ziel/
 
-# Auflisten
-python3 scripts/mega_manager.py list /
+# Verzeichnis anzeigen
+python3 scripts/mega_manager.py list /mega/pfad/
 
-# Speicherplatz
+# Share-Link erstellen
+python3 scripts/mega_manager.py share /mega/pfad/datei.txt
+
+# Speicherplatz anzeigen
 python3 scripts/mega_manager.py quota
 ```
 
-## 🔒 Sicherheit
+## Konfiguration
 
-- **.env Datei** ist in `.gitignore` eingetragen
-- **Credentials** werden nie im Code gespeichert
-- **Nur lokal** in deiner Umgebung konfigurieren
+Füge zu deiner `.env` hinzu:
 
-## 📁 Projektstruktur
-
-```
-mega-filehoster/
-├── SKILL.md
-├── README.md
-└── scripts/
-    └── mega_manager.py
+```bash
+# MEGA.nz Account
+MEGA_EMAIL=dein_mega_email@beispiel.de
+MEGA_PASSWORD=dein_mega_passwort
 ```
 
-## 📝 Lizenz
+## Installation
 
-MIT
+```bash
+# MEGAtools installieren (falls nicht vorhanden)
+apt-get install megatools  # Debian/Ubuntu
+# oder: brew install megatools  # macOS
+```
+
+## Technische Details
+
+- **Backend:** megatools (mega-put, mega-get, mega-ls, mega-df)
+- **Authentifizierung:** Via .env (MEGA_EMAIL, MEGA_PASSWORD)
+
+---
+
+*Teil der OpenClaw Skills Collection* 🎩

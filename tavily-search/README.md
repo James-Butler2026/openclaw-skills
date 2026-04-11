@@ -1,36 +1,71 @@
-# tavily-search
+# Tavily Search Skill
 
-OpenClaw Skill: Tavily Search
+Websuche via Tavily API - AI-generierte Zusammenfassungen mit Quellen.
 
-## Installation
+## Features
 
-### 1. Repository klonen
+- 🔍 **AI-generierte Zusammenfassungen**
+- 📊 **Relevance Scores** für jedes Ergebnis
+- 🔗 **Strukturierte Ergebnisse** mit Quellenangaben
+- 🎯 **Priorität 1** für alle Websuchen
 
-```bash
-git clone https://github.com/James-Butler2026/openclaw-skills.git
-cd openclaw-skills/tavily-search
-```
-
-### 2. Abhängigkeiten installieren
-
-Siehe SKILL.md für spezifische Abhängigkeiten.
+## Schnellstart
 
 ```bash
-pip install -r requirements.txt  # falls vorhanden
+# Standard-Suche
+python3 scripts/tavily_search.py "Was ist die Hauptstadt von Frankreich?"
+
+# Erweiterte Suche mit mehr Ergebnissen
+python3 scripts/tavily_search.py "KI Entwicklungen 2026" --depth advanced --max-results 10
+
+# Raw JSON output
+python3 scripts/tavily_search.py "Python best practices" --raw
 ```
 
-### 3. Konfiguration
+## Parameter
 
-Erstelle eine `.env` Datei nach Anleitung in SKILL.md.
+| Argument | Beschreibung | Default |
+|----------|-------------|---------|
+| `query` | Suchanfrage (erforderlich) | - |
+| `--depth` | Tiefe: `basic` oder `advanced` | `basic` |
+| `--max-results` | Anzahl Ergebnisse (1-20) | 5 |
+| `--no-answer` | Keine AI-Zusammenfassung | False |
+| `--raw` | Raw JSON Output | False |
 
-## Nutzung
+## Konfiguration
 
-Siehe SKILL.md für detaillierte Nutzungsanleitung.
+Füge zu deiner `.env` hinzu:
 
-## 📖 Dokumentation
+```bash
+TAVILY_API_KEY=tvly-dein_key_hier
+```
 
-Siehe [SKILL.md](SKILL.md) für vollständige Dokumentation.
+**API Key holen:** https://tavily.com/
+
+## Python API
+
+```python
+from scripts.tavily_search import search
+
+results = search(
+    query="KI Entwicklungen",
+    depth="advanced",
+    max_results=10
+)
+print(results)
+```
+
+## Vergleich: Tavily vs Perplexity
+
+| Feature | Tavily | Perplexity |
+|---------|--------|------------|
+| **Priorität** | **1 (Primär)** | 2 (nur auf Anweisung) |
+| Typ | Index-basiert | Live-Suche |
+| Geschwindigkeit | ⚡ Schnell | ⚡ Schnell |
+| Struktur | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+
+**Regel:** Immer zuerst Tavily nutzen. Perplexity nur wenn explizit gefordert.
 
 ---
 
-*Part of OpenClaw Skills Collection*
+*Teil der OpenClaw Skills Collection* 🎩

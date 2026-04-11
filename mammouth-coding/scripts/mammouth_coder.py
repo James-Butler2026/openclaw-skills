@@ -94,7 +94,7 @@ def load_api_key() -> str:
     
     raise MammouthAPIKeyError(
         "MAMMOUTH_API_KEY nicht gefunden. Bitte fügen Sie ihn zur .env Datei hinzu: "
-        "[REDACTED]..."
+        "MAMMOUTH_API_KEY=sk-mammouth-..."
     )
 
 
