@@ -7,7 +7,6 @@ Eine Sammlung nützlicher Skills für OpenClaw – entwickelt von James, dem erg
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
-| [backup-manager](#backup-manager) | Automatisches Git + SQLite Backup | System |
 | [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
 | [email-sender](#email-sender) | E-Mails via SMTP senden (Web.de, Gmail, etc.) | Kommunikation |
 | [github-manager](#github-manager) | Skills zu GitHub veröffentlichen | Entwicklung |
@@ -16,10 +15,8 @@ Eine Sammlung nützlicher Skills für OpenClaw – entwickelt von James, dem erg
 | [leonardo-image-gen](#leonardo-image-gen) | Bildgenerierung mit Leonardo AI (mit Pollinations-Fallback) | Bild |
 | [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai (Claude Opus 4-6) | Entwicklung |
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
-| [meme-architect](#meme-architect) | Context-Aware Meme Generator mit imgflip API | Spaß |
 | [newsletter-monitor](#newsletter-monitor) | KI-gestützte Fleisch-Angebotsüberwachung | Monitoring |
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal, Thorsten-Stimme) | Audio |
-| [self-improving](#self-improving) | Self-Reflection und kontinuierliches Lernen | System |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
 | [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
 | [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
@@ -65,22 +62,6 @@ python3 scripts/transcribe.py audio.mp3 --language de
 ```
 
 → [Details ansehen](audio-transcription/README.md)
-
----
-
-### backup-manager
-**Automatisches Backup mit Git + SQLite**
-
-- Git Auto-Commit für Scripts und Konfigurationen
-- SQLite Backup für Datenbanken
-- Daemon-Modus für kontinuierliches Backup
-- Kategorisierung: agents, scripts, skills, docs, memory
-
-```bash
-python3 scripts/git_auto_backup.py --daemon
-```
-
-→ [Details ansehen](backup-manager/README.md)
 
 ---
 
@@ -213,22 +194,6 @@ python3 scripts/mega_manager.py upload /pfad/zur/datei.txt
 
 ---
 
-### meme-architect
-**Context-Aware Meme Generator**
-
-- Emotionserkennung (success, frustration, irony, etc.)
-- 8+ Meme Templates via imgflip API
-- Automatische Text-Generierung
-- Echte Meme-Templates (keine lokalen Bilder)
-
-```bash
-python3 scripts/meme_architect.py "Endlich läuft der Code"
-```
-
-→ [Details ansehen](meme-architect/README.md)
-
----
-
 ### newsletter-monitor
 **KI-gestützte Fleisch-Angebotsüberwachung**
 
@@ -258,18 +223,6 @@ python3 scripts/piper_tts.py "Hallo Welt" --send
 ```
 
 → [Details ansehen](piper-tts/README.md)
-
----
-
-### self-improving
-**Self-Reflection und kontinuierliches Lernen**
-
-- Learning from corrections
-- Tiered Memory (HOT/WARM/COLD)
-- Project & Domain Patterns
-- Automatic promotion/demotion
-
-→ [Details ansehen](self-improving/README.md)
 
 ---
 
