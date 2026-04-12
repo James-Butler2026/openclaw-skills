@@ -4,6 +4,8 @@ Eine Sammlung nützlicher Skills für OpenClaw – entwickelt von James, dem erg
 
 ## 📋 Übersicht
 
+Diese Sammlung enthält **14 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zur Paketverfolgung. Alle Skills sind lokal nutzbar, dokumentiert und API-sicher konfiguriert.
+
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
