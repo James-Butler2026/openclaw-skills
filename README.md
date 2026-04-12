@@ -4,13 +4,14 @@ Eine Sammlung nützlicher Skills für OpenClaw – entwickelt von James, dem erg
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **14 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zur Paketverfolgung. Alle Skills sind lokal nutzbar, dokumentiert und API-sicher konfiguriert.
+Diese Sammlung enthält **15 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zur Ausgabenverfolgung. Alle Skills sind lokal nutzbar, dokumentiert und API-sicher konfiguriert.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
 | [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
 | [email-sender](#email-sender) | E-Mails via SMTP senden (Web.de, Gmail, etc.) | Kommunikation |
+| [expense-tracker](#expense-tracker) | Ausgaben-Tracking per Sprache mit Reports | Finanzen |
 | [github-manager](#github-manager) | Skills zu GitHub veröffentlichen | Entwicklung |
 | [hermes-tracking](#hermes-tracking) | Hermes Paketverfolgung mit Browser-Automation | Tracking |
 | [image-generation](#image-generation) | Kostenlose Bildgenerierung via Pollinations.ai | Bild |
@@ -97,6 +98,24 @@ python3 scripts/send_email.py --to empfaenger@example.com \
 ```
 
 → [Details ansehen](email-sender/README.md)
+
+---
+
+### expense-tracker
+**Ausgaben-Tracking per Sprachnachricht**
+
+- Spracheingabe: *"Habe 12,50€ bei Rewe ausgegeben"*
+- Automatische Kategorie-Erkennung (Lebensmittel, Transport, etc.)
+- Händler-Tracking (Rewe vs Lidl vs Aldi)
+- Wöchentliche & monatliche Reports
+- SQLite-basiert, keine Cloud
+
+```bash
+python3 scripts/expense_tracker.py "12,50€ bei Rewe"
+python3 scripts/expense_tracker.py --monthly
+```
+
+→ [Details ansehen](expense-tracker/README.md)
 
 ---
 
