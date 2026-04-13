@@ -104,7 +104,7 @@ def check_repo_exists(repo_name, config=None):
 
 
 def publish_skill(skill_name, repo_name, description="", config=None):
-    """Veröffentlicht einen Skill zu GitHub"""
+    """Veröffentlicht einen Skill zu GitHub - JETZT MIT ECHTEM PUSH!"""
     if config is None:
         config = load_config()
     
@@ -115,11 +115,7 @@ def publish_skill(skill_name, repo_name, description="", config=None):
         print(f"   📦 Repository existiert nicht, erstelle...")
         create_repo(repo_name, description, private=False, config=config)
     
-    # Klone Repository in persistenten Ordner
-    skills_dir = Path.home() / '.openclaw' / 'workspace' / 'skills'
-    github_dir = skills_dir / '.github'
-    github_dir.mkdir(exist_ok=True)
-    
+    # Erstelle temporäres Verzeichnis für Clone
     temp_clone = Path(tempfile.mkdtemp(prefix='github_clone_'))
     
     try:
@@ -140,39 +136,66 @@ def publish_skill(skill_name, repo_name, description="", config=None):
             shutil.rmtree(temp_clone, ignore_errors=True)
             raise RuntimeError(f"Git clone fehlgeschlagen: {safe_error}")
         
-        # Bereite Skill vor
-        cloned_skill = temp_clone / skill_name
-        skill_dest = github_dir / skill_name
+        # Kopiere lokalen Skill ins geklonte Repo
+        skill_source = Path.home() / '.openclaw' / 'workspace' / 'skills' / skill_name
+        skill_dest = temp_clone / skill_name
+        
+        if not skill_source.exists():
+            print(f"   ⚠️  Lokaler Skill nicht gefunden: {skill_source}")
+            shutil.rmtree(temp_clone, ignore_errors=True)
+            return
         
         if skill_dest.exists():
             print(f"   🗑️  Entferne alte Version...")
             shutil.rmtree(skill_dest)
         
-        if cloned_skill.exists():
-            shutil.copytree(cloned_skill, skill_dest)
-            print(f"   ✅ Skill kopiert: {skill_name}")
-        else:
-            print(f"   ⚠️  Skill nicht im Repository gefunden")
+        print(f"   📁 Kopiere Skill-Dateien...")
+        shutil.copytree(skill_source, skill_dest)
         
         # Erstelle README falls nötig
         readme_path = skill_dest / 'README.md'
         skill_md_path = skill_dest / 'SKILL.md'
         if not readme_path.exists() and skill_md_path.exists():
+            print(f"   📝 Generiere README.md...")
             with open(skill_md_path) as f:
                 content = f.read()
             with open(readme_path, 'w') as f:
                 f.write(f"# {skill_name}\n\n{content}")
         
+        # Git add, commit, push
+        print(f"   🐙 Committe und pushe...")
+        subprocess.run(['git', '-C', str(temp_clone), 'config', 'user.email', config['email']], check=True, capture_output=True)
+        subprocess.run(['git', '-C', str(temp_clone), 'config', 'user.name', 'James Butler'], check=True, capture_output=True)
+        subprocess.run(['git', '-C', str(temp_clone), 'add', f"{skill_name}/"], check=True, capture_output=True)
+        
+        # Prüfe ob es etwas zu commiten gibt
+        status_result = subprocess.run(
+            ['git', '-C', str(temp_clone), 'status', '--porcelain'],
+            check=True, capture_output=True, text=True
+        )
+        
+        if status_result.stdout.strip():
+            subprocess.run(
+                ['git', '-C', str(temp_clone), 'commit', '-m', f'Add {skill_name} skill'],
+                check=True, capture_output=True
+            )
+            subprocess.run(
+                ['git', '-C', str(temp_clone), 'push'],
+                check=True, capture_output=True
+            )
+            print(f"   ✅ Erfolgreich gepusht!")
+        else:
+            print(f"   ⚠️  Nichts zu committen (bereits aktuell?)")
+        
         # Cleanup
         shutil.rmtree(temp_clone, ignore_errors=True)
-        
-        print(f"   ✅ Skill veröffentlicht!")
         
     except Exception as e:
         shutil.rmtree(temp_clone, ignore_errors=True)
         raise
     
     print(f"\n🎉 Fertig!")
+    print(f"   URL: https://github.com/{config['username']}/{repo_name}/tree/main/{skill_name}")
 
 
 def publish_all_skills(repo_name, config=None):
