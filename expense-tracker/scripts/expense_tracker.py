@@ -19,7 +19,8 @@ DB_PATH = Path.home() / ".openclaw" / "workspace" / "data" / "expenses.db"
 # Automatische Kategorie-Erkennung
 CATEGORY_KEYWORDS = {
     "Lebensmittel": ["rewe", "lidl", "aldi", "edeka", "kaufland", "penny", "netto", "dm", "rossmann", "biomarkt", "bäckerei"],
-    "Transport": ["bahn", "db", "bus", "tankstelle", "aral", "shell", "öpnv", "ticket", "fahrkarte"],
+    "Tanken": ["tankstelle", "aral", "shell", "avia", "agip", "bp", "esso", "jet", "omv", "total", "getankt", "tanken", "benzin", "diesel", "sprit"],
+    "Transport": ["bahn", "db", "bus", "öpnv", "ticket", "fahrkarte", "parking", "parken"],
     "Freizeit": ["kino", "restaurant", "mc", "burger", "pizza", "bar", "club", "netflix", "spotify", "steam"],
     "Shopping": ["amazon", "ebay", "zalando", "h&m", "mediamarkt", "saturn", "ikea"],
     "Schule": ["schule", "bücher", "unterricht", "kurs", "lernen", "prüfung"],
