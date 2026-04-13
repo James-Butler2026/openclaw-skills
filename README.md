@@ -4,11 +4,12 @@ Eine Sammlung nützlicher Skills für OpenClaw – entwickelt von James, dem erg
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **15 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zur Ausgabenverfolgung. Alle Skills sind lokal nutzbar, dokumentiert und API-sicher konfiguriert.
+Diese Sammlung enthält **16 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zur Ausgabenverfolgung. Alle Skills sind lokal nutzbar, dokumentiert und API-sicher konfiguriert.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
+| [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe | Produktivität |
 | [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
 | [email-sender](#email-sender) | E-Mails via SMTP senden (Web.de, Gmail, etc.) | Kommunikation |
 | [expense-tracker](#expense-tracker) | Ausgaben-Tracking per Sprache mit Reports | Finanzen |
@@ -65,6 +66,25 @@ python3 scripts/transcribe.py audio.mp3 --language de
 ```
 
 → [Details ansehen](audio-transcription/README.md)
+
+---
+
+### calendar
+**Lokaler Kalender mit natürlicher Spracheingabe**
+
+- Natürliche Sprache: *"Termin morgen 14 Uhr mit Dr. Kaufmann"*
+- Geburtstage mit jährlichen Erinnerungen
+- Automatische Cron-Erinnerungen
+- Wiederholungen: täglich, wöchentlich, monatlich, jährlich
+- SQLite-basiert, keine Cloud
+
+```bash
+python3 scripts/calendar_cli.py "Termin morgen 14 Uhr mit Dr. Kaufmann"
+python3 scripts/calendar_cli.py --today
+python3 scripts/calendar_cli.py --sync-crons
+```
+
+→ [Details ansehen](calendar/README.md)
 
 ---
 
