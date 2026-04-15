@@ -1,17 +1,29 @@
-# 🪙 Bison Tracker
+---
+name: bison-tracker
+description: Professionelles Krypto-Portfolio-Tracking für Bitcoin und Ripple (XRP). SQLite-basiert mit Gewinn/Verlust-Berechnung, automatischen Alerts und detaillierten Reports.
+---
 
-Professioneller Krypto-Portfolio-Tracker für Bison-App-Nutzer. Trackt BTC und XRP mit Echtzeit-Kursen, automatischer Gewinn/Verlust-Berechnung und intelligenten Alerts.
+# Bison Tracker
+
+Ein professionelles Portfolio-Tracking-Tool für Krypto-Investments über die Bison-App.
 
 ## Features
 
-- 💰 **Echtzeit-Kurse** via CoinGecko API (kostenlos)
-- 📊 **Gewinn/Verlust-Berechnung** in Echtzeit
-- 🎯 **Durchschnittskosten-Rechner** (automatisch bei weiteren Käufen)
+- 💰 **Echtzeit-Kurse** via CoinGecko API (kostenlos, keine Auth nötig)
+- 📊 **Automatische Gewinn/Verlust-Berechnung** in Euro und Prozent
+- 🎯 **Durchschnittskosten-Rechner** (gewichtet bei weiteren Käufen)
 - 🚨 **Stop-Loss Warnung** bei -20% Verlust
 - 🎯 **Take-Profit Alert** bei +25% Gewinn
-- 🏆 **Performance-Vergleich** (BTC vs XRP)
+- 🏆 **Performance-Vergleich** zwischen Coins
 - 📜 **Vollständige Trade-Historie**
-- ⏰ **Automatische Updates** via Cron
+- ⏰ **Automatische Reports** via Cron
+
+## Unterstützte Kryptowährungen
+
+| Coin | Beschreibung |
+|------|--------------|
+| BTC (Bitcoin) | Store of Value, Digital Gold |
+| XRP (Ripple) | Banken-Überweisungen, schnelle Transaktionen |
 
 ## Schnellstart
 
@@ -20,9 +32,7 @@ Professioneller Krypto-Portfolio-Tracker für Bison-App-Nutzer. Trackt BTC und X
 python3 scripts/bison_tracker.py --init
 ```
 
-Dies erstellt die SQLite-Datenbank und fügt Beispiel-Daten hinzu.
-
-## Befehle
+### Verfügbare Befehle
 
 | Befehl | Beschreibung |
 |--------|-------------|
@@ -37,34 +47,29 @@ Dies erstellt die SQLite-Datenbank und fügt Beispiel-Daten hinzu.
 ### Beispiele
 
 ```bash
-# Aktuellen Status prüfen
+# Status prüfen
 python3 scripts/bison_tracker.py --status
 
-# Neuen Kauf hinzufügen (mit automatischer Durchschnittskosten-Berechnung)
+# Neuen Kauf hinzufügen
 python3 scripts/bison_tracker.py --buy BTC --amount 0.001 --eur 65
 
 # Performance-Vergleich
 python3 scripts/bison_tracker.py --performance
-
-# Trade-Historie ansehen
-python3 scripts/bison_tracker.py --history
 ```
 
-## Automatische Updates
-
-### Cron-Jobs (empfohlen)
+## Automatische Updates (Cron)
 
 | Job | Zeit | Aktion |
 |-----|------|--------|
-| Stündlicher Check | Jede Stunde :00 | Prüft auf ±15% Bewegung, Stop-Loss -20%, Take-Profit +25% |
+| Stündlicher Check | Jede Stunde :00 | ±15% Bewegung, Stop-Loss, Take-Profit |
 | Daily Update | 12:30 täglich | Vollständiger Status + Snapshot |
 | Weekly Report | Sonntag 20:00 | 7-Tage Vergleich |
 
-### Alert-Logik
+## Alert-Logik
 
 - **±15% stündlich** → Alert (nur bei wilden Bewegungen)
-- **-20% Gesamtverlust** → 🚨 Stop-Loss Warnung
-- **+25% Gesamtgewinn** → 🎯 Take-Profit Alert
+- **-20% Gesamtverlust** → Stop-Loss Warnung
+- **+25% Gesamtgewinn** → Take-Profit Alert
 - **Normale Schwankungen** → Keine Meldung (kein Spam)
 
 ## Datenbank
@@ -77,9 +82,19 @@ python3 scripts/bison_tracker.py --history
 - `daily_snapshots` - Tägliche Wertaufzeichnungen
 - `hourly_prices` - Stündliche Preise für Bewegungs-Erkennung
 
-## Telegram Integration
+## API
 
-Alle Reports können automatisch in ein Telegram-Topic gepostet werden (z.B. Topic 1597).
+**CoinGecko** - Kostenlos, keine Authentifizierung
+- Rate Limit: ~10-30 Calls/Minute
+- Dokumentation: https://www.coingecko.com/en/api
+
+## Konfiguration
+
+```python
+STOP_LOSS_PERCENT = -20      # Warnung bei -20%
+HOURLY_ALERT_PERCENT = 15    # Alert bei ±15%
+TAKE_PROFIT_PERCENT = 25     # Alert bei +25%
+```
 
 ## Anforderungen
 
@@ -87,27 +102,13 @@ Alle Reports können automatisch in ein Telegram-Topic gepostet werden (z.B. Top
 - Internet-Verbindung (CoinGecko API)
 - SQLite (in Python enthalten)
 
-## API
+## Datenschutz
 
-**CoinGecko** - Kostenlos, keine Authentifizierung nötig
-- Rate Limit: ~10-30 Calls/Minute
-- Dokumentation: https://www.coingecko.com/en/api
-
-## Konfiguration
-
-Editiere diese Werte im Script für andere Schwellen:
-
-```python
-STOP_LOSS_PERCENT = -20      # Warnung bei -20% Verlust
-HOURLY_ALERT_PERCENT = 15    # Alert bei ±15% stündlich
-TAKE_PROFIT_PERCENT = 25     # Alert bei +25% Gewinn
-```
-
-## Tipps
-
-- **Keine Panik bei kurzfristigen Verlusten** - Crypto ist volatil
-- **Stop-Loss ist ein Sicherheitsnetz** - nicht für 5% Tagesverluste
-- **Durchschnittskosten helfen** beim Nachkaufen (DCA-Strategie)
+- Keine Daten in der Cloud
+- Keine API-Keys nötig
+- Lokale SQLite-Datenbank
+- Einfach backuppen
 
 ---
-*Erstellt für Eure Lordschaft* 🎩
+
+*Verfügbar unter MIT-Lizenz*
