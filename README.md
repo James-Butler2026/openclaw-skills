@@ -9,6 +9,7 @@ Diese Sammlung enthält **16 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
+| [bison-tracker](#bison-tracker) | Krypto-Portfolio-Tracking für BTC/XRP mit Gewinn/Verlust-Berechnung | Finanzen |
 | [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe | Produktivität |
 | [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
 | [email-sender](#email-sender) | E-Mails via SMTP senden (Web.de, Gmail, etc.) | Kommunikation |
