@@ -1,23 +1,33 @@
 ---
 name: bison-tracker
-description: Professioneller Portfolio-Tracker für Bison-Börsen-Investments (BTC, XRP). SQLite-basiert mit Stop-Loss, Performance-Vergleich, Durchschnittskosten, Trade-Historie und automatischen Reports.
+description: Professioneller Portfolio-Tracker für Krypto-Investments (BTC, XRP, ETH, SOL). SQLite-basiert mit Gewinn/Verlust-Berechnung, Stop-Loss/Take-Profit Alerts, Durchschnittskosten, Performance-Vergleich und automatischen Reports.
 ---
 
-# Bison Portfolio Tracker Skill
+# Bison Portfolio Tracker
 
-Professioneller Krypto-Portfolio-Tracker mit allen Features, die ein seriöser Investor braucht.
+Ein professionelles Portfolio-Tracking-Tool für Krypto-Investments über die Bison-App und andere Börsen. Trackt Bitcoin (BTC), Ripple (XRP), Ethereum (ETH) und Solana (SOL) mit Echtzeit-Kursen und intelligenten Alerts.
 
 ## Features
 
-- 💰 **Echtzeit-Kurse** via CoinGecko API
-- 📊 **Gewinn/Verlust-Berechnung** in Echtzeit
+- 💰 **Echtzeit-Kurse** via CoinGecko API (kostenlos, keine Auth nötig)
+- 📊 **Gewinn/Verlust-Berechnung** in Echtzeit für alle 4 Coins
 - 🎯 **Durchschnittskosten-Rechner** (gewichtet bei weiteren Käufen)
 - 🚨 **Stop-Loss Warnung** bei -20% Verlust
-- 🏆 **Performance-Vergleich** (BTC vs XRP)
+- 🎯 **Take-Profit Alert** bei +25% Gewinn
+- 🏆 **Performance-Vergleich** zwischen allen Coins (Rangliste)
 - 📜 **Vollständige Trade-Historie**
 - 🔘 **Telegram Inline-Buttons** für schnellen Zugriff
 - 🔔 **Tägliche Updates** um 12:30 Uhr
 - 📈 **Wochenbericht** am Sonntag
+
+## Unterstützte Kryptowährungen
+
+| Symbol | Name | CoinGecko ID |
+|--------|------|--------------|
+| BTC | Bitcoin | `bitcoin` |
+| XRP | Ripple | `ripple` |
+| ETH | Ethereum | `ethereum` |
+| SOL | Solana | `solana` |
 
 ## Schnellstart
 
@@ -26,62 +36,100 @@ Professioneller Krypto-Portfolio-Tracker mit allen Features, die ein seriöser I
 python3 skills/bison-tracker/scripts/bison_tracker.py --init
 ```
 
-### Commands Übersicht
+### Verfügbare Befehle
 
 | Befehl | Beschreibung |
 |--------|-------------|
-| `--status` | Aktueller Portfolio-Status |
-| `--daily` | Tägliches Update + Snapshot |
+| `--status` | Aktuellen Portfolio-Status anzeigen (alle 4 Coins) |
+| `--daily` | Tägliches Update mit Snapshot |
 | `--weekly` | Wochenbericht mit 7-Tage-Vergleich |
-| `--history` | Vollständige Trade-Historie |
-| `--performance` | Performance-Vergleich BTC vs XRP |
+| `--hourly` | Stündlicher Check mit Alerts |
+| `--history` | Trade-Historie anzeigen |
+| `--performance` | Performance-Vergleich aller Coins (Rangliste) |
 | `--buy COIN --amount X --eur Y` | Neuen Kauf hinzufügen |
-| `--buttons` | Verfügbare Telegram-Buttons anzeigen |
 
 ### Beispiele
 
 ```bash
-# Status prüfen
+# Status prüfen (zeigt BTC, XRP, ETH, SOL)
 python3 skills/bison-tracker/scripts/bison_tracker.py --status
 
-# Neuen Kauf hinzufügen (mit Durchschnittskosten)
-python3 skills/bison-tracker/scripts/bison_tracker.py --buy BTC --amount 0.001 --eur 65
+# Neuen Kauf hinzufügen (mit automatischer Durchschnittskosten-Berechnung)
+python3 skills/bison-tracker/scripts/bison_tracker.py --buy SOL --amount 0.7 --eur 50
+
+# Performance-Vergleich (zeigt Rangliste aller Coins)
+python3 skills/bison-tracker/scripts/bison_tracker.py --performance
 
 # Trade-Historie
 python3 skills/bison-tracker/scripts/bison_tracker.py --history
-
-# Performance-Vergleich
-python3 skills/bison-tracker/scripts/bison_tracker.py --performance
 ```
 
-## Telegram Inline-Buttons
-
-Nach jedem Update erscheinen Buttons:
-```
-[🔄 Aktualisieren] [📈 Wochenbericht] [📜 Historie]
-[🏆 Performance] [💰 Status]
-```
-
-## Automatische Cron-Jobs
+## Automatische Updates (Cron)
 
 | Job | Zeit | Aktion |
 |-----|------|--------|
-| Daily Update | 12:30 täglich | Status + Snapshot + Alerts |
-| Weekly Report | Sonntag 20:00 | 7-Tage-Vergleich |
+| Stündlicher Check | Jede Stunde :00 | Prüft auf ±15% Bewegung, Stop-Loss -20%, Take-Profit +25% |
+| Daily Update | 12:30 täglich | Vollständiger Status + Snapshot |
+| Weekly Report | Sonntag 20:00 | 7-Tage Vergleich aller Coins |
+
+## Alert-Logik
+
+| Bedingung | Benachrichtigung |
+|-----------|------------------|
+| 🟢 Stündlich **+15%** | "SOL stündliche Bewegung: +16.2%" |
+| 🔴 Stündlich **-15%** | "ETH stündliche Bewegung: -17.8%" |
+| 🚨 **-20%** Gesamt | "STOP-LOSS: BTC bei -20.3%!" |
+| 🎯 **+25%** Gesamt | "TAKE-PROFIT: XRP bei +26.1%!" |
+| ✅ Normal (±14%) | **Keine Nachricht** (kein Spam) |
 
 ## Datenbank-Struktur
 
+**Pfad:** `data/bison_portfolio.db`
+
 **Tabellen:**
-- `holdings` - Aktuelle Bestände mit Durchschnittskosten
-- `trades` - Alle Käufe/Verkäufe
-- `daily_snapshots` - Tägliche Wertaufzeichnungen
-- `price_alerts` - Ausgelöste Alerts
+- `holdings` - Aktuelle Bestände mit Durchschnittskosten für BTC, XRP, ETH, SOL
+- `trades` - Alle Käufe/Verkäufe mit Zeitstempel
+- `daily_snapshots` - Tägliche Wertaufzeichnungen pro Coin
+- `hourly_prices` - Stündliche Preise für Bewegungs-Erkennung
 
-## Stop-Loss & Alerts
+## Telegram Integration
 
-- **-20% Verlust**: 🚨 Warnung wird angezeigt
-- **Performance-Vergleich**: Zeigt besten/schlechtesten Coin
-- **7-Tage-Vergleich**: Im Wochenbericht automatisch
+Alle Reports können automatisch in ein Telegram-Topic gepostet werden (z.B. Topic 1597 für Crypto-Updates).
+
+## Konfiguration
+
+### Umgebungsvariablen
+
+Keine API-Keys nötig – CoinGecko ist kostenlos und benötigt keine Authentifizierung.
+
+### Anpassbare Schwellen (im Script)
+
+```python
+STOP_LOSS_PERCENT = -20      # Warnung bei -20% Verlust
+HOURLY_ALERT_PERCENT = 15    # Alert bei ±15% stündlich
+TAKE_PROFIT_PERCENT = 25     # Alert bei +25% Gewinn
+```
+
+## Anforderungen
+
+- Python 3.8+
+- Internet-Verbindung (CoinGecko API)
+- SQLite (in Python enthalten)
+
+## CoinGecko API
+
+**URL:** https://www.coingecko.com/en/api
+- Kostenlos, keine Authentifizierung
+- Rate Limit: ~10-30 Calls/Minute
+- Unterstützt: BTC, ETH, XRP, SOL und 13.000+ weitere Coins
+
+## Fehlerbehebung
+
+| Problem | Lösung |
+|---------|--------|
+| "Coin nicht gefunden" | Prüfe Symbol (BTC, ETH, XRP, SOL) |
+| "Keine Kurse" | Internetverbindung prüfen |
+| Falsche Berechnungen | Datenbank zurücksetzen mit `--init` |
 
 ---
-*Skill erstellt für Eure Lordschaft* 🎩
+*Verfügbar unter MIT-Lizenz*

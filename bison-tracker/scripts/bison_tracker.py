@@ -92,7 +92,7 @@ def init_db():
 def get_crypto_prices():
     """Holt aktuelle Kurse von CoinGecko"""
     try:
-        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ripple&vs_currencies=usd,eur&include_24hr_change=true"
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ripple,ethereum,solana&vs_currencies=usd,eur&include_24hr_change=true"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         
         with urllib.request.urlopen(req, timeout=15) as response:
@@ -153,6 +153,12 @@ def add_initial_holdings():
     
     # BTC: 100€ / 0.00157188 BTC
     add_trade('BTC', 0.00157188, 100.0)
+    
+    # ETH: 70€ (50€ gekauft + 20€ geschenkt) / 0.03473428 ETH
+    add_trade('ETH', 0.03473428, 70.0)
+    
+    # SOL: 50€ / 0.68268873 SOL
+    add_trade('SOL', 0.68268873, 50.0)
 
 
 def get_portfolio_status(check_alerts=True):
@@ -182,7 +188,14 @@ def get_portfolio_status(check_alerts=True):
     print("─" * 65)
     
     for coin, amount, invested, avg_price, first_buy, last_buy in holdings:
-        coin_id = 'bitcoin' if coin == 'BTC' else 'ripple'
+        # Coin ID Mapping für CoinGecko
+        coin_map = {
+            'BTC': 'bitcoin',
+            'XRP': 'ripple', 
+            'ETH': 'ethereum',
+            'SOL': 'solana'
+        }
+        coin_id = coin_map.get(coin, coin.lower())
         price_data = prices.get(coin_id, {})
         
         current_price_eur = price_data.get('eur', 0)
@@ -323,8 +336,15 @@ def get_performance_comparison():
     print("─" * 65)
     
     performances = []
+    coin_map = {
+        'BTC': 'bitcoin',
+        'XRP': 'ripple',
+        'ETH': 'ethereum',
+        'SOL': 'solana'
+    }
+    
     for coin, invested, avg_price in holdings:
-        coin_id = 'bitcoin' if coin == 'BTC' else 'ripple'
+        coin_id = coin_map.get(coin, coin.lower())
         current_price = prices.get(coin_id, {}).get('eur', 0)
         performance = ((current_price - avg_price) / avg_price) * 100 if avg_price > 0 else 0
         performances.append((coin, performance, current_price, avg_price))
@@ -333,7 +353,7 @@ def get_performance_comparison():
     performances.sort(key=lambda x: x[1], reverse=True)
     
     for rank, (coin, perf, current, avg) in enumerate(performances, 1):
-        medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else "  "
+        medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else "4️⃣"
         emoji = "🟢" if perf >= 0 else "🔴"
         print(f"\n   {medal} #{rank} {coin}")
         print(f"      {emoji} Performance: {perf:+.2f}%")
@@ -508,7 +528,14 @@ def check_hourly_alerts():
     alerts = []
     
     for coin, amount, invested, avg_price in holdings:
-        coin_id = 'bitcoin' if coin == 'BTC' else 'ripple'
+        # Coin ID Mapping für CoinGecko
+        coin_map = {
+            'BTC': 'bitcoin',
+            'XRP': 'ripple',
+            'ETH': 'ethereum', 
+            'SOL': 'solana'
+        }
+        coin_id = coin_map.get(coin, coin.lower())
         current_price = prices.get(coin_id, {}).get('eur', 0)
         
         # Speichere aktuellen Preis
