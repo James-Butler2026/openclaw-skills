@@ -52,6 +52,7 @@ python3 skills/expense-tracker/scripts/expense_tracker.py --list
 | Amazon, Zalando, Media Markt... | Shopping |
 | Schule, Bücher, Lernen... | Schule |
 | Apotheke, Arzt, Sport... | Gesundheit |
+| **Crypto, Bitcoin, ETH, Aktie...** | **Anlagevermögen** |
 
 ### Beispiele
 ```
@@ -63,6 +64,9 @@ python3 skills/expense-tracker/scripts/expense_tracker.py --list
 
 "Bei Amazon 45 Euro für Bücher"
 → 45.00€, Shopping, Amazon
+
+"300 Euro in Bitcoin investiert"
+→ 300.00€, Anlagevermögen, Bitcoin
 ```
 
 ## In Python nutzen
@@ -105,4 +109,5 @@ expenses:
 ```
 
 ---
-*Skill erstellt für Eure Lordschaft* 🎩
+
+*Verfügbar unter MIT-Lizenz*

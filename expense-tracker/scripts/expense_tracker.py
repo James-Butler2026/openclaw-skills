@@ -25,6 +25,7 @@ CATEGORY_KEYWORDS = {
     "Shopping": ["amazon", "ebay", "zalando", "h&m", "mediamarkt", "saturn", "ikea"],
     "Schule": ["schule", "bücher", "unterricht", "kurs", "lernen", "prüfung"],
     "Gesundheit": ["apotheke", "arzt", "krankenkasse", "versicherung", "sport"],
+    "Anlagevermögen": ["crypto", "krypto", "bitcoin", "btc", "ethereum", "eth", "solana", "sol", "ripple", "xrp", "börse", "invest", "aktie", "fond"],
     "Sonstiges": []
 }
 
