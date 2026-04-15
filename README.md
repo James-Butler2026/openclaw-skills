@@ -1,27 +1,27 @@
-# 🎩 OpenClaw Skills Collection
+# OpenClaw Skills Collection
 
-Eine Sammlung nützlicher Skills für OpenClaw – entwickelt von James, dem ergebensten Butler.
+Eine Sammlung nützlicher Skills für OpenClaw – vollständig lokal nutzbar, dokumentiert und API-sicher konfiguriert.
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **16 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zur Ausgabenverfolgung. Alle Skills sind lokal nutzbar, dokumentiert und API-sicher konfiguriert.
+Diese Sammlung enthält **17 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
-| [bison-tracker](#bison-tracker) | Krypto-Portfolio-Tracking für BTC/XRP mit Gewinn/Verlust-Berechnung | Finanzen |
+| [bison-tracker](#bison-tracker) | Krypto-Portfolio-Tracking für BTC/XRP | Finanzen |
 | [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe | Produktivität |
 | [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
-| [email-sender](#email-sender) | E-Mails via SMTP senden (Web.de, Gmail, etc.) | Kommunikation |
+| [email-sender](#email-sender) | E-Mails via SMTP senden | Kommunikation |
 | [expense-tracker](#expense-tracker) | Ausgaben-Tracking per Sprache mit Reports | Finanzen |
 | [github-manager](#github-manager) | Skills zu GitHub veröffentlichen | Entwicklung |
 | [hermes-tracking](#hermes-tracking) | Hermes Paketverfolgung mit Browser-Automation | Tracking |
 | [image-generation](#image-generation) | Kostenlose Bildgenerierung via Pollinations.ai | Bild |
-| [leonardo-image-gen](#leonardo-image-gen) | Bildgenerierung mit Leonardo AI (mit Pollinations-Fallback) | Bild |
-| [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai (Claude Opus 4-6) | Entwicklung |
+| [leonardo-image-gen](#leonardo-image-gen) | Bildgenerierung mit Leonardo AI | Bild |
+| [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai | Entwicklung |
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
 | [newsletter-monitor](#newsletter-monitor) | KI-gestützte Fleisch-Angebotsüberwachung | Monitoring |
-| [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal, Thorsten-Stimme) | Audio |
+| [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
 | [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
 | [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
@@ -70,10 +70,28 @@ python3 scripts/transcribe.py audio.mp3 --language de
 
 ---
 
+### bison-tracker
+**Krypto-Portfolio-Tracking für BTC/XRP**
+
+- Echtzeit-Kurse via CoinGecko API
+- Gewinn/Verlust-Berechnung
+- Stop-Loss bei -20%, Take-Profit bei +25%
+- Performance-Vergleich
+- SQLite-basiert
+
+```bash
+python3 scripts/bison_tracker.py --init
+python3 scripts/bison_tracker.py --status
+```
+
+→ [Details ansehen](bison-tracker/README.md)
+
+---
+
 ### calendar
 **Lokaler Kalender mit natürlicher Spracheingabe**
 
-- Natürliche Sprache: *"Termin morgen 14 Uhr mit Dr. Kaufmann"*
+- Natürliche Sprache: *"Termin morgen 14 Uhr"*
 - Geburtstage mit jährlichen Erinnerungen
 - Automatische Cron-Erinnerungen
 - Wiederholungen: täglich, wöchentlich, monatlich, jährlich
@@ -82,7 +100,6 @@ python3 scripts/transcribe.py audio.mp3 --language de
 ```bash
 python3 scripts/calendar_cli.py "Termin morgen 14 Uhr mit Dr. Kaufmann"
 python3 scripts/calendar_cli.py --today
-python3 scripts/calendar_cli.py --sync-crons
 ```
 
 → [Details ansehen](calendar/README.md)
@@ -126,8 +143,8 @@ python3 scripts/send_email.py --to empfaenger@example.com \
 **Ausgaben-Tracking per Sprachnachricht**
 
 - Spracheingabe: *"Habe 12,50€ bei Rewe ausgegeben"*
-- Automatische Kategorie-Erkennung (Lebensmittel, Transport, etc.)
-- Händler-Tracking (Rewe vs Lidl vs Aldi)
+- Automatische Kategorie-Erkennung
+- Händler-Tracking
 - Wöchentliche & monatliche Reports
 - SQLite-basiert, keine Cloud
 
@@ -337,6 +354,7 @@ Siehe die einzelnen Skill-READMEs für die benötigten Variablen.
 ├── .env                          # API-Keys und Konfiguration
 ├── skills/
 │   ├── audio-transcription/
+│   ├── bison-tracker/
 │   ├── dhl-tracking/
 │   ├── ...
 │   └── wordpress-manager/
@@ -348,14 +366,10 @@ Siehe die einzelnen Skill-READMEs für die benötigten Variablen.
 
 ## 🤝 Mitwirken
 
-Skills werden fortlaufend erweitert. Vorschläge sind willkommen!
-
-**Kontakt:** James-Butler2026 auf GitHub
+Skills werden fortlaufend erweitert. Vorschläge und Pull Requests sind willkommen!
 
 ---
 
 ## 📜 Lizenz
 
 Alle Skills sind unter MIT-Lizenz veröffentlicht.
-
-*Erstellt mit 🎩 von James, dem ergebensten Butler.*
