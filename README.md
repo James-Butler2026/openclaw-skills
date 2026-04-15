@@ -9,7 +9,7 @@ Diese Sammlung enthält **17 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
-| [bison-tracker](#bison-tracker) | Krypto-Portfolio-Tracking für BTC, ETH, SOL, XRP | Finanzen |
+| [crypto-tracker](#crypto-tracker) | Krypto-Portfolio-Tracking für BTC, ETH, SOL, XRP | Finanzen |
 | [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe | Produktivität |
 | [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
 | [email-sender](#email-sender) | E-Mails via SMTP senden | Kommunikation |
@@ -70,7 +70,7 @@ python3 scripts/transcribe.py audio.mp3 --language de
 
 ---
 
-### bison-tracker
+### crypto-tracker
 **Krypto-Portfolio-Tracking für BTC/XRP**
 
 - Echtzeit-Kurse via CoinGecko API
@@ -84,7 +84,7 @@ python3 scripts/bison_tracker.py --init
 python3 scripts/bison_tracker.py --status
 ```
 
-→ [Details ansehen](bison-tracker/README.md)
+→ [Details ansehen](crypto-tracker/README.md)
 
 ---
 
@@ -354,7 +354,7 @@ Siehe die einzelnen Skill-READMEs für die benötigten Variablen.
 ├── .env                          # API-Keys und Konfiguration
 ├── skills/
 │   ├── audio-transcription/
-│   ├── bison-tracker/
+│   ├── crypto-tracker/
 │   ├── dhl-tracking/
 │   ├── ...
 │   └── wordpress-manager/

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Bison Portfolio Tracker - Erweiterte Version
+Crypto Portfolio Tracker - Erweiterte Version
 Trackt BTC/XRP Investments mit Gewinn/Verlust-Berechnung, Stop-Loss, Performance-Vergleich, Trade-Historie, Durchschnittskosten
 """
 
@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import sys
 
-DB_PATH = Path(__file__).parent.parent.parent.parent / "data" / "bison_portfolio.db"
+DB_PATH = Path(__file__).parent.parent.parent.parent / "data" / "crypto_portfolio.db"
 DATA_DIR = DB_PATH.parent
 
 # Konfiguration
@@ -578,7 +578,7 @@ Oder Befehle: /crypto_status /crypto_weekly /crypto_history
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Bison Portfolio Tracker')
+    parser = argparse.ArgumentParser(description='Crypto Portfolio Tracker')
     parser.add_argument('--init', action='store_true', help='Datenbank initialisieren')
     parser.add_argument('--status', action='store_true', help='Aktuellen Status anzeigen')
     parser.add_argument('--daily', action='store_true', help='Tägliches Update mit Snapshot')

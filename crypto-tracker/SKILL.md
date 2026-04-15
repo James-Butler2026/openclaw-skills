@@ -1,11 +1,11 @@
 ---
-name: bison-tracker
-description: Professioneller Portfolio-Tracker für Krypto-Investments (BTC, XRP, ETH, SOL). SQLite-basiert mit Gewinn/Verlust-Berechnung, Stop-Loss/Take-Profit Alerts, Durchschnittskosten, Performance-Vergleich und automatischen Reports.
+name: crypto-tracker
+description: Professioneller Portfolio-Tracker für Krypto-Investments (BTC, ETH, SOL, XRP). SQLite-basiert mit Gewinn/Verlust-Berechnung, Stop-Loss/Take-Profit Alerts, Durchschnittskosten, Performance-Vergleich und automatischen Reports.
 ---
 
-# Bison Portfolio Tracker
+# Crypto Portfolio Tracker
 
-Ein professionelles Portfolio-Tracking-Tool für Krypto-Investments über die Bison-App und andere Börsen. Trackt Bitcoin (BTC), Ripple (XRP), Ethereum (ETH) und Solana (SOL) mit Echtzeit-Kursen und intelligenten Alerts.
+Ein professionelles Portfolio-Tracking-Tool für Krypto-Investments. Trackt Bitcoin (BTC), Ethereum (ETH), Solana (SOL) und Ripple (XRP) mit Echtzeit-Kursen und intelligenten Alerts.
 
 ## Features
 
@@ -25,15 +25,15 @@ Ein professionelles Portfolio-Tracking-Tool für Krypto-Investments über die Bi
 | Symbol | Name | CoinGecko ID |
 |--------|------|--------------|
 | BTC | Bitcoin | `bitcoin` |
-| XRP | Ripple | `ripple` |
 | ETH | Ethereum | `ethereum` |
 | SOL | Solana | `solana` |
+| XRP | Ripple | `ripple` |
 
 ## Schnellstart
 
 ### Initialisierung
 ```bash
-python3 skills/bison-tracker/scripts/bison_tracker.py --init
+python3 scripts/crypto_tracker.py --init
 ```
 
 ### Verfügbare Befehle
@@ -51,17 +51,17 @@ python3 skills/bison-tracker/scripts/bison_tracker.py --init
 ### Beispiele
 
 ```bash
-# Status prüfen (zeigt BTC, XRP, ETH, SOL)
-python3 skills/bison-tracker/scripts/bison_tracker.py --status
+# Status prüfen (zeigt BTC, ETH, SOL, XRP)
+python3 scripts/crypto_tracker.py --status
 
 # Neuen Kauf hinzufügen (mit automatischer Durchschnittskosten-Berechnung)
-python3 skills/bison-tracker/scripts/bison_tracker.py --buy SOL --amount 0.7 --eur 50
+python3 scripts/crypto_tracker.py --buy SOL --amount 0.7 --eur 50
 
 # Performance-Vergleich (zeigt Rangliste aller Coins)
-python3 skills/bison-tracker/scripts/bison_tracker.py --performance
+python3 scripts/crypto_tracker.py --performance
 
 # Trade-Historie
-python3 skills/bison-tracker/scripts/bison_tracker.py --history
+python3 scripts/crypto_tracker.py --history
 ```
 
 ## Automatische Updates (Cron)
@@ -84,17 +84,17 @@ python3 skills/bison-tracker/scripts/bison_tracker.py --history
 
 ## Datenbank-Struktur
 
-**Pfad:** `data/bison_portfolio.db`
+**Pfad:** `data/crypto_portfolio.db`
 
 **Tabellen:**
-- `holdings` - Aktuelle Bestände mit Durchschnittskosten für BTC, XRP, ETH, SOL
+- `holdings` - Aktuelle Bestände mit Durchschnittskosten für BTC, ETH, SOL, XRP
 - `trades` - Alle Käufe/Verkäufe mit Zeitstempel
 - `daily_snapshots` - Tägliche Wertaufzeichnungen pro Coin
 - `hourly_prices` - Stündliche Preise für Bewegungs-Erkennung
 
 ## Telegram Integration
 
-Alle Reports können automatisch in ein Telegram-Topic gepostet werden (z.B. Topic 1597 für Crypto-Updates).
+Alle Reports können automatisch in ein Telegram-Topic gepostet werden.
 
 ## Konfiguration
 
@@ -105,9 +105,9 @@ Keine API-Keys nötig – CoinGecko ist kostenlos und benötigt keine Authentifi
 ### Anpassbare Schwellen (im Script)
 
 ```python
-STOP_LOSS_PERCENT = -20      # Warnung bei -20% Verlust
-HOURLY_ALERT_PERCENT = 15    # Alert bei ±15% stündlich
-TAKE_PROFIT_PERCENT = 25     # Alert bei +25% Gewinn
+STOP_LOSS_PERCENT = -20      # Warnung bei -20%
+HOURLY_ALERT_PERCENT = 15    # Alert bei ±15%
+TAKE_PROFIT_PERCENT = 25     # Alert bei +25%
 ```
 
 ## Anforderungen
@@ -121,13 +121,13 @@ TAKE_PROFIT_PERCENT = 25     # Alert bei +25% Gewinn
 **URL:** https://www.coingecko.com/en/api
 - Kostenlos, keine Authentifizierung
 - Rate Limit: ~10-30 Calls/Minute
-- Unterstützt: BTC, ETH, XRP, SOL und 13.000+ weitere Coins
+- Unterstützt: BTC, ETH, SOL, XRP und 13.000+ weitere Coins
 
 ## Fehlerbehebung
 
 | Problem | Lösung |
 |---------|--------|
-| "Coin nicht gefunden" | Prüfe Symbol (BTC, ETH, XRP, SOL) |
+| "Coin nicht gefunden" | Prüfe Symbol (BTC, ETH, SOL, XRP) |
 | "Keine Kurse" | Internetverbindung prüfen |
 | Falsche Berechnungen | Datenbank zurücksetzen mit `--init` |
 

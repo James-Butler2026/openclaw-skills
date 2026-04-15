@@ -1,6 +1,6 @@
-# Bison Tracker
+# Crypto Tracker
 
-Professioneller Krypto-Portfolio-Tracker für Bitcoin (BTC), Ripple (XRP), Ethereum (ETH) und Solana (SOL).
+Professioneller Krypto-Portfolio-Tracker für Bitcoin (BTC), Ethereum (ETH), Solana (SOL) und Ripple (XRP).
 
 ## Features
 
@@ -17,21 +17,21 @@ Professioneller Krypto-Portfolio-Tracker für Bitcoin (BTC), Ripple (XRP), Ether
 | Coin | Symbol | Typ |
 |------|--------|-----|
 | Bitcoin | BTC | Store of Value |
-| Ripple | XRP | Banken/Transfers |
 | Ethereum | ETH | Smart Contracts |
 | Solana | SOL | High-Performance |
+| Ripple | XRP | Banken/Transfers |
 
 ## Schnellstart
 
 ```bash
 # Initialisieren
-python3 scripts/bison_tracker.py --init
+python3 scripts/crypto_tracker.py --init
 
 # Status prüfen
-python3 scripts/bison_tracker.py --status
+python3 scripts/crypto_tracker.py --status
 
 # Kauf hinzufügen
-python3 scripts/bison_tracker.py --buy ETH --amount 0.5 --eur 100
+python3 scripts/crypto_tracker.py --buy ETH --amount 0.5 --eur 100
 ```
 
 ## Automatische Updates
