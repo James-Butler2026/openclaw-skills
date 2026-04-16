@@ -1,4 +1,4 @@
-# Calendar Skill
+# calendar
 
 # Calendar Skill - James Calendar
 
@@ -163,6 +163,27 @@ Die Datenbank liegt unter:
 ```
 
 Wird automatisch mit dem täglichen Git+SQLite Backup gesichert.
+
+## Automatische Eintragung durch James
+
+**WICHTIGE REGEL:** Wenn Eure Lordschaft folgende Begriffe verwendet, trage ich automatisch in den Kalender ein:
+
+| Begriff | Beispiel | Aktion |
+|---------|----------|--------|
+| **Termin** | "Termin bei Dr. Riedl Dienstag 17 Uhr" | Automatisch eintragen mit Erinnerung |
+| **Geburtstag** | "Geburtstag Sepp am 31.03." | Automatisch eintragen (jährlich wiederholend) |
+| **Ereignis** | "Ereignis: Prüfung am 15.05." | Automatisch eintragen |
+| **Erinnerung** | "Erinnerung: Rechnung zahlen morgen" | Automatisch eintragen |
+
+**Standard-Einstellungen:**
+- Erinnerung: 8 Stunden vorher (außer anders gewünscht)
+- Geburtstage: Jährlich wiederholend
+- Ausgabe: Bestätigung der Eintragung
+
+**Täglicher Überblick:**
+- 07:45 Uhr: Prüfung auf Termine des Tages
+- Post in Topic 12 bei Terminen
+- Absolute Stille bei leeren Tagen
 
 ---
 *Erstellt für Eure Lordschaft* 🎩
