@@ -18,8 +18,8 @@ Verwaltet GitHub-Repositories und synchronisiert Skills automatisch. Perfekt fü
 ## Voraussetzungen
 
 ### 1. GitHub Account
-- Account erstellen: https://github.com/join
-- E-Mail bestätigen (Code wurde an j_butler@web.de gesendet)
+- Account erstellen: https://github.comoin
+- E-Mail bestätigen
 
 ### 2. Personal Access Token (PAT)
 
@@ -36,7 +36,7 @@ Erstelle einen Token unter: https://github.com/settings/tokens
 # In ~/.openclaw/workspace/.env eintragen:
 GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 GITHUB_USERNAME=dein_username
-GITHUB_EMAIL=j_butler@web.de
+GITHUB_EMAIL=deine_email@example.com
 ```
 
 ## Schnellstart
