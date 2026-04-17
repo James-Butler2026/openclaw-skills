@@ -22,7 +22,6 @@ Diese Sammlung enthält **18 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
 | [newsletter-monitor](#newsletter-monitor) | KI-gestützte Fleisch-Angebotsüberwachung | Monitoring |
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
-| [elevenlabs-tts](#elevenlabs-tts) | Premium TTS mit Drachenlord Voice | Audio |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
 | [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
 | [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
@@ -120,6 +119,23 @@ python3 scripts/dhl_tracker.py 00340434886241560288
 ```
 
 → [Details ansehen](dhl-tracking/README.md)
+
+---
+
+### elevenlabs-tts
+**Premium Text-to-Speech mit Drachenlord Voice**
+
+- Custom cloned voice (Drachenlord)
+- ElevenLabs API - 70+ Sprachen
+- Primary TTS für OpenClaw
+- Piper als Fallback bei API-Ausfall
+- Deutsche Sprache optimal unterstützt
+
+```bash
+python3 scripts/elevenlabs_tts.py speak "Hallo Kosta, ich bin der Drachenlord!"
+```
+
+→ [Details ansehen](elevenlabs-tts/README.md)
 
 ---
 
