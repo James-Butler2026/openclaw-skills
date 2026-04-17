@@ -29,7 +29,7 @@ def load_config():
     
     token = os.getenv('GITHUB_TOKEN')
     username = os.getenv('GITHUB_USERNAME')
-    email = os.getenv('GITHUB_EMAIL', 'j_butler@web.de')
+    email = os.getenv('GITHUB_EMAIL', 'user@example.com')  # PLATZHALTER - bitte in .env setzen!
     
     if not token:
         raise ValueError(
@@ -165,7 +165,7 @@ def publish_skill(skill_name, repo_name, description="", config=None):
         # Git add, commit, push
         print(f"   🐙 Committe und pushe...")
         subprocess.run(['git', '-C', str(temp_clone), 'config', 'user.email', config['email']], check=True, capture_output=True)
-        subprocess.run(['git', '-C', str(temp_clone), 'config', 'user.name', 'James Butler'], check=True, capture_output=True)
+        subprocess.run(['git', '-C', str(temp_clone), 'config', 'user.name', 'OpenClaw Bot'], check=True, capture_output=True)
         subprocess.run(['git', '-C', str(temp_clone), 'add', f"{skill_name}/"], check=True, capture_output=True)
         
         # Prüfe ob es etwas zu commiten gibt
