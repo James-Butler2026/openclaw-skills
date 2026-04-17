@@ -4,7 +4,7 @@ Eine Sammlung nützlicher Skills für OpenClaw – vollständig lokal nutzbar, d
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **17 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
+Diese Sammlung enthält **18 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
@@ -22,6 +22,7 @@ Diese Sammlung enthält **17 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
 | [newsletter-monitor](#newsletter-monitor) | KI-gestützte Fleisch-Angebotsüberwachung | Monitoring |
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
+| [elevenlabs-tts](#elevenlabs-tts) | Premium TTS mit Drachenlord Voice | Audio |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
 | [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
 | [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
