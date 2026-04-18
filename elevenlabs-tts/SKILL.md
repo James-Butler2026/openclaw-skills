@@ -7,7 +7,7 @@ description: Generate high-quality Text-to-Speech audio using ElevenLabs API wit
 
 **Status:** ✅ Active since 17.04.2026
 
-Primary Text-to-Speech solution using ElevenLabs API with custom Drachenlord voice clone.
+Primäre TTS-Lösung für OpenClaw mit individuell geklonten Stimmen.
 
 ## Quick Start
 
@@ -27,7 +27,7 @@ ELEVENLABS_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 **Active Voice:**
-- **voice_id:** `NkhHdPbLqYzmdIaSUuIy` (Drachenlord clone)
+- **voice_id:** `YOUR_VOICE_ID_HERE` (eigene geklonte Stimme)
 
 ## Models & Credits
 
@@ -87,7 +87,7 @@ python3 scripts/piper_tts_fixed.py "Nachricht"
 
 ## Voice Settings
 
-Drachenlord Voice Settings (Konstantin's Settings):
+Empfohlene Voice Settings:
 ```json
 {
   "stability": 1.0,
