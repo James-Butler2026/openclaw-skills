@@ -48,6 +48,10 @@ python3 scripts/elevenlabs_tts.py speak \
   --model eleven_multilingual_v2
 ```
 
+**NEW RULE (17.04.2026):**
+> When sending voice messages: Report character count + total + duration!
+> Format: `[XXX chars | Total: YYYY | ZZ.Zs]`
+
 ### 2. Send as Telegram Voice Message
 ```python
 # Generate and send
@@ -83,15 +87,27 @@ python3 scripts/piper_tts_fixed.py "Nachricht"
 
 ## Voice Settings
 
-Default settings used:
+Drachenlord Voice Settings (Konstantin's Settings):
 ```json
 {
-  "stability": 0.5,
-  "similarity_boost": 0.75,
-  "style": 0.0,
-  "use_speaker_boost": true
+  "stability": 1.0,
+  "similarity_boost": 0.9,
+  "style": 0.1,
+  "use_speaker_boost": true,
+  "speed": 0.8
 }
 ```
+
+**Warum diese Settings:**
+- `speed: 0.8` - Etwas flotter als vorher (0.7), bessere Verständlichkeit
+- `stability: 1.0` - Maximum! Konsistente Stimme
+- `similarity_boost: 0.9` - Hohe Ähnlichkeit zum Original
+- `style: 0.1` - Wenig Stil-Variation
+- `use_speaker_boost: true` - Klarere Aussprache
+
+**Pausen:**
+- Komma: 0.4s
+- Punkt: 0.6s
 
 ## Files
 
@@ -108,6 +124,7 @@ Default settings used:
 
 ## Changelog
 
+- **18.04.2026:** Speed erhöht von 0.7 auf 0.8 für bessere Verständlichkeit
 - **17.04.2026:** Activated as primary TTS, Drachenlord voice configured
 - **17.04.2026:** Piper demoted to fallback-only status
 - **17.04.2026:** gTTS officially forbidden
