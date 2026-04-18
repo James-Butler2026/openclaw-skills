@@ -80,24 +80,31 @@ def list_models(api_key):
         return {}
 
 
-def generate_speech(api_key, text, voice_id=None, model=None, output_path=None):
+def generate_speech(api_key, text, voice_id=None, model=None, output_path=None, voice_settings=None):
     """Text zu Sprache umwandeln"""
     
     voice_id = voice_id or DEFAULT_VOICE
     model = model or DEFAULT_MODEL
     output_path = output_path or DEFAULT_OUTPUT
     
+    # Drachenlord Voice Settings - Konstantin's Settings
+    # SPEED: 1.0 = normal, 1.2 = schnell, 0.7 = langsam
+    # User request 18.04.2026: speed erhöht von 0.7 auf 1.1 (flotter)
+    if voice_settings is None:
+        voice_settings = {
+            "stability": 1.0,              # Maximum! Konsistente Stimme
+            "similarity_boost": 0.9,       # Hohe Ähnlichkeit
+            "style": 0.1,                # Wenig Stil-Variation
+            "use_speaker_boost": True,     # Klarere Aussprache
+            "speed": 0.8                   # Etwas flotter - User-Request 18.04.2026
+        }
+    
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
     
     payload = {
         "text": text,
         "model_id": model,
-        "voice_settings": {
-            "stability": 0.5,
-            "similarity_boost": 0.75,
-            "style": 0.0,
-            "use_speaker_boost": True
-        }
+        "voice_settings": voice_settings
     }
     
     headers = {
