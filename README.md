@@ -8,7 +8,9 @@ Diese Sammlung enthält **17 praxisnahe Skills** für OpenClaw – von Audio-Tra
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
+| [ap1-training-tracker](#ap1-training-tracker) | IHK Fiche-informatiker AP1 Training mit 280 Fragen | Lernen |
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
+| [backup-manager](#backup-manager) | Automatische Workspace-Backups mit Git | Sicherung |
 | [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe | Produktivität |
 | [crypto-tracker](#crypto-tracker) | Krypto-Portfolio-Tracking für BTC, ETH, SOL, XRP | Finanzen |
 | [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
@@ -20,6 +22,7 @@ Diese Sammlung enthält **17 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [image-generation](#image-generation) | Kostenlose Bildgenerierung via Pollinations.ai | Bild |
 | [leonardo-image-gen](#leonardo-image-gen) | Bildgenerierung mit Leonardo AI | Bild |
 | [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai | Entwicklung |
+| [meme-architect](#meme-architect) | Meme-Generierung mit imgflip API | Spaß |
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
 | [newsletter-monitor](#newsletter-monitor) | KI-gestützte Fleisch-Angebotsüberwachung | Monitoring |
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
@@ -55,6 +58,24 @@ Die meisten Skills benötigen:
 
 ## 📦 Skills im Detail
 
+### ap1-training-tracker
+**IHK Fachinformatiker AP1 Training**
+
+- 280 Fragen aus dem IHK-Prüfungsstoff
+- 50 subnetting-spezifische Fragen
+- Interaktives Training mit Feedback
+- Automatische Statistiken und Fortschrittsanzeige
+- SQLite-basierte Datenbank
+
+```bash
+python3 scripts/ap1_training.py
+python3 scripts/ap1_tracker.py --daily
+```
+
+→ [Details ansehen](ap1-training-tracker/README.md)
+
+---
+
 ### audio-transcription
 **Audio zu Text Transkription mit faster-whisper**
 
@@ -86,6 +107,25 @@ python3 scripts/bison_tracker.py --status
 ```
 
 → [Details ansehen](crypto-tracker/README.md)
+
+---
+
+### backup-manager
+**Automatisches Workspace-Backup**
+
+- Automatische Backups in definierten Intervallen
+- Git-basierte Versionskontrolle
+- Ausschluss von sensiblen Daten (memory, .env, etc.)
+- SQLite-Datenbank-Backups
+- Einfaches Restore möglich
+
+```bash
+python3 scripts/backup_manager.py --init
+python3 scripts/backup_manager.py --backup
+python3 scripts/backup_manager.py --restore
+```
+
+→ [Details ansehen](backup-manager/README.md)
 
 ---
 
@@ -235,6 +275,23 @@ python3 scripts/mammouth_coder.py "Erstelle eine Python-Klasse für..."
 ```
 
 → [Details ansehen](mammouth-coding/README.md)
+
+---
+
+### meme-architect
+**Meme-Generierung mit imgflip API**
+
+- Automatische Meme-Erstellung aus Kontext
+- Unterstützung für imgflip Meme-Templates
+- Emotionserkennung für passende Memes
+- Text-Generierung basierend auf Vorlagen
+- Einfache CLI-Nutzung
+
+```bash
+python3 scripts/meme_architect.py "lustiger Moment"
+```
+
+→ [Details ansehen](meme-architect/README.md)
 
 ---
 
