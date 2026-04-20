@@ -1,3 +1,5 @@
+# ap1-training-tracker
+
 ---
 name: ap1-training-tracker
 description: IHK Fachinformatiker AP1 Training-Tracker mit 280 Fragen in SQLite-Datenbank. 50 Subnetting-Fragen, interaktives Training, automatische Statistiken. Der Kollege muss nur den Skill-Ordner in sein OpenClaw Workspace kopieren und das Script ausführen.
