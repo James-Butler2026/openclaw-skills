@@ -1,0 +1,48 @@
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# OpenClaw workspace files
+memory/
+backup/
+data/
+*.db
+*.db-journal
+
+# Self-improving and personal files
+self-improving/
+~/self-improving/
+.corrections.md
+
+# Logs
+*.log
+logs/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
+/tmp/
+
+# Archives (if not part of skill)
+*.tar.gz
+*.zip
+!*.skill.tar.gz
