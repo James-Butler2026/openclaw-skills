@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 AP1 Training - IHK Fachinformatiker Lern-Tracker
-SQLite-Version mit externer Datenbank
-======================================
+Optimierte Version mit Shared Database Module
+==============================================
 Usage:
     python3 ap1_training.py --daily         # 3 zufällige Fragen
     python3 ap1_training.py --save <id> <ans> <correct> <cat>  # Antwort speichern
@@ -11,15 +11,22 @@ Usage:
 
 import sys
 import json
-import random
-import sqlite3
 import argparse
 from datetime import datetime, date
-from pathlib import Path
 
-# Pfade
-DB_MAIN = '/home/node/.openclaw/workspace/data/james.db'
-DB_QUESTIONS = '/home/node/.openclaw/workspace/skills/ap1-training-tracker/data/questions.db'
+from shared_db import (
+    init_main_db,
+    get_random_questions_efficient,
+    save_attempt,
+    get_weekly_stats,
+    get_monthly_stats,
+    get_all_time_stats,
+    invalidate_stats_cache,
+    invalidate_question_cache,
+    DB_MAIN,
+    DB_QUESTIONS
+)
+
 TOPIC_ID = "-1003765464477:13"
 
 THEMEN = [
@@ -27,81 +34,8 @@ THEMEN = [
     'IT-Sicherheit', 'Projektmanagement', 'Wirtschaft'
 ]
 
-def init_main_db():
-    """Hauptdatenbank für Versuche und Statistik"""
-    conn = sqlite3.connect(DB_MAIN)
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS learning_attempts (
-        id INTEGER PRIMARY KEY,
-        question_id TEXT,
-        user_answer TEXT,
-        correct INTEGER,
-        timestamp TIMESTAMP,
-        session_date DATE
-    )''')
-    conn.commit()
-    conn.close()
-
-def get_random_questions(count=3):
-    """Zufällige Fragen aus SQLite-DB holen"""
-    conn = sqlite3.connect(DB_QUESTIONS)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    
-    # Zufällige Fragen aus verschiedenen Kategorien
-    cursor.execute('''SELECT * FROM questions 
-                      ORDER BY RANDOM() 
-                      LIMIT ?''', (count,))
-    rows = cursor.fetchall()
-    conn.close()
-    
-    questions = []
-    for row in rows:
-        questions.append({
-            'id': row['id'],
-            'question': row['question'],
-            'options': json.loads(row['options']),
-            'correct': row['correct'],
-            'explanation': row['explanation'],
-            'category': row['category'],
-            'difficulty': row['difficulty']
-        })
-    return questions
-
-def save_attempt(question_id, user_answer, is_correct, category):
-    """Versuch speichern"""
-    today = date.today().isoformat()
-    conn = sqlite3.connect(DB_MAIN)
-    cursor = conn.cursor()
-    cursor.execute('''INSERT INTO learning_attempts 
-                      VALUES (NULL,?,?,?,datetime("now"),?)''',
-        (question_id, user_answer, 1 if is_correct else 0, today))
-    conn.commit()
-    conn.close()
-
-def get_stats():
-    """Statistiken abrufen"""
-    conn = sqlite3.connect(DB_MAIN)
-    cursor = conn.cursor()
-    cursor.execute('''SELECT COUNT(*), SUM(correct) FROM learning_attempts 
-                      WHERE timestamp >= date("now", "-7 days")''')
-    total, correct = cursor.fetchone()
-    
-    cursor.execute('''SELECT COUNT(*) FROM learning_attempts 
-                      WHERE timestamp >= date("now", "-7 days") 
-                      AND correct = 0''')
-    wrong = cursor.fetchone()[0]
-    conn.close()
-    
-    return {
-        'total': total or 0,
-        'correct': correct or 0,
-        'wrong': wrong or 0,
-        'percentage': round((correct/total)*100, 1) if total else 0
-    }
 
 def format_daily_questions(questions):
-    """Fragen formatieren wie im Cron"""
     output = []
     output.append("=" * 50)
     output.append("📚 TÄGLICHE AP1-ÜBUNG")
@@ -118,19 +52,26 @@ def format_daily_questions(questions):
     output.append("Antwortet mit A, B, C oder D!")
     return "\n".join(output)
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--daily', action='store_true', help='3 zufällige Fragen')
     parser.add_argument('--save', nargs=4, help='Antwort speichern: ID ANSWER CORRECT CATEGORY')
     parser.add_argument('--stats', action='store_true', help='Statistiken anzeigen')
+    parser.add_argument('--refresh', action='store_true', help='Cache leeren und neu laden')
     args = parser.parse_args()
     
     init_main_db()
     
+    if args.refresh:
+        invalidate_stats_cache()
+        invalidate_question_cache()
+        print("✅ Cache geleert")
+        return
+    
     if args.daily:
-        questions = get_random_questions(3)
+        questions = get_random_questions_efficient(3)
         print(format_daily_questions(questions))
-        # Auch als JSON für Cron
         print("\n---JSON---")
         print(json.dumps({'questions': questions}, ensure_ascii=False))
     
@@ -140,7 +81,7 @@ def main():
         print(f"✅ Gespeichert: {qid}")
     
     elif args.stats:
-        s = get_stats()
+        s = get_weekly_stats()
         print(f"📊 Wochenstatistik:")
         print(f"   Gesamt: {s['total']}")
         print(f"   ✅ Richtig: {s['correct']}")
@@ -149,6 +90,7 @@ def main():
     
     else:
         parser.print_help()
+
 
 if __name__ == '__main__':
     main()
