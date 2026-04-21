@@ -2,6 +2,13 @@
 """
 Hermes Sendungsverfolgung - Browser-Automation mit OCR
 Extrahiert Status aus Hermes-Tracking-Seite via Playwright + Tesseract
+
+WICHTIG: Dies ist das LOW-LEVEL Tracking-Script für einzelne Pakete.
+Für zentrale Verwaltung mehrerer Pakete (Hermes + DHL) siehe:
+  -> package_manager.py (im selben Ordner)
+  
+Verwendung via Manager:
+  python3 package_manager.py track --json
 """
 
 import argparse
