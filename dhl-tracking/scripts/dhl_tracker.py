@@ -16,6 +16,7 @@ import requests
 # Zentrales Logging importieren
 sys.path.insert(0, '/home/node/.openclaw/workspace/scripts')
 from logger_config import get_logger
+from scripts.db_manager import update_package_status
 
 logger = get_logger(__name__)
 
@@ -161,6 +162,20 @@ def main():
             'relevant_found': relevant
         }
         print(json.dumps(output, indent=2, ensure_ascii=False))
+        
+        # Bei Zustellung: DB aktualisieren
+        if zugestellt:
+            try:
+                update_package_status(
+                    tracking_code,
+                    status='delivered',
+                    delivered=1,
+                    delivered_at=datetime.now().isoformat()
+                )
+                logger.info(f"DHL Paket {tracking_code} als delivered markiert")
+            except Exception as e:
+                logger.error(f"DB-Update fehlgeschlagen: {e}")
+        
         return output
     
     # Text-Output
