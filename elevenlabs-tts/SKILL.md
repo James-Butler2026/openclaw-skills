@@ -1,13 +1,22 @@
 ---
 name: elevenlabs-tts
-description: Generate high-quality Text-to-Speech audio using ElevenLabs API with custom cloned voices. Use when the user wants to create voice messages, text-to-speech output, or audio files from text. Primary TTS solution with Piper TTS as fallback only when ElevenLabs is unavailable or credits exhausted. Supports German and 70+ languages via eleven_multilingual_v2 model.
+description: Generate high-quality Text-to-Speech audio using ElevenLabs API with custom cloned voices. OPTIMIZED with retry logic, logging, and proper argument parsing.
+version: 2.0
 ---
 
-# ElevenLabs TTS
+# ElevenLabs TTS v2.0
 
-**Status:** ✅ Active since 17.04.2026
+**Status:** ✅ Active since 17.04.2026 | **Optimized:** 21.04.2026
 
 Primäre TTS-Lösung für OpenClaw mit individuell geklonten Stimmen.
+
+## ✅ Optimizations in v2.0
+
+- 🔄 **Retry Logic** - Automatic retries on API failures
+- 📝 **Logging** - Proper logging instead of print()
+- ⚙️ **Argparse** - Better CLI with --help and subcommands
+- 🛡️ **Error Handling** - Improved error messages and handling
+- 📊 **Statistics** - Automatic cost tracking
 
 ## Quick Start
 
@@ -17,6 +26,19 @@ python3 scripts/elevenlabs_tts.py speak "Hallo Kosta, ich bin der Drachenlord!"
 
 # Custom voice and model
 python3 scripts/elevenlabs_tts.py speak "Text hier" --voice VOICE_ID --model MODEL_ID
+
+# List available voices
+python3 scripts/elevenlabs_tts.py list
+
+# List German voices
+python3 scripts/elevenlabs_tts.py list-de
+
+# List available models
+python3 scripts/elevenlabs_tts.py models
+
+# Get help
+python3 scripts/elevenlabs_tts.py --help
+python3 scripts/elevenlabs_tts.py speak --help
 ```
 
 ## Configuration
@@ -26,8 +48,18 @@ python3 scripts/elevenlabs_tts.py speak "Text hier" --voice VOICE_ID --model MOD
 ELEVENLABS_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
+**Optional config file:** `config/config.json`
+```json
+{
+  "default_voice": "NkhHdPbLqYzmdIaSUuIy",
+  "default_model": "eleven_multilingual_v2",
+  "retry_attempts": 3,
+  "cost_per_1000_chars": 0.267
+}
+```
+
 **Active Voice:**
-- **voice_id:** `YOUR_VOICE_ID_HERE` (eigene geklonte Stimme)
+- **voice_id:** `NkhHdPbLqYzmdIaSUuIy` (Drachenlord geklonte Stimme)
 
 ## Models & Credits
 
@@ -37,64 +69,38 @@ ELEVENLABS_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | `eleven_flash_v2.5` | Low | Fastest latency |
 | `eleven_turbo_v2.5` | Low | Real-time applications |
 
-## Usage Patterns
+## NEW RULE (17.04.2026):
 
-### 1. Standard Voice Message (Drachenlord)
-```python
-# For Butler-style messages to Kosta
-python3 scripts/elevenlabs_tts.py speak \
-  "Hallo Kosta, ich bin der Drachenlord. Ab sofort bin ich der Butler vom Freibeuter." \
-  --voice NkhHdPbLqYzmdIaSUuIy \
-  --model eleven_multilingual_v2
-```
-
-**NEW RULE (17.04.2026):**
 > When sending voice messages: Report character count + total + duration!
 > Format: `[XXX chars | Total: YYYY | ZZ.Zs]`
-> 
+>
 > **STANDARD:** Bei jeder Drachenlord-Sprachnachricht wird die Statistik AUTOMATISCH unter die Nachricht angehängt!
 > ```
 > 🐉 Der Drachenlord sagt: ...
-> 
+>
 > [243 Zeichen | Total: 8672 | 2.32€ | 16.2s]
 > ```
 
-### 2. Send as Telegram Voice Message
-```python
-# Generate and send
-python3 scripts/elevenlabs_tts.py speak "Nachricht"
-# Then use filePath in message(action='send', asVoice=True, filePath='/tmp/elevenlabs_output.mp3')
+## Usage Examples
+
+```bash
+# Standard Voice Message (Drachenlord)
+python3 scripts/elevenlabs_tts.py speak \
+  "Hallo Kosta, ich bin der Drachenlord. Ab sofort bin ich der Butler vom Freibeuter."
+
+# Custom voice
+python3 scripts/elevenlabs_tts.py speak "Nachricht" --voice VOICE_ID
+
+# Custom model
+python3 scripts/elevenlabs_tts.py speak "Nachricht" --model eleven_flash_v2.5
+
+# Custom output path
+python3 scripts/elevenlabs_tts.py speak "Nachricht" --output /path/to/output.mp3
 ```
-
-## TTS Priority Rules
-
-**CRITICAL - Hierachy:**
-
-1. ✅ **ElevenLabs** (Primary) - Use for ALL TTS unless unavailable
-2. ✅ **Piper TTS** (Fallback ONLY) - Use ONLY when:
-   - ElevenLabs API is down
-   - Credits exhausted
-   - API errors persist
-3. ❌ **NEVER gTTS** - Decommissioned, forbidden by user
-
-**When to use Piper (Fallback):**
-```python
-# If ElevenLabs fails with credits or API errors
-python3 scripts/piper_tts_fixed.py "Nachricht"
-```
-
-## Error Handling
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `402 Payment Required` | Credits exhausted | Add credits or use Piper fallback |
-| `401 Unauthorized` | API key invalid/berechtigung missing | Check API key and permissions |
-| `404 Voice Not Found` | Wrong voice_id | Use correct voice_id from dashboard |
-| `400 Bad Request` | Invalid model_id | Use `eleven_multilingual_v2` |
 
 ## Voice Settings
 
-Empfohlene Voice Settings:
+Empfohlene Voice Settings (hardcoded in script):
 ```json
 {
   "stability": 1.0,
@@ -112,26 +118,32 @@ Empfohlene Voice Settings:
 - `style: 0.1` - Wenig Stil-Variation
 - `use_speaker_boost: true` - Klarere Aussprache
 
-**Pausen:**
-- Komma: 0.4s
-- Punkt: 0.6s
+## Error Handling (NEW in v2.0)
 
-## Files
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `402 Payment Required` | Credits exhausted | Add credits |
+| `401 Unauthorized` | API key invalid | Check API key |
+| `404 Voice Not Found` | Wrong voice_id | Use correct voice_id |
+| `400 Bad Request` | Invalid model_id | Use `eleven_multilingual_v2` |
+| `5xx Server Error` | ElevenLabs down | **Automatic retry (3x)** |
+| `Timeout` | Slow connection | **Automatic retry (3x)** |
 
-- **Script:** `scripts/elevenlabs_tts.py`
-- **Output:** `/tmp/elevenlabs_output.mp3` (default)
-- **Workspace copy:** For Telegram voice messages
+## Statistics Tracking
 
-## IMPORTANT NOTES
+Automatic cost tracking in `data/elevenlabs_stats.json`:
+```json
+{
+  "total_chars": 8672,
+  "total_cost_eur": 2.32
+}
+```
 
-- **Free Tier:** Does NOT exist anymore for API usage (changed 2025/2026)
-- **Credits required:** All API calls consume credits
-- **Voice Library vs Custom:** Library voices require paid plan, custom clones work with credits
-- **German support:** ✅ Full support via multilingual_v2 model
+**Cost calculation:** 1000 characters = 0.267€
 
 ## Changelog
 
-- **18.04.2026:** Speed erhöht von 0.7 auf 0.8 für bessere Verständlichkeit
+- **21.04.2026 (v2.0):** Retry logic, logging, argparse, improved error handling
+- **18.04.2026:** Speed increased from 0.7 to 0.8
 - **17.04.2026:** Activated as primary TTS, Drachenlord voice configured
 - **17.04.2026:** Piper demoted to fallback-only status
-- **17.04.2026:** gTTS officially forbidden

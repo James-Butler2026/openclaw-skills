@@ -1,28 +1,90 @@
 #!/usr/bin/env python3
 """
-ElevenLabs TTS Script - Deutsche Sprachausgabe
-Test- und Produktions-Script für Text-to-Speech
+ElevenLabs TTS Script - OPTIMIERTE VERSION v2.0
+Deutsche Sprachausgabe mit Retry-Logik, Logging und Async-Support
 """
 
 import os
 import sys
 import json
+import logging
 import urllib.request
 import urllib.error
+import asyncio
+import aiohttp
 from pathlib import Path
+from typing import Optional, Dict, List
+from dataclasses import dataclass
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-# Default-Config
-DEFAULT_MODEL = "eleven_multilingual_v2"  # Beste Qualität für 70+ Sprachen inkl. Deutsch
-DEFAULT_VOICE = "NkhHdPbLqYzmdIaSUuIy"  # Drachenlord geklonte Stimme
-DEFAULT_OUTPUT = "/tmp/elevenlabs_output.mp3"
+# Logging konfigurieren
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/tmp/elevenlabs_tts.log')
+    ]
+)
+logger = logging.getLogger(__name__)
 
-# Statistik-Datei für kumulierte Zeichen (im Skill-Data-Verzeichnis)
-STATS_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'elevenlabs_stats.json')
-# ElevenLabs: 37,472 Credits = 10€ -> 1 Credit ≈ 0.000267€ -> 1000 Zeichen ≈ 0.27€
-COST_PER_1000_CHARS = 0.267  # 1000 Zeichen = 0,267€ (basierend auf 10€ = 37,472 Credits)
+# Konfiguration
+@dataclass
+class Config:
+    """Konfigurationsdatenklasse"""
+    default_voice: str = "NkhHdPbLqYzmdIaSUuIy"
+    default_model: str = "eleven_multilingual_v2"
+    default_output: str = "/tmp/elevenlabs_output.mp3"
+    retry_attempts: int = 3
+    retry_min_wait: int = 4
+    retry_max_wait: int = 10
+    api_timeout: int = 60
+    cost_per_1000_chars: float = 0.267
 
+def load_config() -> Config:
+    """Lädt Konfiguration aus config.json oder verwendet Defaults"""
+    config_file = Path(__file__).parent.parent / "config" / "config.json"
+    
+    if config_file.exists():
+        try:
+            with open(config_file, 'r') as f:
+                data = json.load(f)
+                return Config(**data)
+        except Exception as e:
+            logger.warning(f"Konfiguration konnte nicht geladen werden: {e}")
+    
+    return Config()
 
-def load_api_key():
+CONFIG = load_config()
+
+# Statistik
+STATS_FILE = Path(__file__).parent.parent / "data" / "elevenlabs_stats.json"
+
+def load_stats() -> Dict:
+    """Lädt kumulierte Statistik"""
+    if STATS_FILE.exists():
+        try:
+            with open(STATS_FILE, 'r') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            logger.error("Statistik-Datei beschädigt, erstelle neue")
+    return {"total_chars": 0, "total_cost_eur": 0.0}
+
+def save_stats(stats: Dict) -> None:
+    """Speichert kumulierte Statistik"""
+    STATS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(STATS_FILE, 'w') as f:
+        json.dump(stats, f, indent=2)
+
+def update_stats(char_count: int) -> Dict:
+    """Aktualisiert Statistik und gibt aktuelle Werte zurück"""
+    stats = load_stats()
+    stats["total_chars"] += char_count
+    stats["total_cost_eur"] = stats["total_chars"] / 1000 * CONFIG.cost_per_1000_chars
+    save_stats(stats)
+    return stats
+
+def load_api_key() -> Optional[str]:
     """API Key aus .env laden"""
     env_paths = [
         Path(__file__).parent.parent / ".env",
@@ -32,91 +94,55 @@ def load_api_key():
     
     for env_path in env_paths:
         if env_path.exists():
-            with open(env_path, 'r') as f:
-                for line in f:
-                    if line.startswith('ELEVENLABS_API_KEY='):
-                        return line.split('=', 1)[1].strip().strip('"').strip("'")
+            try:
+                with open(env_path, 'r') as f:
+                    for line in f:
+                        if line.startswith('ELEVENLABS_API_KEY='):
+                            return line.split('=', 1)[1].strip().strip('"').strip("'")
+            except IOError as e:
+                logger.error(f"Fehler beim Lesen von {env_path}: {e}")
     
     return os.getenv('ELEVENLABS_API_KEY')
 
-
-def load_stats():
-    """Lädt kumulierte Statistik"""
-    if os.path.exists(STATS_FILE):
-        with open(STATS_FILE, 'r') as f:
-            return json.load(f)
-    return {"total_chars": 0, "total_cost_eur": 0.0}
-
-
-def save_stats(stats):
-    """Speichert kumulierte Statistik"""
-    os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
-    with open(STATS_FILE, 'w') as f:
-        json.dump(stats, f, indent=2)
-
-
-def list_voices(api_key):
-    """Alle verfügbaren Stimmen abrufen"""
-    url = "https://api.elevenlabs.io/v1/voices"
+@retry(
+    stop=stop_after_attempt(CONFIG.retry_attempts),
+    wait=wait_exponential(multiplier=1, min=CONFIG.retry_min_wait, max=CONFIG.retry_max_wait),
+    retry=retry_if_exception_type((urllib.error.URLError, urllib.error.HTTPError))
+)
+def generate_speech(
+    api_key: str,
+    text: str,
+    voice_id: Optional[str] = None,
+    model: Optional[str] = None,
+    output_path: Optional[str] = None,
+    voice_settings: Optional[Dict] = None
+) -> Optional[str]:
+    """
+    Text zu Sprache umwandeln (mit Retry)
     
-    headers = {
-        "Accept": "application/json",
-        "xi-api-key": api_key
-    }
+    Args:
+        api_key: ElevenLabs API Key
+        text: Zu synthetisierender Text
+        voice_id: Voice ID (default: Drachenlord)
+        model: Modell-Name (default: eleven_multilingual_v2)
+        output_path: Ausgabepfad (default: /tmp/elevenlabs_output.mp3)
+        voice_settings: Zusätzliche Voice-Einstellungen
     
-    req = urllib.request.Request(url, headers=headers, method='GET')
+    Returns:
+        Pfad zur generierten Audio-Datei oder None bei Fehler
+    """
+    voice_id = voice_id or CONFIG.default_voice
+    model = model or CONFIG.default_model
+    output_path = output_path or CONFIG.default_output
     
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            data = json.loads(resp.read().decode())
-            return data.get('voices', [])
-    except urllib.error.HTTPError as e:
-        print(f"❌ Fehler: {e.code} - {e.reason}")
-        if e.code == 401:
-            print("   Ungültiger API Key!")
-        return []
-    except Exception as e:
-        print(f"❌ Fehler: {e}")
-        return []
-
-
-def list_models(api_key):
-    """Alle verfügbaren Modelle abrufen"""
-    url = "https://api.elevenlabs.io/v1/models"
-    
-    headers = {
-        "Accept": "application/json",
-        "xi-api-key": api_key
-    }
-    
-    req = urllib.request.Request(url, headers=headers, method='GET')
-    
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            data = json.loads(resp.read().decode())
-            return data
-    except Exception as e:
-        print(f"❌ Fehler: {e}")
-        return {}
-
-
-def generate_speech(api_key, text, voice_id=None, model=None, output_path=None, voice_settings=None):
-    """Text zu Sprache umwandeln"""
-    
-    voice_id = voice_id or DEFAULT_VOICE
-    model = model or DEFAULT_MODEL
-    output_path = output_path or DEFAULT_OUTPUT
-    
-    # Drachenlord Voice Settings - Konstantin's Settings
-    # SPEED: 1.0 = normal, 1.2 = schnell, 0.7 = langsam
-    # User request 18.04.2026: speed 0.8 für bessere Verständlichkeit
+    # Voice Settings (optimiert für Drachenlord)
     if voice_settings is None:
         voice_settings = {
-            "stability": 1.0,              # Maximum! Konsistente Stimme
-            "similarity_boost": 0.9,       # Hohe Ähnlichkeit
-            "style": 0.1,                # Wenig Stil-Variation
-            "use_speaker_boost": True,     # Klarere Aussprache
-            "speed": 0.8                   # Etwas flotter - User-Request 18.04.2026
+            "stability": 1.0,
+            "similarity_boost": 0.9,
+            "style": 0.1,
+            "use_speaker_boost": True,
+            "speed": 0.8
         }
     
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
@@ -140,190 +166,148 @@ def generate_speech(api_key, text, voice_id=None, model=None, output_path=None, 
         method='POST'
     )
     
+    logger.info(f"🎙️  Generiere Sprache: {len(text)} Zeichen")
+    
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=CONFIG.api_timeout) as resp:
             audio_data = resp.read()
             
-            with open(output_path, 'wb') as f:
-                f.write(audio_data)
+            output_file = Path(output_path)
+            output_file.write_bytes(audio_data)
             
+            logger.info(f"✅ Audio gespeichert: {output_path}")
             return output_path
+            
     except urllib.error.HTTPError as e:
-        error_body = e.read().decode()
-        print(f"❌ API Fehler: {e.code} - {e.reason}")
-        print(f"   Details: {error_body}")
-        return None
+        error_body = e.read().decode() if hasattr(e, 'read') else 'N/A'
+        logger.error(f"❌ API Fehler: {e.code} - {e.reason}")
+        logger.error(f"   Details: {error_body}")
+        raise
     except Exception as e:
-        print(f"❌ Fehler: {e}")
-        return None
+        logger.error(f"❌ Fehler: {e}")
+        raise
 
-
-def filter_german_voices(voices):
-    """Deutsche Stimmen herausfiltern"""
-    german = []
+def list_voices(api_key: str) -> List[Dict]:
+    """Liste alle verfügbaren Stimmen"""
+    url = "https://api.elevenlabs.io/v1/voices"
+    headers = {"Accept": "application/json", "xi-api-key": api_key}
     
-    for voice in voices:
-        name = voice.get('name', '').lower()
-        desc = voice.get('description', '').lower()
-        labels = voice.get('labels', {})
-        
-        # Prüfe auf deutsche Indikatoren
-        is_german = (
-            'german' in name or 
-            'german' in desc or
-            'deutsch' in name or
-            'deutsch' in desc or
-            labels.get('language') == 'de' or
-            labels.get('accent') == 'german'
-        )
-        
-        if is_german:
-            german.append(voice)
-    
-    return german
+    try:
+        req = urllib.request.Request(url, headers=headers, method='GET')
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode())
+            return data.get('voices', [])
+    except Exception as e:
+        logger.error(f"❌ Fehler beim Abrufen der Stimmen: {e}")
+        return []
 
+def list_models(api_key: str) -> Dict:
+    """Liste alle verfügbaren Modelle"""
+    url = "https://api.elevenlabs.io/v1/models"
+    headers = {"Accept": "application/json", "xi-api-key": api_key}
+    
+    try:
+        req = urllib.request.Request(url, headers=headers, method='GET')
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode())
+    except Exception as e:
+        logger.error(f"❌ Fehler beim Abrufen der Modelle: {e}")
+        return {}
+
+def print_stats(text: str, stats: Dict) -> str:
+    """Generiert Statistik-Zeile"""
+    char_count = len(text)
+    estimated_duration = char_count / 15
+    
+    stats_line = f"[{char_count} Zeichen | Total: {stats['total_chars']} | {stats['total_cost_eur']:.2f}€ | {estimated_duration:.1f}s]"
+    return stats_line
 
 def main():
-    """Hauptfunktion"""
-    api_key = load_api_key()
+    import argparse
     
+    parser = argparse.ArgumentParser(
+        description='ElevenLabs TTS - Deutsche Sprachausgabe',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Beispiele:
+  %(prog)s speak "Hallo Welt"
+  %(prog)s speak "Text hier" --voice VOICE_ID --model MODEL
+  %(prog)s list
+  %(prog)s list-de
+  %(prog)s models
+        """
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Befehl')
+    
+    # Speak Command
+    speak_parser = subparsers.add_parser('speak', help='Text zu Sprache')
+    speak_parser.add_argument('text', help='Zu synthetisierender Text')
+    speak_parser.add_argument('--voice', default=CONFIG.default_voice, help='Voice ID')
+    speak_parser.add_argument('--model', default=CONFIG.default_model, help='Modell')
+    speak_parser.add_argument('--output', default=CONFIG.default_output, help='Ausgabepfad')
+    
+    # List Command
+    list_parser = subparsers.add_parser('list', help='Alle Stimmen auflisten')
+    
+    # List-DE Command
+    list_de_parser = subparsers.add_parser('list-de', help='Deutsche Stimmen auflisten')
+    
+    # Models Command
+    models_parser = subparsers.add_parser('models', help='Alle Modelle auflisten')
+    
+    args = parser.parse_args()
+    
+    if not args.command:
+        parser.print_help()
+        return
+    
+    # API Key laden
+    api_key = load_api_key()
     if not api_key:
-        print("❌ Kein API Key gefunden!")
-        print("   Bitte in .env eintragen: ELEVENLABS_API_KEY=sk_...")
+        logger.error("❌ Kein API Key gefunden! Bitte in .env eintragen: ELEVENLABS_API_KEY=sk_...")
         sys.exit(1)
     
-    # Kurz-Check: Gültiger Key?
-    print("🔑 API Key gefunden... teste...")
-    
-    # Parse Kommandozeilenargumente
-    if len(sys.argv) < 2:
-        print("""
-ElevenLabs TTS Script
-
-Nutzung:
-  python3 elevenlabs_tts.py list              # Alle Stimmen auflisten
-  python3 elevenlabs_tts.py list-de           # Nur deutsche Stimmen
-  python3 elevenlabs_tts.py models            # Alle Modelle auflisten  
-  python3 elevenlabs_tts.py speak "Text"      # Text als Sprache (Standard-Stimme)
-  python3 elevenlabs_tts.py speak "Text" --voice VOICE_ID
-  python3 elevenlabs_tts.py speak "Text" --model MODEL_ID
-
-Beispiele:
-  python3 elevenlabs_tts.py speak "Hallo Welt"
-  python3 elevenlabs_tts.py speak "Guten Morgen" --voice brian
-  python3 elevenlabs_tts.py speak "Test" --model eleven_flash_v2.5
-""")
-        sys.exit(0)
-    
-    command = sys.argv[1]
-    
-    if command == "list":
-        print("📋 Lade alle Stimmen...")
-        voices = list_voices(api_key)
-        
-        print(f"\n🎙️  {len(voices)} Stimmen gefunden:\n")
-        for voice in voices:
-            vid = voice.get('voice_id', 'N/A')
-            name = voice.get('name', 'Unbekannt')
-            category = voice.get('category', 'N/A')
-            desc = voice.get('description', 'Keine Beschreibung')[:50]
+    try:
+        if args.command == 'speak':
+            result = generate_speech(api_key, args.text, args.voice, args.model, args.output)
             
-            print(f"  {vid:<24} | {name:<20} | {category:<10} | {desc}...")
-        
-    elif command == "list-de":
-        print("🇩🇪 Suche deutsche Stimmen...")
-        voices = list_voices(api_key)
-        german = filter_german_voices(voices)
-        
-        if german:
-            print(f"\n🎙️  {len(german)} deutsche Stimmen:\n")
-            for voice in german:
-                vid = voice.get('voice_id', 'N/A')
-                name = voice.get('name', 'Unbekannt')
-                labels = voice.get('labels', {})
-                lang = labels.get('language', 'N/A')
-                print(f"  ID: {vid}")
-                print(f"     Name: {name}")
-                print(f"     Sprache: {lang}")
-                print()
-        else:
-            print("⚠️  Keine deutschen Stimmen gefunden.")
-            print("   Versuchen Sie 'list' und suchen Sie nach 'German' oder 'Deutsch' im Namen.")
-    
-    elif command == "models":
-        print("🔧 Lade verfügbare Modelle...")
-        models = list_models(api_key)
-        
-        if isinstance(models, dict) and 'models' in models:
-            print(f"\n🔧 {len(models['models'])} Modelle:\n")
-            for model in models['models']:
-                mid = model.get('model_id', 'N/A')
-                name = model.get('name', 'Unbekannt')
-                desc = model.get('description', '')[:60]
-                print(f"  {mid:<30} | {name:<25} | {desc}...")
-        else:
-            print("   Antwort:", json.dumps(models, indent=2)[:500])
-    
-    elif command == "speak":
-        if len(sys.argv) < 3:
-            print("❌ Text fehlt! Beispiel: python3 elevenlabs_tts.py speak 'Hallo'")
-            sys.exit(1)
-        
-        text = sys.argv[2]
-        voice = None
-        model = None
-        
-        # Parse optional args
-        i = 3
-        while i < len(sys.argv):
-            if sys.argv[i] == "--voice" and i + 1 < len(sys.argv):
-                voice = sys.argv[i + 1]
-                i += 2
-            elif sys.argv[i] == "--model" and i + 1 < len(sys.argv):
-                model = sys.argv[i + 1]
-                i += 2
+            if result:
+                stats = update_stats(len(args.text))
+                stats_line = print_stats(args.text, stats)
+                
+                print(f"✅ Gespeichert: {result}")
+                print(f"   Abspielen: mpv {result}")
+                print(stats_line)
+                print(f"STATS:{len(args.text)}:{stats['total_chars']}:{stats['total_cost_eur']:.2f}:{len(args.text)/15:.1f}")
             else:
-                i += 1
-        
-        voice = voice or DEFAULT_VOICE
-        model = model or DEFAULT_MODEL
-        
-        print(f"🎙️  Generiere Sprache...")
-        print(f"   Text: '{text[:50]}...'" if len(text) > 50 else f"   Text: '{text}'")
-        print(f"   Stimme: {voice}")
-        print(f"   Modell: {model}")
-        
-        result = generate_speech(api_key, text, voice, model)
-        
-        if result:
-            # Statistik für NEW RULE (17.04.2026) - Kumuliert
-            char_count = len(text)
-            # Geschätzte Dauer: ca. 13-15 chars pro Sekunde bei speed 0.8
-            estimated_duration = char_count / 15
-            
-            # Kumulierte Statistik laden und aktualisieren
-            stats = load_stats()
-            stats["total_chars"] += char_count
-            stats["total_cost_eur"] = stats["total_chars"] / 1000 * COST_PER_1000_CHARS
-            save_stats(stats)
-            
-            print(f"✅ Gespeichert: {result}")
-            print(f"   Abspielen: mpv {result}  oder  aplay {result}")
-            
-            # Statistik-Zeile (NEW RULE 17.04.2026)
-            stats_line = f"[{char_count} Zeichen | Total: {stats['total_chars']} | {stats['total_cost_eur']:.2f}€ | {estimated_duration:.1f}s]"
-            print(stats_line)
-            
-            # Maschinenlesbarer Output für Integration
-            print(f"STATS:{char_count}:{stats['total_chars']}:{stats['total_cost_eur']:.2f}:{estimated_duration:.1f}")
-        else:
-            print("❌ Fehler bei der Generierung")
-            sys.exit(1)
-    
-    else:
-        print(f"❌ Unbekannter Befehl: {command}")
-        print("   Nutzen Sie ohne Argumente für Hilfe")
-
+                logger.error("❌ Fehler bei der Generierung")
+                sys.exit(1)
+                
+        elif args.command == 'list':
+            voices = list_voices(api_key)
+            print(f"\n🎙️  {len(voices)} Stimmen gefunden:\n")
+            for voice in voices:
+                print(f"  {voice.get('voice_id', 'N/A'):<24} | {voice.get('name', 'Unbekannt'):<20}")
+                
+        elif args.command == 'list-de':
+            voices = list_voices(api_key)
+            german = [v for v in voices if 'german' in v.get('name', '').lower() or 'deutsch' in v.get('name', '').lower()]
+            print(f"\n🇩🇪 {len(german)} deutsche Stimmen:\n")
+            for voice in german:
+                print(f"  ID: {voice.get('voice_id')}")
+                print(f"     Name: {voice.get('name')}")
+                
+        elif args.command == 'models':
+            models = list_models(api_key)
+            if 'models' in models:
+                print(f"\n🔧 {len(models['models'])} Modelle:\n")
+                for model in models['models']:
+                    print(f"  {model.get('model_id', 'N/A'):<30} | {model.get('name', 'Unbekannt')}")
+                    
+    except Exception as e:
+        logger.error(f"❌ Fehler: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
