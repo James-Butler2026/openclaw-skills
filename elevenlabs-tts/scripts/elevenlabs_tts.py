@@ -16,6 +16,11 @@ DEFAULT_MODEL = "eleven_multilingual_v2"  # Beste Qualität für 70+ Sprachen in
 DEFAULT_VOICE = "NkhHdPbLqYzmdIaSUuIy"  # Drachenlord geklonte Stimme
 DEFAULT_OUTPUT = "/tmp/elevenlabs_output.mp3"
 
+# Statistik-Datei für kumulierte Zeichen (im Skill-Data-Verzeichnis)
+STATS_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'elevenlabs_stats.json')
+# ElevenLabs: 37,472 Credits = 10€ -> 1 Credit ≈ 0.000267€ -> 1000 Zeichen ≈ 0.27€
+COST_PER_1000_CHARS = 0.267  # 1000 Zeichen = 0,267€ (basierend auf 10€ = 37,472 Credits)
+
 
 def load_api_key():
     """API Key aus .env laden"""
@@ -33,6 +38,21 @@ def load_api_key():
                         return line.split('=', 1)[1].strip().strip('"').strip("'")
     
     return os.getenv('ELEVENLABS_API_KEY')
+
+
+def load_stats():
+    """Lädt kumulierte Statistik"""
+    if os.path.exists(STATS_FILE):
+        with open(STATS_FILE, 'r') as f:
+            return json.load(f)
+    return {"total_chars": 0, "total_cost_eur": 0.0}
+
+
+def save_stats(stats):
+    """Speichert kumulierte Statistik"""
+    os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
+    with open(STATS_FILE, 'w') as f:
+        json.dump(stats, f, indent=2)
 
 
 def list_voices(api_key):
@@ -80,37 +100,31 @@ def list_models(api_key):
         return {}
 
 
-def apply_pauses(text):
-    """Wendet Pausen auf Satzzeichen an"""
-    # Komma: 0.4s Pause
-    text = text.replace(",", ",<break time=\"0.4s\"/>")
-    # Punkt: 0.6s Pause
-    text = text.replace(".", ".<break time=\"0.6s\"/>")
-    return text
-
-
-def generate_speech(api_key, text, voice_id=None, model=None, output_path=None):
+def generate_speech(api_key, text, voice_id=None, model=None, output_path=None, voice_settings=None):
     """Text zu Sprache umwandeln"""
-
+    
     voice_id = voice_id or DEFAULT_VOICE
     model = model or DEFAULT_MODEL
     output_path = output_path or DEFAULT_OUTPUT
-
-    # Pausen für Satzzeichen einbauen
-    text = apply_pauses(text)
-
+    
+    # Drachenlord Voice Settings - Konstantin's Settings
+    # SPEED: 1.0 = normal, 1.2 = schnell, 0.7 = langsam
+    # User request 18.04.2026: speed 0.8 für bessere Verständlichkeit
+    if voice_settings is None:
+        voice_settings = {
+            "stability": 1.0,              # Maximum! Konsistente Stimme
+            "similarity_boost": 0.9,       # Hohe Ähnlichkeit
+            "style": 0.1,                # Wenig Stil-Variation
+            "use_speaker_boost": True,     # Klarere Aussprache
+            "speed": 0.8                   # Etwas flotter - User-Request 18.04.2026
+        }
+    
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-
+    
     payload = {
         "text": text,
         "model_id": model,
-        "voice_settings": {
-            "stability": 1.0,
-            "similarity_boost": 0.9,
-            "style": 0.1,
-            "use_speaker_boost": True,
-            "speed": 0.8
-        }
+        "voice_settings": voice_settings
     }
     
     headers = {
@@ -282,8 +296,26 @@ Beispiele:
         result = generate_speech(api_key, text, voice, model)
         
         if result:
+            # Statistik für NEW RULE (17.04.2026) - Kumuliert
+            char_count = len(text)
+            # Geschätzte Dauer: ca. 13-15 chars pro Sekunde bei speed 0.8
+            estimated_duration = char_count / 15
+            
+            # Kumulierte Statistik laden und aktualisieren
+            stats = load_stats()
+            stats["total_chars"] += char_count
+            stats["total_cost_eur"] = stats["total_chars"] / 1000 * COST_PER_1000_CHARS
+            save_stats(stats)
+            
             print(f"✅ Gespeichert: {result}")
             print(f"   Abspielen: mpv {result}  oder  aplay {result}")
+            
+            # Statistik-Zeile (NEW RULE 17.04.2026)
+            stats_line = f"[{char_count} Zeichen | Total: {stats['total_chars']} | {stats['total_cost_eur']:.2f}€ | {estimated_duration:.1f}s]"
+            print(stats_line)
+            
+            # Maschinenlesbarer Output für Integration
+            print(f"STATS:{char_count}:{stats['total_chars']}:{stats['total_cost_eur']:.2f}:{estimated_duration:.1f}")
         else:
             print("❌ Fehler bei der Generierung")
             sys.exit(1)
