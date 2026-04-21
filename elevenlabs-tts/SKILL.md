@@ -41,9 +41,9 @@ ELEVENLABS_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ### 1. Standard Voice Message (Drachenlord)
 ```python
-# Example voice message
+# For Butler-style messages to Kosta
 python3 scripts/elevenlabs_tts.py speak \
-  "Example voice message text. \
+  "Hallo Kosta, ich bin der Drachenlord. Ab sofort bin ich der Butler vom Freibeuter." \
   --voice NkhHdPbLqYzmdIaSUuIy \
   --model eleven_multilingual_v2
 ```
@@ -51,6 +51,13 @@ python3 scripts/elevenlabs_tts.py speak \
 **NEW RULE (17.04.2026):**
 > When sending voice messages: Report character count + total + duration!
 > Format: `[XXX chars | Total: YYYY | ZZ.Zs]`
+> 
+> **STANDARD:** Bei jeder Drachenlord-Sprachnachricht wird die Statistik AUTOMATISCH unter die Nachricht angehängt!
+> ```
+> 🐉 Der Drachenlord sagt: ...
+> 
+> [243 Zeichen | Total: 8672 | 2.32€ | 16.2s]
+> ```
 
 ### 2. Send as Telegram Voice Message
 ```python
