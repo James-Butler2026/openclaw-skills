@@ -64,32 +64,53 @@ Eure Lordschaft gibt mir die Tracking-Nummer – ich erledige den Rest:
 
 1. **Paket hinzufügen:**
    ```bash
-   python3 scripts/package_manager.py add -c H1003660401590901036 -r hermes -d "Amazon Bestellung"
+   python3 scripts/package_manager.py add -c [DEINE_TRACKING_NUMMER] -r hermes -d "Beschreibung"
    ```
 
 2. **Automatische Einrichtung:**
-   - Speichert in SQLite-Datenbank (`data/james.db`)
-   - Erstellt Cron-Jobs für 10:00 und 16:00 Uhr
-   - Überwacht Status automatisch
+   - Speichert in SQLite-Datenbank (`data/james.db`, Tabelle `packages`)
+   - Erstellt **dynamischen Cron-Job** (10:00 & 16:00 Uhr)
+   - Überwacht **alle aktiven Pakete** automatisch
+   - Postet Updates in **Telegram Topic 695**
 
 3. **Bei Zustellung:**
-   - Cron-Job wird automatisch gelöscht
-   - Paket als "geliefert" markiert
-   - Keine weiteren Checks nötig
+   - Status automatisch auf `delivered` gesetzt
+   - `delivered_at` mit aktuellem Datum/Zeit gefüllt
+   - Zustellungs-Bestätigung in Topic 695
+   - Cron bleibt aktiv für neue Pakete
 
-## Nutzung
+## Datenbank-Schema (Tabelle: packages)
 
-### Direkt
+| Spalte | Typ | Beschreibung |
+|--------|-----|--------------|
+| id | INTEGER | Primärschlüssel |
+| tracking_code | TEXT | Tracking-Nummer |
+| carrier | TEXT | hermes / dhl |
+| status | TEXT | aktueller Status |
+| delivered | INTEGER | 0=nein, 1=ja |
+| **delivered_at** | TEXT | **Zustelldatum (neu!)** |
+| added_at | TIMESTAMP | Hinzugefügt am |
+| updated_at | TIMESTAMP | Letzte Änderung |
+
+## Automatisches Tracking (Empfohlen)
+
+Der Cron-Job überwacht alle aktiven Pakete automatisch:
+- ⏰ **10:00 & 16:00 Uhr** täglich
+- 📍 **Telegram Topic 695** für Updates
+- 🚚 Status-Änderungen werden automatisch gepostet
+- ✅ Zustellung = Bestätigung + DB-Update
+
+### Manuelles Tracking
 
 ```bash
-# Mit Tracking-Code
-python3 scripts/hermes_tracker.py H1003660401590901036
+# Einzelnes Paket prüfen
+python3 scripts/hermes_tracker.py [TRACKING_NUMMER]
 
 # Mit voller URL
-python3 scripts/hermes_tracker.py "https://www.myhermes.de/...#H1003660401590901036"
+python3 scripts/hermes_tracker.py "https://www.myhermes.de/...#[TRACKING_NUMMER]"
 
 # Mit sichtbarem Browser (für Debugging)
-python3 scripts/hermes_tracker.py H1003660401590901036 --show-browser
+python3 scripts/hermes_tracker.py [TRACKING_NUMMER] --show-browser
 ```
 
 ## Hinweise
