@@ -1,68 +1,115 @@
 #!/usr/bin/env python3
 """
-Paket-Manager
-Verwaltet Pakete und dynamische Cron-Jobs für Tracking
+Paket-Manager - Zentralisiertes Tracking für Hermes und DHL
+Optimiert für Cron-Jobs mit JSON-Output und Telegram-Integration
 """
 
 import sys
 import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import List, Dict, Any
 
-sys.path.insert(0, '/home/node/.openclaw/workspace')
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
 from scripts.db_manager import add_package, get_active_packages, update_package_status
 
-def add_new_package(tracking_code, carrier, description=''):
-    """Fügt neues Paket hinzu und startet Tracking"""
-    
-    # Validierung
+def add_new_package(tracking_code: str, carrier: str, description: str = '') -> bool:
+    """Fügt neues Paket hinzu und startet automatisches Tracking"""
     carrier = carrier.lower()
     if carrier not in ['dhl', 'hermes']:
         print(f"❌ Ungültiger Carrier: {carrier}")
-        print("   Erlaubt: dhl, hermes")
         return False
     
-    # In DB speichern
-    success = add_package(tracking_code, carrier, description)
-    
-    if success:
+    if add_package(tracking_code, carrier, description):
         print(f"✅ Paket hinzugefügt: {tracking_code} ({carrier})")
-        print(f"   Beschreibung: {description or 'Keine'}")
-        print(f"   Tracking läuft automatisch um 10:00 und 16:00")
-        print(f"   ✨ Sie werden benachrichtigt bei Status-Änderungen")
+        print(f"   Tracking: 10:00 & 16:00 Uhr")
         return True
-    else:
-        print(f"ℹ️  Paket bereits vorhanden oder Fehler")
-        return False
+    return False
 
-def list_packages():
-    """Zeigt alle aktiven Pakete"""
-    packages = get_active_packages()
+def track_carrier(tracking_code: str, carrier: str, current_status: str) -> Dict[str, Any]:
+    """Trackt einzelnes Paket - Generic Funktion für beide Carrier
     
-    if not packages:
-        print("📭 Keine aktiven Pakete")
-        return
-    
-    print(f"📦 Aktive Pakete: {len(packages)}")
-    print("=" * 60)
-    
-    for i, pkg in enumerate(packages, 1):
-        status = pkg.get('status', 'Unbekannt')
-        desc = pkg.get('description', '')
-        carrier = pkg.get('carrier', '').upper()
-        updated = pkg.get('updated_at', 'Nie')
+    Args:
+        tracking_code: Die Tracking-Nummer
+        carrier: 'hermes' oder 'dhl'
+        current_status: Aktueller Status aus DB
         
-        print(f"{i}. {carrier}: {pkg['tracking_code']}")
-        print(f"   Status: {status}")
-        if desc:
-            print(f"   Beschreibung: {desc}")
-        print(f"   Letztes Update: {updated}")
-        print()
-
-def track_all_packages():
-    """Trackt alle aktiven Pakete - für Cron-Job (Hermes + DHL)"""
-    import subprocess
+    Returns:
+        Update-Dict oder None wenn kein Change
+    """
+    scripts = {
+        'hermes': 'skills/hermes-tracking/scripts/hermes_tracker.py',
+        'dhl': 'skills/dhl-tracking/scripts/dhl_tracker.py'
+    }
     
+    timeouts = {'hermes': 120, 'dhl': 60}
+    
+    script_path = Path(__file__).parent.parent.parent / scripts[carrier]
+    
+    try:
+        result = subprocess.run(
+            ['python3', str(script_path), tracking_code, '--json'],
+            capture_output=True,
+            text=True,
+            timeout=timeouts[carrier]
+        )
+        
+        # stderr für Fehler prüfen
+        if result.returncode != 0:
+            return None
+        
+        data = json.loads(result.stdout)
+        
+        # Bei Fehler im JSON
+        if data.get('error'):
+            return None
+        
+        new_status = data.get('status', current_status)
+        
+        # Status normalisieren
+        if carrier == 'dhl':
+            new_status = normalize_dhl_status(new_status)
+        
+        if new_status != current_status:
+            # DB aktualisieren
+            update_data = {'status': new_status, 'updated_at': datetime.now().isoformat()}
+            
+            if new_status == 'delivered':
+                update_data['delivered'] = 1
+                update_data['delivered_at'] = datetime.now().isoformat()
+            
+            update_package_status(tracking_code, **update_data)
+            
+            return {
+                'code': tracking_code,
+                'carrier': carrier.upper(),
+                'old_status': current_status,
+                'new_status': new_status,
+                'status_text': data.get('status_description', new_status),
+                'delivered': new_status == 'delivered',
+                'timestamp': datetime.now().isoformat()
+            }
+            
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError) as e:
+        return None
+    
+    return None
+
+def normalize_dhl_status(status: str) -> str:
+    """Normalisiert DHL-Status auf gemeinsame Codes"""
+    status_lower = status.lower()
+    
+    if 'zugestellt' in status_lower or 'zustellung erfolgreich' in status_lower:
+        return 'delivered'
+    elif 'zustellfahrzeug' in status_lower:
+        return 'in_delivery'
+    elif 'paketzentrum' in status_lower or 'sortiert' in status_lower:
+        return 'in_transit'
+    return status
+
+def track_all_packages() -> List[Dict[str, Any]]:
+    """Trackt alle aktiven Pakete - Hauptfunktion für Cron"""
     packages = get_active_packages()
     updates = []
     
@@ -71,57 +118,9 @@ def track_all_packages():
         carrier = pkg['carrier'].lower()
         current_status = pkg.get('status', '')
         
-        if carrier == 'hermes':
-            # Hermes tracken mit JSON Output
-            result = subprocess.run(
-                ['python3', '/home/node/.openclaw/workspace/scripts/hermes_tracker.py', tracking_code, '--json'],
-                capture_output=True, text=True, timeout=120
-            )
-            
-            try:
-                data = json.loads(result.stdout)
-                new_status = data.get('status', current_status)
-                
-                if new_status != current_status:
-                    update_package_status(tracking_code, new_status)
-                    updates.append({
-                        'code': tracking_code,
-                        'carrier': 'HERMES',
-                        'old_status': current_status,
-                        'new_status': new_status,
-                        'status_text': new_status,
-                        'delivered': 'zugestellt' in new_status.lower() or 'delivered' in new_status.lower()
-                    })
-            except json.JSONDecodeError:
-                pass
-        
-        elif carrier == 'dhl':
-            # DHL tracken (falls DHL Script existiert)
-            try:
-                result = subprocess.run(
-                    ['python3', '/home/node/.openclaw/workspace/scripts/dhl_tracker.py', tracking_code, '--json'],
-                    capture_output=True, text=True, timeout=60
-                )
-                
-                try:
-                    data = json.loads(result.stdout)
-                    new_status = data.get('status', current_status)
-                    
-                    if new_status != current_status:
-                        update_package_status(tracking_code, new_status)
-                        updates.append({
-                            'code': tracking_code,
-                            'carrier': 'DHL',
-                            'old_status': current_status,
-                            'new_status': new_status,
-                            'status_text': new_status,
-                            'delivered': 'zugestellt' in new_status.lower() or 'delivered' in new_status.lower()
-                        })
-                except json.JSONDecodeError:
-                    pass
-            except FileNotFoundError:
-                # DHL Tracker existiert noch nicht - überspringen
-                pass
+        update = track_carrier(tracking_code, carrier, current_status)
+        if update:
+            updates.append(update)
     
     return updates
 
@@ -129,47 +128,47 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Paket-Manager')
-    parser.add_argument('action', choices=['add', 'list', 'status', 'track'], 
-                       help='Aktion: add, list, status, track')
+    parser.add_argument('action', choices=['add', 'list', 'status', 'track'])
     parser.add_argument('--code', '-c', help='Tracking-Code')
-    parser.add_argument('--carrier', '-r', choices=['dhl', 'hermes'],
-                       help='Carrier: dhl oder hermes')
-    parser.add_argument('--desc', '-d', default='', help='Beschreibung')
-    parser.add_argument('--json', action='store_true', help='JSON Output für track')
+    parser.add_argument('--carrier', '-r', choices=['dhl', 'hermes'])
+    parser.add_argument('--desc', '-d', default='')
+    parser.add_argument('--json', action='store_true')
     
     args = parser.parse_args()
     
     if args.action == 'add':
         if not args.code or not args.carrier:
             print("❌ Fehlt: --code und --carrier")
-            print("   Beispiel: python3 package_manager.py add -c [DEINE_TRACKING_NUMMER] -r dhl -d 'Amazon'")
             sys.exit(1)
-        
         add_new_package(args.code, args.carrier, args.desc)
     
     elif args.action == 'list':
-        list_packages()
+        packages = get_active_packages()
+        if not packages:
+            print("📭 Keine aktiven Pakete")
+            return
+        
+        print(f"📦 {len(packages)} aktive Pakete:")
+        for pkg in packages:
+            print(f"  {pkg['carrier'].upper()}: {pkg['tracking_code']} - {pkg.get('status', 'Unbekannt')}")
     
     elif args.action == 'status':
-        # Zeigt Status aus DB
         packages = get_active_packages()
         print(json.dumps([{
             'code': p['tracking_code'],
             'carrier': p['carrier'],
             'status': p.get('status', 'Unbekannt'),
-            'description': p.get('description', ''),
-            'last_update': p.get('updated_at', '')
-        } for p in packages], indent=2, ensure_ascii=False))
+        } for p in packages], indent=2))
     
     elif args.action == 'track':
-        # Cron-Modus: Trackt alle aktiven Pakete
         updates = track_all_packages()
         
         if args.json:
-            print(json.dumps(updates, indent=2, ensure_ascii=False))
+            print(json.dumps(updates, indent=2))
         else:
             for upd in updates:
-                print(f"UPDATE: {upd['carrier']} {upd['code']} - {upd['status_text']}")
+                icon = '✅' if upd['delivered'] else '🚚'
+                print(f"{icon} {upd['carrier']} {upd['code']}: {upd['status_text']}")
 
 if __name__ == '__main__':
     main()
