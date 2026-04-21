@@ -57,4 +57,4 @@ print(f"XRP: {prices['ripple']['usd']}$")
 ```
 
 ---
-*Skill erstellt für* 🎩
+*Skill erstellt für Eure Lordschaft* 🎩
