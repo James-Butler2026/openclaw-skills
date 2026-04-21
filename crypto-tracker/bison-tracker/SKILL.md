@@ -1,11 +1,19 @@
 ---
 name: bison-tracker
 description: Professioneller Portfolio-Tracker für Krypto-Investments (BTC, XRP, ETH, SOL). SQLite-basiert mit Gewinn/Verlust-Berechnung, Stop-Loss/Take-Profit Alerts, Durchschnittskosten, Performance-Vergleich, stündlichen Snapshots, Max/Min Gewinn-Tracking und automatischen Reports.
+version: 2.1
 ---
 
-# Bison Portfolio Tracker v2.0
+# Bison Portfolio Tracker v2.1
 
 Ein professionelles Portfolio-Tracking-Tool für Krypto-Investments über die Bison-App und andere Börsen. Trackt Bitcoin (BTC), Ripple (XRP), Ethereum (ETH) und Solana (SOL) mit Echtzeit-Kursen, stündlicher Historie und intelligenten Alerts.
+
+**✅ Verbessert in Version 2.1:**
+- 🛡️ Error Handling bei allen API Calls
+- 📝 Logging statt print()
+- 💾 Automatisches Backup vor `--init`
+- ⚙️ Konfiguration aus `config.json`
+- 🔄 Retry-Logik für API-Fehler
 
 ## Features
 
@@ -39,11 +47,25 @@ Ein professionelles Portfolio-Tracking-Tool für Krypto-Investments über die Bi
 python3 skills/crypto-tracker/bison-tracker/scripts/bison_tracker.py --init
 ```
 
-**⚠️  WICHTIGE REGEL: `--init` löscht ALLE bestehenden Daten!**
-- Nur bei **erstmaligem Setup** verwenden
-- **NIE** auf bestehender Datenbank ausführen – alle Historie geht verloren!
+**⚠️  WICHTIG: `--init` erstellt automatisch ein Backup!**
+- Backup wird erstellt vor Neuerstellung
+- Vorherige Daten werden nicht gelöscht ohne Backup
 - Für **neue Käufe**: `--buy COIN --amount X --eur Y` verwenden (addiert zum Bestand)
-- Initialisierung = kompletter Reset, alle Daten weg!
+
+### Backup manuell erstellen
+```bash
+python3 skills/crypto-tracker/bison-tracker/scripts/bison_tracker.py --backup
+```
+
+### Konfiguration anpassen
+Editiere `config/config.json`:
+```json
+{
+  "stop_loss_percent": -20,
+  "take_profit_percent": 25,
+  "hourly_alert_percent": 15
+}
+```
 
 ### Verfügbare Befehle
 
