@@ -1,46 +1,37 @@
 #!/usr/bin/env python3
 """
-Expense Tracker - Ausgaben-Tracking per Sprachnachricht
-SQLite-basiert mit Reports nach Zeit, Kategorie und Händler
-
-WICHTIG: Datenbank bleibt erhalten! Schema unverändert:
-  - id (INTEGER PRIMARY KEY AUTOINCREMENT)
-  - amount (REAL NOT NULL)
-  - category (TEXT NOT NULL)
-  - store (TEXT)
-  - description (TEXT)
-  - date (TEXT NOT NULL)
-  - created_at (TEXT DEFAULT CURRENT_TIMESTAMP)
+Expense Tracker v2.1 - Überarbeitet
+Ausgaben-Tracking per Sprachnachricht
+SQLite-basiert mit Reports, JSON-Konfiguration, Backup & CSV Export
 """
 
 import os
 import sys
 import re
 import sqlite3
-import json
 import argparse
+import json
+import shutil
+import csv
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
-from typing import Dict, List, Tuple, Optional
 
-# Logging konfigurieren
+# Logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Datenbank-Pfad (flexibel)
-DB_PATH = Path(os.getenv('OPENCLAW_WORKSPACE', '/home/node/.openclaw/workspace')) / 'data' / 'expenses.db'
+# Pfade
+WORKSPACE = Path.home() / ".openclaw" / "workspace"
+DB_PATH = WORKSPACE / "data" / "expenses.db"
+CONFIG_DIR = WORKSPACE / "skills" / "expense-tracker" / "config"
+CONFIG_FILE = CONFIG_DIR / "categories.json"
 
-# Konfigurationsdatei für Kategorien
-CONFIG_DIR = Path(__file__).parent.parent / 'config'
-CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-CATEGORIES_FILE = CONFIG_DIR / 'categories.json'
-
-# Standard-Kategorien (werden bei erstmaligem Start gespeichert)
+# Standard-Kategorien
 DEFAULT_CATEGORIES = {
     "Lebensmittel": ["rewe", "lidl", "aldi", "edeka", "kaufland", "penny", "netto", "dm", "rossmann", "biomarkt", "bäckerei"],
     "Tanken": ["tankstelle", "aral", "shell", "avia", "agip", "bp", "esso", "jet", "omv", "total", "getankt", "tanken", "benzin", "diesel", "sprit"],
@@ -54,62 +45,99 @@ DEFAULT_CATEGORIES = {
     "Sonstiges": []
 }
 
-def load_categories() -> Dict[str, List[str]]:
-    """Lädt Kategorien aus JSON oder erstellt Standard-Datei"""
-    if CATEGORIES_FILE.exists():
-        try:
-            with open(CATEGORIES_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except json.JSONDecodeError as e:
-            logger.error(f"Fehler beim Laden der Kategorien: {e}")
+
+def load_categories():
+    """Lädt Kategorien aus JSON oder erstellt Default"""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     
-    # Erstelle Standard-Datei
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Konnte Kategorien nicht laden: {e}, nutze Defaults")
+    
+    # Erstelle Default-Config
     save_categories(DEFAULT_CATEGORIES)
     return DEFAULT_CATEGORIES
 
-def save_categories(categories: Dict[str, List[str]]):
-    """Speichert Kategorien in JSON-Datei"""
-    try:
-        with open(CATEGORIES_FILE, 'w', encoding='utf-8') as f:
-            json.dump(categories, f, indent=2, ensure_ascii=False)
-        logger.info(f"Kategorien gespeichert: {CATEGORIES_FILE}")
-    except IOError as e:
-        logger.error(f"Konnte Kategorien nicht speichern: {e}")
+
+def save_categories(categories):
+    """Speichert Kategorien in JSON"""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(categories, f, indent=2, ensure_ascii=False)
+    logger.info(f"Kategorien gespeichert: {CONFIG_FILE}")
+
+
+def add_category(name, keywords):
+    """Fügt neue Kategorie hinzu"""
+    categories = load_categories()
+    categories[name] = [k.strip().lower() for k in keywords.split(',')]
+    save_categories(categories)
+    print(f"✅ Kategorie '{name}' hinzugefügt mit {len(categories[name])} Keywords")
+
 
 def init_db():
-    """Initialisiert die SQLite-Datenbank (Schema bleibt identisch!)"""
+    """Initialisiert die SQLite-Datenbank"""
     try:
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS expenses (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    amount REAL NOT NULL,
-                    category TEXT NOT NULL,
-                    store TEXT,
-                    description TEXT,
-                    date TEXT NOT NULL,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            conn.commit()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
         
-        logger.info(f"✅ Datenbank bereit: {DB_PATH}")
-        return True
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS expenses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                amount REAL NOT NULL,
+                category TEXT NOT NULL,
+                store TEXT,
+                description TEXT,
+                date TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         
-    except sqlite3.Error as e:
-        logger.error(f"❌ Datenbank-Fehler: {e}")
-        return False
+        # Index für schnellere Abfragen
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_date ON expenses(date)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_category ON expenses(category)")
+        
+        conn.commit()
+        conn.close()
+        print(f"✅ Datenbank initialisiert: {DB_PATH}")
+        logger.info("Datenbank initialisiert")
+    except Exception as e:
+        logger.error(f"Datenbank-Fehler: {e}")
+        print(f"❌ Fehler: {e}")
 
-def detect_category(text: str, categories: Dict[str, List[str]] = None) -> str:
-    """Erkennt Kategorie basierend auf Keywords"""
-    if categories is None:
-        categories = load_categories()
+
+def parse_amount(text):
+    """Parst deutsche Beträge korrekt (1.234,56€)"""
+    # Entferne Währungssymbole
+    text = text.replace('€', '').replace('$', '')
     
+    # Suche nach deutschem Format: 1.234,56 oder 12,50
+    match = re.search(r'(\d{1,3}(?:\.\d{3})*,\d{2})', text)
+    if match:
+        amount_str = match.group(1).replace('.', '').replace(',', '.')
+        return float(amount_str)
+    
+    # Suche nach einfachem Format: 12.50 oder 12,50
+    match = re.search(r'(\d+[,.]\d{2})', text)
+    if match:
+        amount_str = match.group(1).replace(',', '.')
+        return float(amount_str)
+    
+    # Suche nach ganzer Zahl
+    match = re.search(r'(\d+)', text)
+    if match:
+        return float(match.group(1))
+    
+    return None
+
+
+def detect_category(text, categories):
+    """Erkennt Kategorie basierend auf Keywords"""
     text_lower = text.lower()
     
     for category, keywords in categories.items():
@@ -119,15 +147,14 @@ def detect_category(text: str, categories: Dict[str, List[str]] = None) -> str:
     
     return "Sonstiges"
 
-def detect_store(text: str) -> Optional[str]:
+
+def detect_store(text):
     """Erkennt den Händler/Supermarkt aus dem Text"""
     text_lower = text.lower()
-    stores = [
-        "rewe", "lidl", "aldi", "edeka", "kaufland", "penny", "netto", 
-        "dm", "rossmann", "amazon", "ebay", "media markt", "saturn",
-        "bäckerei", "apotheke", "arzt", "bahn", "db", "tankstelle",
-        "shell", "aral", "avia", "esso", "lidl", "aldi"
-    ]
+    stores = ["rewe", "lidl", "aldi", "edeka", "kaufland", "penny", "netto", 
+              "dm", "rossmann", "amazon", "ebay", "media markt", "saturn",
+              "bäckerei", "apotheke", "arzt", "bahn", "db", "tankstelle",
+              "mcdonalds", "burger king", "kfc", "subway", "pizzeria"]
     
     for store in stores:
         if store in text_lower:
@@ -135,177 +162,166 @@ def detect_store(text: str) -> Optional[str]:
     
     return None
 
-def parse_amount(text: str) -> Optional[float]:
-    """Parst Betrag aus Text (robustere Erkennung)"""
-    # Verschiedene Formate erkennen
-    patterns = [
-        r'(\d+[,.]\d{2})\s*[€$]?',           # 12,50 oder 12.50
-        r'(\d+)\s*[€$]?',                       # 12 (ohne Dezimal)
-        r'(\d+)\s*(?:Euro|EUR)',                # 12 Euro
-        r'(\d+[,.]\d{2})\s*(?:Euro|EUR)',     # 12,50 Euro
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            amount_str = match.group(1).replace(',', '.')
-            try:
-                return float(amount_str)
-            except ValueError:
-                continue
-    
-    return None
 
-def parse_expense(text: str) -> Optional[Dict]:
-    """Parst eine Ausgaben-Sprachnachricht"""
+def check_duplicate(amount, description, store):
+    """Prüft auf Duplikate (gleicher Betrag, Händler und Tag)"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        cursor.execute("""
+            SELECT COUNT(*) FROM expenses 
+            WHERE amount = ? AND store = ? AND date LIKE ?
+        """, (amount, store, f"{today}%"))
+        
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count > 0
+    except Exception as e:
+        logger.error(f"Duplikat-Prüfung fehlgeschlagen: {e}")
+        return False
+
+
+def add_expense(text):
+    """Fügt eine Ausgabe hinzu"""
     amount = parse_amount(text)
+    
     if amount is None:
-        return None
+        print("❌ Konnte keinen Betrag erkennen!")
+        print("💡 Beispiel: 'Habe 12,50€ bei Rewe für Milch ausgegeben'")
+        print("💡 Oder: '1.250,00€ für Miete'")
+        return
     
-    # Kategorie erkennen
-    category = detect_category(text)
-    
-    # Händler erkennen
+    categories = load_categories()
+    category = detect_category(text, categories)
     store = detect_store(text)
     
     # Beschreibung extrahieren (alles außer Betrag)
-    description = re.sub(r'\d+[,.]?\d*\s*[€$EUR]?', '', text, flags=re.IGNORECASE).strip()
-    description = re.sub(r'\s+', ' ', description)  # Mehrfache Leerzeichen entfernen
+    description = re.sub(r'\d{1,3}(?:\.\d{3})*,\d{2}', '', text).strip()
+    description = re.sub(r'\d+[,.]?\d*', '', description).strip()
+    description = re.sub(r'\s+', ' ', description)
     
-    return {
-        "amount": amount,
-        "category": category,
-        "store": store,
-        "description": description
-    }
-
-def add_expense(text: str) -> bool:
-    """Fügt eine Ausgabe hinzu (mit Error Handling)"""
+    # Duplikat-Check
+    if check_duplicate(amount, description, store):
+        print(f"⚠️  WARNUNG: Ähnliche Ausgabe ({amount:.2f}€ bei {store}) wurde HEUTE bereits eingetragen!")
+        confirm = input("Trotzdem speichern? (j/n): ")
+        if confirm.lower() not in ['j', 'ja', 'y', 'yes']:
+            print("❌ Abgebrochen.")
+            return
+    
     try:
-        data = parse_expense(text)
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
         
-        if not data:
-            print("❌ Konnte keinen Betrag erkennen!")
-            print("💡 Beispiel: 'Habe 12,50€ bei Rewe für Milch ausgegeben'")
-            return False
+        cursor.execute("""
+            INSERT INTO expenses (amount, category, store, description, date)
+            VALUES (?, ?, ?, ?, ?)
+        """, (amount, category, store, description, datetime.now().isoformat()))
         
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                INSERT INTO expenses (amount, category, store, description, date)
-                VALUES (?, ?, ?, ?, ?)
-            """, (data["amount"], data["category"], data["store"], 
-                  data["description"], datetime.now().isoformat()))
-            
-            conn.commit()
+        conn.commit()
+        conn.close()
         
         print(f"✅ Ausgabe gespeichert:")
-        print(f"   💰 {data['amount']:.2f}€")
-        print(f"   📂 {data['category']}")
-        if data['store']:
-            print(f"   🏪 {data['store']}")
-        if data['description']:
-            print(f"   📝 {data['description']}")
+        print(f"   💰 {amount:.2f}€")
+        print(f"   📂 {category}")
+        if store:
+            print(f"   🏪 {store}")
+        if description:
+            print(f"   📝 {description}")
         
-        return True
-        
-    except sqlite3.Error as e:
-        logger.error(f"❌ Datenbank-Fehler beim Speichern: {e}")
-        print(f"❌ Fehler beim Speichern: {e}")
-        return False
+        logger.info(f"Ausgabe gespeichert: {amount:.2f}€ - {category}")
     except Exception as e:
-        logger.error(f"❌ Unerwarteter Fehler: {e}")
-        print(f"❌ Fehler: {e}")
-        return False
+        logger.error(f"Speichern fehlgeschlagen: {e}")
+        print(f"❌ Fehler beim Speichern: {e}")
 
-def get_weekly_report() -> str:
-    """Erstellt einen wöchentlichen Bericht (aktuelle Kalenderwoche Mo-So)"""
+
+def get_weekly_report():
+    """Erstellt einen Bericht für die aktuelle Kalenderwoche"""
     try:
         today = datetime.now()
-        # Aktuelle Woche: Montag bis Sonntag
-        monday = today - timedelta(days=today.weekday())  # 0=Montag
-        monday_iso = monday.replace(hour=0, minute=0, second=0).isoformat()
+        start_of_week = today - timedelta(days=today.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
         
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                SELECT category, SUM(amount) as total
-                FROM expenses
-                WHERE date >= ?
-                GROUP BY category
-                ORDER BY total DESC
-            """, (monday_iso,))
-            
-            results = cursor.fetchall()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT category, SUM(amount) as total
+            FROM expenses
+            WHERE date >= ?
+            GROUP BY category
+            ORDER BY total DESC
+        """, (start_of_week.isoformat(),))
+        
+        results = cursor.fetchall()
+        conn.close()
         
         if not results:
-            return f"📊 Keine Ausgaben diese Woche (ab {monday.strftime('%d.%m.%Y')})."
+            return "📊 Keine Ausgaben diese Woche."
         
         total = sum(r[1] for r in results)
         
         report = [f"📊 **WÖCHENTLICHER AUSGABENBERICHT**\n"]
-        report.append(f"Zeitraum: {monday.strftime('%d.%m.')} - {today.strftime('%d.%m.%Y')}\n")
+        report.append(f"Zeitraum: {start_of_week.strftime('%d.%m.%Y')} - {today.strftime('%d.%m.%Y')}")
         report.append(f"Gesamt: **{total:.2f}€**\n")
         report.append("Nach Kategorie:")
         
         for category, amount in results:
-            percentage = (amount / total) * 100 if total > 0 else 0
+            percentage = (amount / total) * 100
             report.append(f"  • {category}: {amount:.2f}€ ({percentage:.1f}%)")
         
         return "\n".join(report)
-        
-    except sqlite3.Error as e:
-        logger.error(f"❌ Fehler beim wöchentlichen Report: {e}")
+    except Exception as e:
+        logger.error(f"Wochenbericht fehlgeschlagen: {e}")
         return f"❌ Fehler: {e}"
 
-def get_monthly_report() -> str:
-    """Erstellt einen monatlichen Bericht (aktueller Monat 1.-31.)"""
+
+def get_monthly_report():
+    """Erstellt einen Bericht für den aktuellen Monat"""
     try:
         today = datetime.now()
-        # Erster Tag des aktuellen Monats
-        first_day = today.replace(day=1, hour=0, minute=0, second=0)
-        first_day_iso = first_day.isoformat()
+        start_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            
-            # Nach Kategorie
-            cursor.execute("""
-                SELECT category, SUM(amount) as total
-                FROM expenses
-                WHERE date >= ?
-                GROUP BY category
-                ORDER BY total DESC
-            """, (first_day_iso,))
-            
-            category_results = cursor.fetchall()
-            
-            # Nach Händler
-            cursor.execute("""
-                SELECT store, SUM(amount) as total
-                FROM expenses
-                WHERE date >= ? AND store IS NOT NULL
-                GROUP BY store
-                ORDER BY total DESC
-                LIMIT 5
-            """, (first_day_iso,))
-            
-            store_results = cursor.fetchall()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Nach Kategorie
+        cursor.execute("""
+            SELECT category, SUM(amount) as total
+            FROM expenses
+            WHERE date >= ?
+            GROUP BY category
+            ORDER BY total DESC
+        """, (start_of_month.isoformat(),))
+        
+        category_results = cursor.fetchall()
+        
+        # Nach Händler
+        cursor.execute("""
+            SELECT store, SUM(amount) as total
+            FROM expenses
+            WHERE date >= ? AND store IS NOT NULL
+            GROUP BY store
+            ORDER BY total DESC
+            LIMIT 5
+        """, (start_of_month.isoformat(),))
+        
+        store_results = cursor.fetchall()
+        conn.close()
         
         if not category_results:
-            return f"📊 Keine Ausgaben diesen Monat ({today.strftime('%B %Y')})."
+            return "📊 Keine Ausgaben diesen Monat."
         
         total = sum(r[1] for r in category_results)
         
         report = [f"📊 **MONATLICHER AUSGABENBERICHT**\n"]
-        report.append(f"Zeitraum: {today.strftime('%B %Y')}\n")
+        report.append(f"Monat: {today.strftime('%B %Y')}")
         report.append(f"Gesamt: **{total:.2f}€**\n")
         
         report.append("Nach Kategorie:")
         for category, amount in category_results:
-            percentage = (amount / total) * 100 if total > 0 else 0
+            percentage = (amount / total) * 100
             report.append(f"  • {category}: {amount:.2f}€ ({percentage:.1f}%)")
         
         if store_results:
@@ -314,26 +330,27 @@ def get_monthly_report() -> str:
                 report.append(f"  • {store}: {amount:.2f}€")
         
         return "\n".join(report)
-        
-    except sqlite3.Error as e:
-        logger.error(f"❌ Fehler beim monatlichen Report: {e}")
+    except Exception as e:
+        logger.error(f"Monatsbericht fehlgeschlagen: {e}")
         return f"❌ Fehler: {e}"
 
-def get_store_comparison() -> str:
+
+def get_store_comparison():
     """Vergleicht Ausgaben bei verschiedenen Händlern"""
     try:
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                SELECT store, SUM(amount) as total, COUNT(*) as visits
-                FROM expenses
-                WHERE store IS NOT NULL
-                GROUP BY store
-                ORDER BY total DESC
-            """)
-            
-            results = cursor.fetchall()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT store, SUM(amount) as total, COUNT(*) as visits
+            FROM expenses
+            WHERE store IS NOT NULL
+            GROUP BY store
+            ORDER BY total DESC
+        """)
+        
+        results = cursor.fetchall()
+        conn.close()
         
         if not results:
             return "📊 Keine Händler-Daten vorhanden."
@@ -345,107 +362,133 @@ def get_store_comparison() -> str:
             report.append(f"  • {store}: {total:.2f}€ ({visits}x, Ø {avg_per_visit:.2f}€)")
         
         return "\n".join(report)
-        
-    except sqlite3.Error as e:
-        logger.error(f"❌ Fehler beim Händler-Vergleich: {e}")
+    except Exception as e:
+        logger.error(f"Händler-Vergleich fehlgeschlagen: {e}")
         return f"❌ Fehler: {e}"
 
-def get_recent_expenses(limit: int = 10) -> str:
-    """Zeigt die letzten N Ausgaben"""
+
+def export_csv(filename=None):
+    """Exportiert alle Daten als CSV"""
+    if not filename:
+        filename = f"expenses_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    
     try:
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT date, amount, category, store FROM expenses ORDER BY date DESC LIMIT ?",
-                (limit,)
-            )
-            results = cursor.fetchall()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM expenses ORDER BY date DESC")
+        results = cursor.fetchall()
+        conn.close()
         
         if not results:
-            return "📊 Keine Ausgaben vorhanden."
+            print("📊 Keine Daten zum Exportieren.")
+            return
         
-        report = [f"📋 **Letzte {limit} Ausgaben:**"]
-        for date, amount, category, store in results:
-            store_str = f" ({store})" if store else ""
-            report.append(f"  {date[:10]}: {amount:.2f}€ - {category}{store_str}")
+        export_path = Path.home() / filename
+        with open(export_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['ID', 'Betrag', 'Kategorie', 'Händler', 'Beschreibung', 'Datum', 'Erstellt'])
+            writer.writerows(results)
         
-        return "\n".join(report)
-        
-    except sqlite3.Error as e:
-        logger.error(f"❌ Fehler beim Abrufen: {e}")
-        return f"❌ Fehler: {e}"
-
-def add_category(category: str, keywords: List[str]) -> bool:
-    """Fügt neue Kategorie mit Keywords hinzu"""
-    try:
-        categories = load_categories()
-        
-        if category in categories:
-            # Keywords erweitern
-            categories[category].extend([k for k in keywords if k not in categories[category]])
-        else:
-            categories[category] = keywords
-        
-        save_categories(categories)
-        print(f"✅ Kategorie '{category}' hinzugefügt/erweitert")
-        return True
-        
+        print(f"✅ Exportiert: {export_path}")
+        logger.info(f"CSV exportiert: {export_path}")
     except Exception as e:
-        logger.error(f"❌ Fehler beim Hinzufügen der Kategorie: {e}")
-        return False
+        logger.error(f"Export fehlgeschlagen: {e}")
+        print(f"❌ Fehler: {e}")
+
+
+def backup_db():
+    """Erstellt ein Backup der Datenbank"""
+    try:
+        backup_file = f"{DB_PATH}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        shutil.copy2(DB_PATH, backup_file)
+        logger.info(f"Backup erstellt: {backup_file}")
+        return backup_file
+    except Exception as e:
+        logger.error(f"Backup fehlgeschlagen: {e}")
+        return None
+
+
+def list_expenses(limit=10):
+    """Zeigt die letzten Einträge"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Summe
+        cursor.execute("SELECT SUM(amount) FROM expenses")
+        total = cursor.fetchone()[0] or 0
+        
+        # Einträge
+        cursor.execute("""
+            SELECT date, amount, category, store, description 
+            FROM expenses 
+            ORDER BY date DESC 
+            LIMIT ?
+        """, (limit,))
+        
+        results = cursor.fetchall()
+        conn.close()
+        
+        if not results:
+            print("📊 Keine Ausgaben vorhanden.")
+            return
+        
+        print(f"📋 **Letzte {len(results)} Ausgaben:**")
+        print(f"   💰 Gesamtsumme: {total:.2f}€\n")
+        
+        for date, amount, category, store, description in results:
+            store_str = f" ({store})" if store else ""
+            desc_str = f" - {description[:30]}" if description else ""
+            print(f"  {date[:10]}: {amount:>8.2f}€ - {category}{store_str}{desc_str}")
+    except Exception as e:
+        logger.error(f"Auflisten fehlgeschlagen: {e}")
+        print(f"❌ Fehler: {e}")
+
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Expense Tracker - Ausgaben verfolgen",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Beispiele:
-  %(prog)s "12,50€ bei Rewe"
-  %(prog)s --weekly
-  %(prog)s --monthly
-        """
-    )
-    parser.add_argument("text", nargs="?", help="Ausgabe als Text")
+    parser = argparse.ArgumentParser(description="Expense Tracker - Ausgaben verfolgen")
+    parser.add_argument("text", nargs="?", help="Ausgabe als Text (z.B. '12,50€ bei Rewe')")
     parser.add_argument("--init", action="store_true", help="Datenbank initialisieren")
     parser.add_argument("--weekly", action="store_true", help="Wöchentlicher Bericht")
     parser.add_argument("--monthly", action="store_true", help="Monatlicher Bericht")
     parser.add_argument("--stores", action="store_true", help="Händler-Vergleich")
-    parser.add_argument("--list", action="store_true", help="Letzte 10 Einträge")
+    parser.add_argument("--list", action="store_true", help="Letzte Einträge anzeigen")
+    parser.add_argument("--limit", type=int, default=10, help="Anzahl der Einträge (default: 10)")
     parser.add_argument("--add-category", metavar="NAME", help="Neue Kategorie hinzufügen")
-    parser.add_argument("--keywords", metavar="LIST", help="Keywords für neue Kategorie (komma-getrennt)")
+    parser.add_argument("--keywords", help="Keywords für neue Kategorie (kommasepariert)")
+    parser.add_argument("--export", action="store_true", help="Als CSV exportieren")
+    parser.add_argument("--backup", action="store_true", help="Datenbank sichern")
     
     args = parser.parse_args()
     
-    # Datenbank initialisieren (falls noch nicht geschehen)
     if args.init:
         init_db()
-        return
-    
-    # Stelle sicher, dass DB existiert
-    if not DB_PATH.exists():
-        print("⚠️  Datenbank existiert noch nicht. Initialisiere...")
-        if not init_db():
-            sys.exit(1)
-    
-    if args.weekly:
+    elif args.weekly:
         print(get_weekly_report())
     elif args.monthly:
         print(get_monthly_report())
     elif args.stores:
         print(get_store_comparison())
     elif args.list:
-        print(get_recent_expenses())
+        list_expenses(args.limit)
     elif args.add_category:
         if not args.keywords:
-            print("❌ --keywords erforderlich für --add-category")
-            sys.exit(1)
-        keywords = [k.strip() for k in args.keywords.split(',')]
-        add_category(args.add_category, keywords)
+            print("❌ --keywords wird benötigt (z.B. --keywords 'gym,fitness,sport')")
+            return
+        add_category(args.add_category, args.keywords)
+    elif args.export:
+        export_csv()
+    elif args.backup:
+        backup_file = backup_db()
+        if backup_file:
+            print(f"✅ Backup erstellt: {backup_file}")
+        else:
+            print("❌ Backup fehlgeschlagen")
     elif args.text:
-        success = add_expense(args.text)
-        sys.exit(0 if success else 1)
+        add_expense(args.text)
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()
