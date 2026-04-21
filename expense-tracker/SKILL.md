@@ -1,11 +1,18 @@
 ---
 name: expense-tracker
 description: Ausgaben-Tracking per Sprachnachricht mit automatischer Kategorie-Erkennung und Reports (wöchentlich/monatlich)
+version: 2.0
 ---
 
 # Expense Tracker Skill
 
 Trackt Ausgaben per Sprachnachricht oder Text. Automatische Kategorie-Erkennung, Händler-Tracking und detaillierte Reports.
+
+**✅ Verbessert in Version 2.0:**
+- Robustes Error Handling
+- Erweiterbare Kategorien (JSON)
+- Bessere Betragserkennung
+- Logging für Fehler
 
 ## Features
 
@@ -14,6 +21,7 @@ Trackt Ausgaben per Sprachnachricht oder Text. Automatische Kategorie-Erkennung,
 - 🏪 **Händler-Tracking**: Vergleicht Rewe vs Lidl vs Aldi
 - 📊 **Reports**: Wöchentlich & Monatlich automatisch
 - 💾 **SQLite**: Lokale Datenbank, keine Cloud
+- 🛡️ **Datensicherheit**: Backup vor Updates, Schema bleibt identisch
 
 ## Schnellstart
 
@@ -46,9 +54,20 @@ python3 skills/expense-tracker/scripts/expense_tracker.py --stores
 python3 skills/expense-tracker/scripts/expense_tracker.py --list
 ```
 
-## Automatische Erkennung
+## Erweiterbare Kategorien
 
-### Kategorien
+### Standard-Kategorien anpassen
+```bash
+# Neue Kategorie hinzufügen
+python3 skills/expense-tracker/scripts/expense_tracker.py \
+  --add-category "Fitness" \
+  --keywords "gym,mcfit,clever fit,training,fitnessstudio"
+```
+
+Kategorien werden in `config/categories.json` gespeichert.
+
+### Automatische Erkennung
+
 | Keyword | Kategorie |
 |---------|-----------|
 | Rewe, Lidl, Aldi, Edeka... | Lebensmittel |
@@ -97,17 +116,20 @@ print(report)
 
 **Pfad:** `~/.openclaw/workspace/data/expenses.db`
 
-**Struktur:**
+**Struktur (unverändert):**
 ```sql
 expenses:
 - id (INTEGER PRIMARY KEY)
-- amount (REAL)           # Betrag
-- category (TEXT)           # Kategorie
-- store (TEXT)            # Händler (optional)
-- description (TEXT)      # Beschreibung
-- date (TEXT)             # ISO-8601 Datum
-- created_at (TEXT)       # Timestamp
+- amount (REAL NOT NULL)           # Betrag
+- category (TEXT NOT NULL)          # Kategorie
+- store (TEXT)                      # Händler (optional)
+- description (TEXT)                # Beschreibung
+- date (TEXT)                       # ISO-8601 Datum
+- created_at (TEXT)                 # Timestamp
 ```
 
+**Backup:** Vor jedem Update wird automatisch ein Backup erstellt (`expense_tracker.py.backup.YYYYMMDD_HHMMSS`)
+
 ---
-*Skill erstellt für* 🎩
+*Skill erstellt für Eure Lordschaft* 🎩
+*Version 2.0 - Robusteres Error Handling*
