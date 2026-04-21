@@ -3,7 +3,7 @@
 WordPress REST API Manager
 Erstellt, aktualisiert und löscht WordPress-Beiträge via REST API.
 
-Autor: OpenClaw Assistent
+Autor: James (OpenClaw Assistant)
 Version: 1.0.0
 """
 
