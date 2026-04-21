@@ -2,6 +2,13 @@
 """
 DHL Sendungsverfolgung via API
 Optimiert mit Retry-Logik, Caching und robustem Error Handling
+
+WICHTIG: Dies ist das LOW-LEVEL Tracking-Script für einzelne Pakete.
+Für zentrale Verwaltung mehrerer Pakete (Hermes + DHL) siehe:
+  -> skills/hermes-tracking/scripts/package_manager.py
+  
+Verwendung via Manager:
+  python3 package_manager.py track --json
 """
 
 import argparse
