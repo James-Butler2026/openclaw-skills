@@ -4,7 +4,7 @@ Eine Sammlung nützlicher Skills für OpenClaw – vollständig lokal nutzbar, d
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **17 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
+Diese Sammlung enthält **16 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
@@ -13,18 +13,17 @@ Diese Sammlung enthält **17 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [backup-manager](#backup-manager) | Automatische Workspace-Backups mit Git | Sicherung |
 | [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe | Produktivität |
 | [crypto-tracker](#crypto-tracker) | Krypto-Portfolio-Tracking für BTC, ETH, SOL, XRP | Finanzen |
-| [dhl-tracking](#dhl-tracking) | DHL Paketverfolgung via REST API | Tracking |
 | [elevenlabs-tts](#elevenlabs-tts) | Text-to-Speech via ElevenLabs API | Audio |
 | [email-sender](#email-sender) | E-Mails via SMTP senden | Kommunikation |
 | [expense-tracker](#expense-tracker) | Ausgaben-Tracking per Sprache mit Reports | Finanzen |
 | [github-manager](#github-manager) | Skills zu GitHub veröffentlichen | Entwicklung |
-| [hermes-tracking](#hermes-tracking) | Hermes Paketverfolgung mit Browser-Automation | Tracking |
 | [image-generation](#image-generation) | Kostenlose Bildgenerierung via Pollinations.ai | Bild |
 | [leonardo-image-gen](#leonardo-image-gen) | Bildgenerierung mit Leonardo AI | Bild |
 | [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai | Entwicklung |
 | [meme-architect](#meme-architect) | Meme-Generierung mit imgflip API | Spaß |
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
 | [newsletter-monitor](#newsletter-monitor) | KI-gestützte Fleisch-Angebotsüberwachung | Monitoring |
+| [package-tracking](#package-tracking) | Einheitliches Paket-Tracking für Hermes + DHL | Tracking |
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
 | [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
@@ -147,19 +146,32 @@ python3 scripts/calendar_cli.py --today
 
 ---
 
-### dhl-tracking
-**DHL Paketverfolgung via REST API**
+### package-tracking
+**Einheitliches Paket-Tracking für Hermes + DHL**
 
-- Direkte API-Abfrage (kein Browser nötig)
-- Überwachte Status-Erkennung
+- Zentraler Manager für alle Pakete
+- SQLite-Datenbank mit Tracking-Verlauf
 - Automatische Checks um 10:00 und 16:00 Uhr
-- JSON-Output für Weiterverarbeitung
+- Telegram-Updates bei Status-Änderungen
+- Retry-Logik für API-Fehler
 
 ```bash
-python3 scripts/dhl_tracker.py 00340434886241560288
+# Paket hinzufügen
+python3 scripts/package_manager.py add -c [CODE] -r hermes -d "Beschreibung"
+
+# Alle Pakete tracken
+python3 scripts/package_manager.py track --json
+
+# Übersicht anzeigen
+python3 scripts/package_manager.py list
 ```
 
-→ [Details ansehen](dhl-tracking/README.md)
+**Architektur:**
+- `package_manager.py` - Hauptscript (Koordination, DB)
+- `hermes_tracker.py` - Hermes via Browser + OCR
+- `dhl_tracker.py` - DHL via REST API
+
+→ [Details ansehen](package-tracking/SKILL.md)
 
 ---
 
@@ -211,22 +223,6 @@ python3 scripts/github_publish.py --skill image-generation --repo openclaw-skill
 ```
 
 → [Details ansehen](github-manager/README.md)
-
----
-
-### hermes-tracking
-**Hermes Paketverfolgung mit Browser-Automation**
-
-- Playwright + Chromium Browser
-- OCR-Textextraktion mit Tesseract
-- Screenshot-Archivierung
-- Automatische Cron-Verwaltung
-
-```bash
-python3 scripts/hermes_tracker.py H1003660401590901036
-```
-
-→ [Details ansehen](hermes-tracking/README.md)
 
 ---
 
@@ -430,7 +426,7 @@ Siehe die einzelnen Skill-READMEs für die benötigten Variablen.
 ├── skills/
 │   ├── audio-transcription/
 │   ├── crypto-tracker/
-│   ├── dhl-tracking/
+│   ├── package-tracking/         # ← NEU: Einheitliches Tracking
 │   ├── ...
 │   └── wordpress-manager/
 ├── scripts/                      # Skill-Scripts
