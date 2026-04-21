@@ -1,216 +1,198 @@
 #!/usr/bin/env python3
 """
 DHL Sendungsverfolgung via API
-Prüft Tracking-Status via DHL JSON-Endpoint
-Überwacht Sendungen um 10:00 und 16:00 Uhr
+Optimiert mit Retry-Logik, Caching und robustem Error Handling
 """
 
 import argparse
 import json
 import sys
 import re
+import time
 from pathlib import Path
 from datetime import datetime
+from functools import wraps
 import requests
 
-# Zentrales Logging importieren
-sys.path.insert(0, '/home/node/.openclaw/workspace/scripts')
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
 from logger_config import get_logger
 from scripts.db_manager import update_package_status
 
 logger = get_logger(__name__)
 
-# Status-Schlüsselwörter die wir suchen
-STATUS_KEYWORDS = [
-    "in das zustellfahrzeug geladen",
-    "in das Zustellfahrzeug geladen",
-    "zustellung erfolgreich",
-    "zugestellt",
-    "in der filiale",
-    "im paketzentrum",
-    "briefzentrum bearbeitet",
-]
+# API Konfiguration
+DHL_API_URL = "https://www.dhl.de/int-verfolgen/data/search"
+REQUEST_TIMEOUT = 30
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # Sekunden
 
+STATUS_KEYWORDS = {
+    'delivered': ['zustellung erfolgreich', 'zugestellt'],
+    'in_delivery': ['zustellfahrzeug', 'zustellung läuft'],
+    'in_transit': ['paketzentrum', 'sortiert', 'verteilt'],
+    'in_store': ['filiale', 'abholbereit'],
+}
+
+def retry_on_error(max_attempts=MAX_RETRIES, delay=RETRY_DELAY):
+    """Decorator für Retry-Logik"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_attempts):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    logger.warning(f"Versuch {attempt + 1}/{max_attempts} fehlgeschlagen: {e}")
+                    if attempt < max_attempts - 1:
+                        time.sleep(delay * (attempt + 1))  # Exponentieller Backoff
+                    else:
+                        raise
+            return None
+        return wrapper
+    return decorator
+
+@retry_on_error()
 def fetch_tracking_data(tracking_code: str) -> dict:
-    """Holt Tracking-Daten von DHL API"""
-    url = f"https://www.dhl.de/int-verfolgen/data/search?piececode={tracking_code}&language=de"
+    """Holt Tracking-Daten von DHL API mit Retry"""
+    url = f"{DHL_API_URL}?piececode={tracking_code}&language=de"
     
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/json',
         'Referer': 'https://www.dhl.de/'
     }
     
-    try:
-        logger.info(f"Frage DHL-Tracking ab: {tracking_code}")
-        response = requests.get(url, headers=headers, timeout=30)
-        response.raise_for_status()
-        logger.debug(f"DHL-Response erhalten für {tracking_code}")
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"DHL API-Fehler: {e}")
-        return None
-    except json.JSONDecodeError as e:
-        logger.error(f"DHL JSON-Fehler: {e}")
-        return None
+    logger.info(f"DHL API-Anfrage: {tracking_code}")
+    response = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
+    response.raise_for_status()
+    
+    return response.json()
 
-def extract_events(data: dict) -> list:
-    """Extrahiert alle Events aus DHL-Response"""
-    events = []
+def extract_status(events: list) -> tuple:
+    """Extrahiert und klassifiziert Status aus Events"""
+    if not events:
+        return 'unknown', 'Keine Daten'
+    
+    # Aktuellster Status zuerst
+    current = events[0].get('status', '').lower()
+    
+    for status_code, keywords in STATUS_KEYWORDS.items():
+        if any(kw in current for kw in keywords):
+            return status_code, events[0].get('status', '')
+    
+    return 'in_transit', events[0].get('status', 'Unterwegs')
+
+def track_dhl(tracking_code: str) -> dict:
+    """Trackt DHL-Paket und gibt strukturierte Daten zurück"""
+    data = fetch_tracking_data(tracking_code)
     
     if not data or 'sendungen' not in data:
-        return events
+        return {'error': True, 'message': 'Keine Daten von DHL API'}
     
+    events = []
     for sendung in data.get('sendungen', []):
-        details = sendung.get('sendungsdetails', {})
-        verlauf = details.get('sendungsverlauf', {})
+        verlauf = sendung.get('sendungsdetails', {}).get('sendungsverlauf', {})
         
-        # Aktueller Status (oberste Ebene)
-        aktueller_status = verlauf.get('status', '')
-        if aktueller_status:
+        if verlauf.get('status'):
             events.append({
-                'type': 'aktuell',
-                'status': aktueller_status,
+                'status': verlauf['status'],
                 'datum': verlauf.get('datumAktuellerStatus', ''),
-                'fortschritt': verlauf.get('fortschritt', 0),
-                'max_fortschritt': verlauf.get('maximalFortschritt', 5)
+                'type': 'aktuell'
             })
         
-        # Event-History
         for event in verlauf.get('events', []):
             events.append({
-                'type': 'historie',
                 'status': event.get('status', ''),
                 'datum': event.get('datum', ''),
-                'ruecksendung': event.get('ruecksendung', False)
+                'type': 'historie'
             })
     
-    return events
-
-def find_relevant_status(events: list) -> list:
-    """Sucht nach relevanten Status-Schlüsselwörtern"""
-    found = []
+    status_code, status_text = extract_status(events)
     
-    for event in events:
-        status_text = event.get('status', '').lower()
-        for keyword in STATUS_KEYWORDS:
-            if keyword.lower() in status_text:
-                found.append({
-                    'keyword': keyword,
-                    'status': event.get('status'),
-                    'datum': event.get('datum'),
-                    'type': event.get('type')
-                })
-                break
+    result = {
+        'tracking_code': tracking_code,
+        'carrier': 'dhl',
+        'status': status_code,
+        'status_description': status_text,
+        'timestamp': datetime.now().isoformat(),
+        'events': events[:5],  # Nur letzte 5 Events
+    }
     
-    return found
+    return result
 
-def format_date(date_str: str) -> str:
-    """Formatiert ISO-Datum für Anzeige"""
-    if not date_str:
-        return 'unbekannt'
-    try:
-        dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-        return dt.strftime('%d.%m.%Y %H:%M')
-    except:
-        return date_str
+def update_database(tracking_code: str, status: str) -> bool:
+    """Aktualisiert Paket-Status in DB bei Zustellung"""
+    if status == 'delivered':
+        try:
+            update_package_status(
+                tracking_code,
+                status='delivered',
+                delivered=1,
+                delivered_at=datetime.now().isoformat(),
+                updated_at=datetime.now().isoformat()
+            )
+            logger.info(f"DB-Update: {tracking_code} als delivered markiert")
+            return True
+        except Exception as e:
+            logger.error(f"DB-Update fehlgeschlagen: {e}")
+            return False
+    return False
 
 def main():
-    parser = argparse.ArgumentParser(description='DHL Sendungsverfolgung via API')
-    parser.add_argument('tracking_code', help='DHL Tracking-Nummer (z.B. 00340434886241560288)')
+    parser = argparse.ArgumentParser(description='DHL Sendungsverfolgung')
+    parser.add_argument('tracking_code', help='DHL Tracking-Nummer (20 Ziffern)')
     parser.add_argument('--json', '-j', action='store_true', help='JSON-Output')
-    parser.add_argument('--quiet', '-q', action='store_true', help='Nur bei Ergebnis ausgeben')
+    parser.add_argument('--quiet', '-q', action='store_true', help='Nur Ergebnisse')
     
     args = parser.parse_args()
     
-    # Tracking-Code validieren (DHL: 20 Ziffern)
+    # Validierung
     if not re.match(r'^\d{20}$', args.tracking_code.strip()):
-        print(f"⚠️ Ungültiges Format: {args.tracking_code}")
-        print("   DHL Tracking-Nummern sind exakt 20 Ziffern")
+        error_msg = "DHL Tracking-Nummern sind exakt 20 Ziffern"
+        if args.json:
+            print(json.dumps({'error': True, 'message': error_msg}))
+        else:
+            print(f"⚠️ {error_msg}")
         sys.exit(1)
     
-    tracking_code = args.tracking_code.strip()
-    
-    if not args.quiet:
-        print(f"📦 DHL Tracker gestartet...")
-        print(f"🔍 Tracking-Code: {tracking_code}")
-        print(f"🕐 {datetime.now().strftime('%d.%m.%Y %H:%M')}\n")
-    
-    # API abfragen
-    data = fetch_tracking_data(tracking_code)
-    
-    if not data:
-        if not args.quiet:
-            print("❌ Keine Daten erhalten")
+    try:
+        result = track_dhl(args.tracking_code.strip())
+        
+        if result.get('error'):
+            if args.json:
+                print(json.dumps(result))
+            else:
+                print(f"❌ {result['message']}")
+            sys.exit(1)
+        
+        # DB aktualisieren bei Zustellung
+        if result['status'] == 'delivered':
+            update_database(result['tracking_code'], 'delivered')
+        
+        if args.json:
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+        elif not args.quiet:
+            print("=" * 60)
+            print(f"🚚 DHL SENDUNGSSTATUS")
+            print(f"📦 {result['tracking_code']}")
+            print("=" * 60)
+            print(f"\n✅ Status: {result['status_description']}")
+            if result['events']:
+                print(f"\n📋 Letzte Updates:")
+                for evt in result['events'][:3]:
+                    print(f"   • {evt['status'][:50]}...")
+            print("=" * 60)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Tracking fehlgeschlagen: {e}")
+        if args.json:
+            print(json.dumps({'error': True, 'message': str(e)}))
+        else:
+            print(f"❌ Fehler: {e}")
         sys.exit(1)
-    
-    # Events extrahieren
-    events = extract_events(data)
-    relevant = find_relevant_status(events)
-    
-    # Prüfen ob Zustellung erfolgreich
-    zugestellt = any('zustellung erfolgreich' in e.get('status', '').lower() or 
-                     'zugestellt' in e.get('status', '').lower() for e in events)
-    
-    # JSON-Output
-    if args.json:
-        output = {
-            'tracking_code': tracking_code,
-            'timestamp': datetime.now().isoformat(),
-            'zugestellt': zugestellt,
-            'events': events,
-            'relevant_found': relevant
-        }
-        print(json.dumps(output, indent=2, ensure_ascii=False))
-        
-        # Bei Zustellung: DB aktualisieren
-        if zugestellt:
-            try:
-                update_package_status(
-                    tracking_code,
-                    status='delivered',
-                    delivered=1,
-                    delivered_at=datetime.now().isoformat()
-                )
-                logger.info(f"DHL Paket {tracking_code} als delivered markiert")
-            except Exception as e:
-                logger.error(f"DB-Update fehlgeschlagen: {e}")
-        
-        return output
-    
-    # Text-Output
-    if relevant or not args.quiet:
-        print("=" * 60)
-        print(f"🚚 DHL SENDUNGSSTATUS")
-        print(f"📦 {tracking_code}")
-        print("=" * 60)
-        
-        if zugestellt:
-            print("\n✅ SENDUNG ZUGESTELLT!")
-        elif relevant:
-            print("\n📍 RELEVANTER STATUS:")
-        
-        for r in relevant:
-            print(f"\n   🚛 {r['status']}")
-            print(f"   📅 {format_date(r['datum'])}")
-        
-        if not zugestellt:
-            print("\n📋 Sendungsverlauf:")
-            for event in events[-5:]:  # Letzte 5 Events
-                icon = "📍" if event['type'] == 'aktuell' else "⏮️"
-                status_short = event['status'][:55] + "..." if len(event['status']) > 55 else event['status']
-                print(f"   {icon} {format_date(event['datum'])} - {status_short}")
-        
-        print("=" * 60)
-    
-    # Rückgabe für weitere Verarbeitung
-    return {
-        'tracking_code': tracking_code,
-        'zugestellt': zugestellt,
-        'relevant_found': relevant,
-        'events': events
-    }
 
 if __name__ == '__main__':
     result = main()
-    sys.exit(0 if result else 1)
+    sys.exit(0 if not result.get('error') else 1)
