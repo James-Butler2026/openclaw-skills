@@ -58,7 +58,7 @@ python3 -c "from playwright.sync_api import sync_playwright; print('Playwright O
 
 ## Automatisches Tracking-Setup
 
-Euer gibt mir die Tracking-Nummer – ich erledige den Rest:
+Eure Lordschaft gibt mir die Tracking-Nummer – ich erledige den Rest:
 
 ### Workflow:
 
