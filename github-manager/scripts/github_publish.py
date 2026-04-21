@@ -104,7 +104,7 @@ def check_repo_exists(repo_name, config=None):
 
 
 def publish_skill(skill_name, repo_name, description="", config=None):
-    """Veröffentlicht einen Skill zu GitHub - JETZT MIT ECHTEM PUSH!"""
+    """Veröffentlicht einen Skill zu GitHub - SICHER, KEINE TOKENS IM OUTPUT!"""
     if config is None:
         config = load_config()
     
@@ -119,7 +119,7 @@ def publish_skill(skill_name, repo_name, description="", config=None):
     temp_clone = Path(tempfile.mkdtemp(prefix='github_clone_'))
     
     try:
-        # SICHER: Token in URL nicht im Output zeigen
+        # SICHER: Token in URL, aber NIEMALS im Output zeigen
         repo_url = f"https://{config['username']}:{config['token']}@github.com/{config['username']}/{repo_name}.git"
         
         print(f"   📥 Klone Repository...")
@@ -131,8 +131,12 @@ def publish_skill(skill_name, repo_name, description="", config=None):
         )
         
         if result.returncode != 0:
-            # Token aus Fehlermeldung entfernen
-            safe_error = result.stderr.replace(config['token'], '***HIDDEN***')
+            # Token aus JEDER Fehlermeldung entfernen
+            safe_error = result.stderr
+            for key in ['token', 'password', 'ghp_', config['token'][:10]]:
+                safe_error = safe_error.replace(config['token'], '***HIDDEN***')
+                if len(config['token']) > 10:
+                    safe_error = safe_error.replace(config['token'][:20], '***HIDDEN***')
             shutil.rmtree(temp_clone, ignore_errors=True)
             raise RuntimeError(f"Git clone fehlgeschlagen: {safe_error}")
         

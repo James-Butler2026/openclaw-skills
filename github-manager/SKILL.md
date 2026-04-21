@@ -201,4 +201,4 @@ jobs:
 
 ---
 
-*Skills veröffentlichen leicht gemacht – für!* 🐙🎩
+*Skills veröffentlichen leicht gemacht – für Eure Lordschaft!* 🐙🎩
