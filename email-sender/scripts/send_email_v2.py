@@ -69,7 +69,7 @@ def load_env_file():
                 line = line.strip()
                 if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
-                    os.environ[key] = value
+                    os.environ.setdefault(key, value)
 
 
 def validate_email(email: str) -> bool:
