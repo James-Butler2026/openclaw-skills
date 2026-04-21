@@ -358,6 +358,9 @@ Beispiele:
     
     args = parser.parse_args()
     
+    # .env laden
+    load_env_file()
+    
     # Logging-Level anpassen
     if args.verbose:
         logger.setLevel(logging.DEBUG)
