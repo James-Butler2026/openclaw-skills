@@ -179,8 +179,49 @@ def publish_skill(skill_name, repo_name, description="", config=None):
         )
         
         if status_result.stdout.strip():
+            # Zeige was sich geändert hat
+            diff_result = subprocess.run(
+                ['git', '-C', str(temp_clone), 'diff', '--stat', '--cached'],
+                check=True, capture_output=True, text=True
+            )
+            if diff_result.stdout.strip():
+                print(f"   📊 Änderungen:")
+                for line in diff_result.stdout.strip().split('\n')[:5]:
+                    print(f"      {line}")
+                if len(diff_result.stdout.strip().split('\n')) > 5:
+                    print(f"      ... und weitere")
+            
+            # Bessere Commit-Message basierend auf Status
+            changed = status_result.stdout.strip().split('\n')
+            if len(changed) == 1:
+                # Eine Datei geändert
+                file_info = changed[0].split()
+                if len(file_info) >= 2:
+                    status_code = file_info[0]
+                    filename = file_info[-1]
+                    if 'A' in status_code:
+                        msg = f"Add {skill_name}: {Path(filename).name}"
+                    elif 'M' in status_code:
+                        msg = f"Update {skill_name}: {Path(filename).name}"
+                    elif 'D' in status_code:
+                        msg = f"Remove {skill_name}: {Path(filename).name}"
+                    else:
+                        msg = f"Update {skill_name}"
+                else:
+                    msg = f"Update {skill_name}"
+            else:
+                # Mehrere Dateien
+                adds = sum(1 for c in changed if c.startswith('A') or ' A' in c)
+                mods = sum(1 for c in changed if c.startswith('M') or ' M' in c)
+                dels = sum(1 for c in changed if c.startswith('D') or ' D' in c)
+                parts = []
+                if adds: parts.append(f"+{adds}")
+                if mods: parts.append(f"~{mods}")
+                if dels: parts.append(f"-{dels}")
+                msg = f"Update {skill_name}: {', '.join(parts)} files"
+            
             subprocess.run(
-                ['git', '-C', str(temp_clone), 'commit', '-m', f'Add {skill_name} skill'],
+                ['git', '-C', str(temp_clone), 'commit', '-m', msg],
                 check=True, capture_output=True
             )
             subprocess.run(
@@ -188,6 +229,7 @@ def publish_skill(skill_name, repo_name, description="", config=None):
                 check=True, capture_output=True
             )
             print(f"   ✅ Erfolgreich gepusht!")
+            print(f"   📝 Commit: {msg}")
         else:
             print(f"   ⚠️  Nichts zu committen (bereits aktuell?)")
         
