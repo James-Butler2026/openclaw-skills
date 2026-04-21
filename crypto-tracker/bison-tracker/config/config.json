@@ -1,0 +1,23 @@
+{
+  "stop_loss_percent": -20,
+  "take_profit_percent": 25,
+  "hourly_alert_percent": 15,
+  "coins": {
+    "BTC": {
+      "id": "bitcoin",
+      "name": "Bitcoin"
+    },
+    "XRP": {
+      "id": "ripple",
+      "name": "Ripple"
+    },
+    "ETH": {
+      "id": "ethereum",
+      "name": "Ethereum"
+    },
+    "SOL": {
+      "id": "solana",
+      "name": "Solana"
+    }
+  }
+}

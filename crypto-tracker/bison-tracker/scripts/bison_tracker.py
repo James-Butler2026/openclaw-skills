@@ -453,6 +453,7 @@ def main():
     parser.add_argument('--force', action='store_true', help='Neuerstellung erzwingen (Backup wird erstellt)')
     parser.add_argument('--status', action='store_true', help='Portfolio-Status anzeigen')
     parser.add_argument('--daily', action='store_true', help='Täglicher Report')
+    parser.add_argument('--hourly', action='store_true', help='Stündlicher Check mit Alerts')
     parser.add_argument('--buy', metavar='COIN', help='Neuen Kauf hinzufügen')
     parser.add_argument('--amount', type=float, help='Menge des Coins')
     parser.add_argument('--eur', type=float, help='Investierter Betrag in EUR')
@@ -491,6 +492,23 @@ def main():
                 print(f"\n{alert}")
         else:
             print("❌ Konnte Portfolio-Status nicht abrufen")
+        return
+    
+    if args.hourly:
+        status = get_portfolio_status()
+        if status:
+            # Nur bei signifikanten Änderungen Alerts ausgeben
+            alerts = check_alerts(status)
+            
+            # Stündliche Bewegung prüfen (±15%)
+            # TODO: Implementierung stündlicher Bewegungs-Erkennung
+            
+            if alerts:
+                for alert in alerts:
+                    print(alert)
+            else:
+                # Keine Alerts = normale Bewegung, nichts ausgeben
+                pass
         return
     
     parser.print_help()
