@@ -205,7 +205,7 @@ Optimierungen v2.0:
     )
     parser.add_argument(
         "--model", "-m",
-        default="small",
+        default="medium",
         choices=["tiny", "base", "small", "medium", "large-v3"],
         help="Whisper-Modell (tiny=am schnellsten, large-v3=beste Qualität). Default: small"
     )
