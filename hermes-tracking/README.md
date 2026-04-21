@@ -22,10 +22,10 @@ cd ~/.openclaw/workspace/skills/hermes-tracking/
 
 ```bash
 # Paket tracken
-python3 scripts/hermes_tracker.py H1003660401590901036
+python3 scripts/hermes_tracker.py [DEINE_TRACKING_NUMMER]
 
 # Mit sichtbarem Browser (Debug)
-python3 scripts/hermes_tracker.py H1003660401590901036 --show-browser
+python3 scripts/hermes_tracker.py [DEINE_TRACKING_NUMMER] --show-browser
 ```
 
 ## Konfiguration

@@ -42,7 +42,7 @@ def main():
     
     if not re.match(r'^H\d{16,}$', tracking_code):
         print(f"❌ Ungültige Tracking-Nummer: {tracking_code}")
-        print("   Format: H gefolgt von 16+ Ziffern (z.B. H1003660401590901036)")
+        print("   Format: H gefolgt von 16+ Ziffern (z.B. [DEINE_TRACKING_NUMMER])")
         sys.exit(1)
     
     # URL aufbauen
