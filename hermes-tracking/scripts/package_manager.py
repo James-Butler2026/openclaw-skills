@@ -60,7 +60,7 @@ def list_packages():
         print()
 
 def track_all_packages():
-    """Trackt alle aktiven Pakete - für Cron-Job"""
+    """Trackt alle aktiven Pakete - für Cron-Job (Hermes + DHL)"""
     import subprocess
     
     packages = get_active_packages()
@@ -81,7 +81,6 @@ def track_all_packages():
             try:
                 data = json.loads(result.stdout)
                 new_status = data.get('status', current_status)
-                status_text = new_status
                 
                 if new_status != current_status:
                     update_package_status(tracking_code, new_status)
@@ -90,11 +89,38 @@ def track_all_packages():
                         'carrier': 'HERMES',
                         'old_status': current_status,
                         'new_status': new_status,
-                        'status_text': status_text,
+                        'status_text': new_status,
                         'delivered': 'zugestellt' in new_status.lower() or 'delivered' in new_status.lower()
                     })
             except json.JSONDecodeError:
-                # Fehler beim Parsen - ignorieren
+                pass
+        
+        elif carrier == 'dhl':
+            # DHL tracken (falls DHL Script existiert)
+            try:
+                result = subprocess.run(
+                    ['python3', '/home/node/.openclaw/workspace/scripts/dhl_tracker.py', tracking_code, '--json'],
+                    capture_output=True, text=True, timeout=60
+                )
+                
+                try:
+                    data = json.loads(result.stdout)
+                    new_status = data.get('status', current_status)
+                    
+                    if new_status != current_status:
+                        update_package_status(tracking_code, new_status)
+                        updates.append({
+                            'code': tracking_code,
+                            'carrier': 'DHL',
+                            'old_status': current_status,
+                            'new_status': new_status,
+                            'status_text': new_status,
+                            'delivered': 'zugestellt' in new_status.lower() or 'delivered' in new_status.lower()
+                        })
+                except json.JSONDecodeError:
+                    pass
+            except FileNotFoundError:
+                # DHL Tracker existiert noch nicht - überspringen
                 pass
     
     return updates
