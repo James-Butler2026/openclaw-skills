@@ -220,9 +220,12 @@ def add_expense(text: str) -> bool:
         return False
 
 def get_weekly_report() -> str:
-    """Erstellt einen wöchentlichen Bericht (mit Error Handling)"""
+    """Erstellt einen wöchentlichen Bericht (aktuelle Kalenderwoche Mo-So)"""
     try:
-        week_ago = (datetime.now() - timedelta(days=7)).isoformat()
+        today = datetime.now()
+        # Aktuelle Woche: Montag bis Sonntag
+        monday = today - timedelta(days=today.weekday())  # 0=Montag
+        monday_iso = monday.replace(hour=0, minute=0, second=0).isoformat()
         
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
@@ -233,16 +236,17 @@ def get_weekly_report() -> str:
                 WHERE date >= ?
                 GROUP BY category
                 ORDER BY total DESC
-            """, (week_ago,))
+            """, (monday_iso,))
             
             results = cursor.fetchall()
         
         if not results:
-            return "📊 Keine Ausgaben diese Woche."
+            return f"📊 Keine Ausgaben diese Woche (ab {monday.strftime('%d.%m.%Y')})."
         
         total = sum(r[1] for r in results)
         
         report = [f"📊 **WÖCHENTLICHER AUSGABENBERICHT**\n"]
+        report.append(f"Zeitraum: {monday.strftime('%d.%m.')} - {today.strftime('%d.%m.%Y')}\n")
         report.append(f"Gesamt: **{total:.2f}€**\n")
         report.append("Nach Kategorie:")
         
@@ -257,9 +261,12 @@ def get_weekly_report() -> str:
         return f"❌ Fehler: {e}"
 
 def get_monthly_report() -> str:
-    """Erstellt einen monatlichen Bericht (mit Error Handling)"""
+    """Erstellt einen monatlichen Bericht (aktueller Monat 1.-31.)"""
     try:
-        month_ago = (datetime.now() - timedelta(days=30)).isoformat()
+        today = datetime.now()
+        # Erster Tag des aktuellen Monats
+        first_day = today.replace(day=1, hour=0, minute=0, second=0)
+        first_day_iso = first_day.isoformat()
         
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
@@ -271,7 +278,7 @@ def get_monthly_report() -> str:
                 WHERE date >= ?
                 GROUP BY category
                 ORDER BY total DESC
-            """, (month_ago,))
+            """, (first_day_iso,))
             
             category_results = cursor.fetchall()
             
@@ -283,16 +290,17 @@ def get_monthly_report() -> str:
                 GROUP BY store
                 ORDER BY total DESC
                 LIMIT 5
-            """, (month_ago,))
+            """, (first_day_iso,))
             
             store_results = cursor.fetchall()
         
         if not category_results:
-            return "📊 Keine Ausgaben diesen Monat."
+            return f"📊 Keine Ausgaben diesen Monat ({today.strftime('%B %Y')})."
         
         total = sum(r[1] for r in category_results)
         
         report = [f"📊 **MONATLICHER AUSGABENBERICHT**\n"]
+        report.append(f"Zeitraum: {today.strftime('%B %Y')}\n")
         report.append(f"Gesamt: **{total:.2f}€**\n")
         
         report.append("Nach Kategorie:")
