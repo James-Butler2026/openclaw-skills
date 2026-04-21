@@ -1,11 +1,22 @@
 ---
 name: email-sender
-description: Send emails via SMTP using configured accounts (Web.de, Gmail, etc.). Supports plain text emails with custom subject and body. Uses credentials from .env file. Perfect for quick notifications, alerts, and automated messages.
+description: Send emails via SMTP using configured accounts (Web.de, Gmail, etc.). Supports plain text and HTML emails with CC/BCC. Features retry-logic, timeout handling, and proper logging. Uses credentials from .env file. Perfect for quick notifications, alerts, and automated messages.
+version: 2.0
 ---
 
-# Email Sender Skill
+# Email Sender Skill v2.0
 
-Einfaches Versenden von E-Mails via SMTP. Nutzt konfigurierte Accounts aus der .env Datei.
+Einfaches Versenden von E-Mails via SMTP mit MiniMax-Optimierungen. Nutzt konfigurierte Accounts aus der .env Datei.
+
+## ✨ Neue Features in v2.0
+
+- 🔁 **Retry-Logik** – Automatische Wiederholung bei Verbindungsfehlern
+- ⏱️ **Timeout-Handling** – Konfigurierbare Timeouts
+- 📝 **Richtiges Logging** – Professionelles Logging statt print()
+- 🌐 **HTML-E-Mails** – HTML-Formatierung unterstützt
+- 📋 **CC/BCC** – Mehrere Empfänger mit CC und BCC
+- ✉️ **E-Mail-Validierung** – Automatische Prüfung aller Adressen
+- 🔙 **Abwärtskompatibel** – Alte API weiterhin nutzbar
 
 ## Voraussetzungen
 
@@ -35,32 +46,40 @@ Keine zusätzlichen Packages nötig – nutzt nur Python Standardlib!
 
 ## Schnellstart
 
-### Einzelne E-Mail senden
+### Einzelne E-Mail senden (v2.0)
 ```bash
 # Einfachste Variante
-python3 skills/email-sender/scripts/send_email.py \
+python3 skills/email-sender/scripts/send_email_v2.py \
     --to empfaenger@example.com \
     --subject "Hallo" \
     --body "Das ist ein Test"
 
-# Mit Web.de (Default)
-python3 skills/email-sender/scripts/send_email.py \
+# Mit HTML
+python3 skills/email-sender/scripts/send_email_v2.py \
     --to freund@gmail.com \
-    --subject "Treffen morgen" \
-    --body "Hallo, wir treffen uns um 15 Uhr." \
-    --provider webde
-```
+    --subject "Schicke Nachricht" \
+    --body "<h1>Hallo!</h1><p>Wie geht's?</p>" \
+    --html
 
-### E-Mail aus Datei
-```bash
-# Inhalt aus Textdatei
-python3 skills/email-sender/scripts/send_email.py \
+# Mit CC und BCC
+python3 skills/email-sender/scripts/send_email_v2.py \
     --to chef@firma.de \
+    --cc "assistent@firma.de, sekretaerin@firma.de" \
+    --bcc "archiv@firma.de" \
     --subject "Bericht" \
-    --body-file bericht.txt
+    --body "Siehe Anhang"
 ```
 
-## Parameter
+### Legacy-Version (v1.0)
+```bash
+# Alte Version für Abwärtskompatibilität
+python3 skills/email-sender/scripts/send_email.py \
+    --to empfaenger@example.com \
+    --subject "Hallo" \
+    --body "Test"
+```
+
+## Parameter (v2.0)
 
 | Parameter | Kurzform | Beschreibung |
 |-----------|----------|--------------|
@@ -68,53 +87,53 @@ python3 skills/email-sender/scripts/send_email.py \
 | `--subject` | `-s` | Betreff (Default: "Nachricht") |
 | `--body` | `-b` | Nachrichtentext |
 | `--body-file` | `-f` | Text aus Datei laden |
-| `--provider` | `-p` | Anbieter: webde, gmail, custom (Default: webde) |
-| `--from` | `-f` | Absender (optional, überschreibt .env) |
-
-## Konfiguration
-
-### Neue Anbieter hinzufügen
-
-In `~/.openclaw/workspace/.env` eintragen:
-
-```bash
-# Beispiel: GMX
-GMX_EMAIL=dein.name@gmx.de
-GMX_PASSWORD=dein_passwort
-GMX_SMTP_SERVER=mail.gmx.net
-GMX_SMTP_PORT=587
-
-# Beispiel: Eigenes SMTP
-CUSTOM_EMAIL=noreply@deine-domain.de
-CUSTOM_PASSWORD=dein_passwort
-CUSTOM_SMTP_SERVER=mail.deine-domain.de
-CUSTOM_SMTP_PORT=587
-```
+| `--provider` | `-p` | Anbieter: webde, gmail, gmx, custom (Default: webde) |
+| `--from` | | Absender überschreiben |
+| `--cc` | | CC Empfänger (kommagetrennt) |
+| `--bcc` | | BCC Empfänger (kommagetrennt) |
+| `--html` | | E-Mail als HTML senden |
+| `--timeout` | | Timeout in Sekunden (Default: 30) |
+| `--retries` | | Maximale Retry-Versuche (Default: 3) |
+| `--verbose` | `-v` | Detaillierte Ausgabe (DEBUG-Logging) |
 
 ## Python API
 
+### Neue v2.0 API (empfohlen)
 ```python
-from skills.email_sender.scripts.send_email import send_email
+from skills.email_sender.scripts.send_email_v2 import send_email_with_retry
 
 # Einfacher Aufruf
-send_email(
+send_email_with_retry(
     to="empfaenger@example.com",
     subject="Hallo",
     body="Das ist ein Test",
     provider="webde"
 )
 
-# Mit Exception-Handling
-try:
-    send_email(
-        to="chef@firma.de",
-        subject="Wichtig!",
-        body="Der Server ist wieder online.",
-        provider="webde"
-    )
-    print("✅ E-Mail gesendet")
-except Exception as e:
-    print(f"❌ Fehler: {e}")
+# Mit HTML und CC
+send_email_with_retry(
+    to="chef@firma.de",
+    cc=["assistent@firma.de", "sekretaerin@firma.de"],
+    subject="Wichtig!",
+    body="<h1>Server Status</h1><p>Alles OK!</p>",
+    html=True,
+    provider="webde",
+    timeout=30,
+    max_retries=3
+)
+```
+
+### Legacy API (v1.0)
+```python
+from skills.email_sender.scripts.send_email import send_email
+
+# Abwärtskompatibel – funktioniert wie zuvor
+send_email(
+    to="empfaenger@example.com",
+    subject="Hallo",
+    body="Das ist ein Test",
+    provider="webde"
+)
 ```
 
 ## Fehlerbehebung
@@ -125,6 +144,8 @@ except Exception as e:
 | "Connection refused" | Firewall/SMTP-Port prüfen (meist 587 oder 465) |
 | "Recipient rejected" | Empfänger-Adresse auf Tippfehler prüfen |
 | "SSL error" | Port auf 465 (SSL) oder 587 (STARTTLS) ändern |
+| "Ungültige E-Mail-Adresse" | E-Mail-Format prüfen (name@domain.tld) |
+| Timeout nach Retries | Netzwerkverbindung prüfen, `--retries` erhöhen |
 
 ## Sicherheitshinweise
 
@@ -136,27 +157,55 @@ except Exception as e:
 
 ## Beispiele
 
-### Cron-Job Benachrichtigung
+### Cron-Job Benachrichtigung mit Retry
 ```bash
 #!/bin/bash
 # Im Cron-Job:
 
 if ! ping -c 1 google.com; then
-    python3 skills/email-sender/scripts/send_email.py \
+    python3 skills/email-sender/scripts/send_email_v2.py \
         --to admin@example.com \
         --subject "ALARM: Internet ausgefallen" \
-        --body "$(date): Keine Internetverbindung!"
+        --body "$(date): Keine Internetverbindung!" \
+        --retries 5
 fi
 ```
 
-### Täglicher Bericht
+### HTML-Newsletter
 ```bash
-python3 skills/email-sender/scripts/send_email.py \
-    --to chef@firma.de \
-    --subject "Tagesbericht $(date +%Y-%m-%d)" \
-    --body-file /var/log/daily-report.txt
+python3 skills/email-sender/scripts/send_email_v2.py \
+    --to kunden@example.com \
+    --cc "marketing@example.com" \
+    --subject "Monatlicher Newsletter $(date +%B)" \
+    --body-file newsletter.html \
+    --html
 ```
+
+### Täglicher Bericht mit Timeout
+```bash
+python3 skills/email-sender/scripts/send_email_v2.py \
+    --to chef@firma.de \
+    --bcc "archiv@firma.de" \
+    --subject "Tagesbericht $(date +%Y-%m-%d)" \
+    --body-file /var/log/daily-report.txt \
+    --timeout 60 \
+    --verbose
+```
+
+## Changelog
+
+### v2.0 (21.04.2026)
+- ✅ Retry-Logik mit Exponential Backoff
+- ✅ Timeout-Handling für SMTP-Verbindungen
+- ✅ Professionelles Logging (logging-Modul)
+- ✅ HTML-E-Mail Unterstützung
+- ✅ CC und BCC Felder
+- ✅ E-Mail-Validierung mit Regex
+- ✅ Abwärtskompatibilität zur v1.0
+
+### v1.0
+- Initiale Version mit Basis-Funktionalität
 
 ---
 
-*E-Mail-Versenden leicht gemacht – für!* 📧🎩
+*E-Mail-Versenden leicht gemacht – für Eure Lordschaft!* 📧🎩
