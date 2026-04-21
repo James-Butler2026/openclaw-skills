@@ -28,6 +28,16 @@ TEMPLATES_DIR = SKILL_DIR / "templates"
 OUTPUT_DIR = Path("/tmp/meme_architect")
 
 # imgflip API Konfiguration
+# .env laden
+env_path = Path.home() / '.openclaw' / 'workspace' / '.env'
+if env_path.exists():
+    with open(env_path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                os.environ[key] = value
+
 IMGFLIP_USERNAME = os.environ.get("IMGFLIP_USERNAME", "")
 IMGFLIP_PASSWORD = os.environ.get("IMGFLIP_PASSWORD", "")
 
