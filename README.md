@@ -14,7 +14,7 @@ Diese Sammlung enthält **14 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [crypto-tracker](#crypto-tracker) | Krypto-Portfolio-Tracking für BTC, ETH, SOL, XRP | Finanzen |
 | [elevenlabs-tts](#elevenlabs-tts) | Text-to-Speech via ElevenLabs API | Audio |
 | [email-sender](#email-sender) | E-Mails via SMTP senden | Kommunikation |
-| [expense-tracker](#expense-tracker) | Ausgaben-Tracking per Sprache mit Reports | Finanzen |
+| [expense-tracker](#expense-tracker) | Budget-Tracking mit Einkommen, Fixkosten, Ersparnissen | Finanzen |
 | [github-manager](#github-manager) | Skills zu GitHub veröffentlichen | Entwicklung |
 | [image-generation](#image-generation) | Kostenlose Bildgenerierung via Pollinations.ai | Bild |
 | [leonardo-image-gen](#leonardo-image-gen) | Bildgenerierung mit Leonardo AI | Bild |
@@ -172,17 +172,27 @@ python3 scripts/send_email.py --to empfaenger@example.com \
 ---
 
 ### expense-tracker
-**Ausgaben-Tracking per Sprachnachricht**
+**Budget-Tracking mit Einkommen, Fixkosten & Ersparnissen (v3.0)**
 
-- Spracheingabe: *"Habe 12,50€ bei Rewe ausgegeben"*
-- Automatische Kategorie-Erkennung
-- Händler-Tracking
-- Wöchentliche & monatliche Reports
+- 🎤 Spracheingabe: *"Habe 12,50€ bei Rewe ausgegeben"*
+- 💰 Einkommen & Fixkosten-Verwaltung
+- 📊 Budget-Übersicht: Einkommen – Fixkosten – Variabel = Ersparnisse
+- 📅 ISO-KW (Mo-So) + Monatswochen (1.-7., 8.-14. etc.)
+- 📋 Detail-Aufschlüsselung bei jedem Report
+- 🗓️ Jahresübersicht & Gesamt-Übersicht
+- ⏱️ Temporäre Fixkosten mit Enddatum
+- 🔢 Cent-genaue Beträge, keine Rundung
+- 💾 Monats-Zusammenfassungen werden gespeichert
 - SQLite-basiert, keine Cloud
 
 ```bash
 python3 scripts/expense_tracker.py "12,50€ bei Rewe"
-python3 scripts/expense_tracker.py --monthly
+python3 scripts/expense_tracker.py --weekly          # Diese Woche (Mo-So)
+python3 scripts/expense_tracker.py --last-week        # Letzte Woche
+python3 scripts/expense_tracker.py --month-to-date    # 1. bis heute
+python3 scripts/expense_tracker.py --monthly          # Budget-Bericht
+python3 scripts/expense_tracker.py --year             # Jahresübersicht
+python3 scripts/expense_tracker.py --total             # Gesamt-Übersicht
 ```
 
 → [Details ansehen](expense-tracker/README.md)
