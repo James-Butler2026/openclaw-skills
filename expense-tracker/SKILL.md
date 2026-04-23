@@ -1,27 +1,36 @@
 ---
 name: expense-tracker
-description: Ausgaben-Tracking per Sprachnachricht mit automatischer Kategorie-Erkennung und Reports (wöchentlich/monatlich)
-version: 2.0
+description: Ausgaben-Tracking per Sprachnachricht mit automatischer Kategorie-Erkennung, Budget-Planung, Einkommen/Fixkosten-Verwaltung und Reports (wöchentlich/monatlich/jährlich)
+version: 3.0
 ---
 
-# Expense Tracker Skill
+# Expense Tracker v3.0
 
-Trackt Ausgaben per Sprachnachricht oder Text. Automatische Kategorie-Erkennung, Händler-Tracking und detaillierte Reports.
+Komplettes Budget-Tracking: Ausgaben per Sprachnachricht oder Text, automatische Kategorie-Erkennung, Einkommen, Fixkosten, Ersparnisse und detaillierte Reports.
 
-**✅ Verbessert in Version 2.0:**
-- Robustes Error Handling
-- Erweiterbare Kategorien (JSON)
-- Bessere Betragserkennung
-- Logging für Fehler
+## 🆕 Neu in v3.0
+
+- 💰 **Einkommen & Fixkosten** – Übergangsgeld, Miete, Versicherungen etc. in der DB
+- 📊 **Budget-Übersicht** – Einkommen minus Fixkosten minus Variabel = Ersparnisse
+- 📅 **Monatswochen** – 1.-7., 8.-14., 15.-21., 22.-Ende
+- 📋 **Detail-Aufschlüsselung** – Einzelpositionen bei jedem Report
+- 📆 **ISO-Kalenderwochen** – Montag bis Sonntag (deutscher Standard)
+- 🗓️ **Jahresübersicht** – Alle Monate auf einen Blick
+- 💾 **Monats-Zusammenfassungen** – Werden automatisch gespeichert
+- 🔄 **Ersparnis-Tracking** – Pro Monat und gesamt
+- ⏱️ **Temporäre Fixkosten** – Enddatum für Versicherungen die wegfallen
+- 🔢 **Cent-genau** – Keine Rundung, immer exakte Beträge
 
 ## Features
 
 - 🎤 **Spracheingabe**: *"Habe 12,50€ bei Rewe für Milch ausgegeben"*
 - 🏷️ **Automatische Kategorien**: Erkennt Lebensmittel, Transport, Freizeit etc.
 - 🏪 **Händler-Tracking**: Vergleicht Rewe vs Lidl vs Aldi
-- 📊 **Reports**: Wöchentlich & Monatlich automatisch
+- 📊 **Reports**: Wöchentlich, monatlich, jährlich, gesamt
+- 💰 **Budget-Planung**: Einkommen, Fixkosten, variable Ausgaben, Ersparnisse
+- 📅 **Monatswochen**: 1.-7., 8.-14., 15.-21., 22.-Ende
 - 💾 **SQLite**: Lokale Datenbank, keine Cloud
-- 🛡️ **Datensicherheit**: Backup vor Updates, Schema bleibt identisch
+- 🛡️ **Datensicherheit**: Backup vor Updates
 
 ## Schnellstart
 
@@ -39,34 +48,105 @@ python3 skills/expense-tracker/scripts/expense_tracker.py "12,50€ bei Rewe"
 "Habe 45 Euro bei Amazon für ein Buch ausgegeben"
 ```
 
-### 3. Reports anzeigen
+### 3. Reports
+
+#### Wöchentlich (ISO-KW, Mo-So)
 ```bash
-# Wöchentlich
+# Diese Woche
 python3 skills/expense-tracker/scripts/expense_tracker.py --weekly
 
-# Monatlich (mit Händler-Top-5)
+# Letzte Woche
+python3 skills/expense-tracker/scripts/expense_tracker.py --last-week
+```
+
+#### Monatlich
+```bash
+# Variable Ausgaben 1. bis heute (mit Einzelposten)
+python3 skills/expense-tracker/scripts/expense_tracker.py --month-to-date
+
+# Vollständiger Monatsbericht mit Budget
 python3 skills/expense-tracker/scripts/expense_tracker.py --monthly
 
+# Kompletter Monat (nur variabel, speichert Zusammenfassung)
+python3 skills/expense-tracker/scripts/expense_tracker.py --full-month
+```
+
+#### Jahr & Gesamt
+```bash
+# Jahresübersicht mit allen Monaten
+python3 skills/expense-tracker/scripts/expense_tracker.py --year
+
+# Gesamt-Übersicht aller Zeiten
+python3 skills/expense-tracker/scripts/expense_tracker.py --total
+
+# Ersparnisse pro Monat
+python3 skills/expense-tracker/scripts/expense_tracker.py --savings
+```
+
+#### Sonstiges
+```bash
 # Händler-Vergleich
 python3 skills/expense-tracker/scripts/expense_tracker.py --stores
 
-# Letzte 10 Einträge
+# Letzte Einträge
 python3 skills/expense-tracker/scripts/expense_tracker.py --list
+
+# CSV Export
+python3 skills/expense-tracker/scripts/expense_tracker.py --export
 ```
 
-## Erweiterbare Kategorien
+## Datenbank-Struktur (v3.0)
 
-### Standard-Kategorien anpassen
-```bash
-# Neue Kategorie hinzufügen
-python3 skills/expense-tracker/scripts/expense_tracker.py \
-  --add-category "Fitness" \
-  --keywords "gym,mcfit,clever fit,training,fitnessstudio"
+### expenses
+```sql
+- id INTEGER PRIMARY KEY
+- amount REAL NOT NULL        # Betrag (Cent-genau)
+- category TEXT NOT NULL      # Kategorie
+- store TEXT                  # Händler (optional)
+- description TEXT           # Beschreibung
+- date TEXT NOT NULL          # ISO-8601 Datum
+- kw INTEGER                 # ISO-Kalenderwoche
+- month_week INTEGER         # Monatswoche (1-4)
+- created_at TEXT             # Timestamp
 ```
 
-Kategorien werden in `config/categories.json` gespeichert.
+### income (Einnahmen)
+```sql
+- id INTEGER PRIMARY KEY
+- name TEXT NOT NULL          # Name (z.B. "Übergangsgeld")
+- amount REAL NOT NULL        # Betrag
+- is_active INTEGER DEFAULT 1 # Aktiv?
+- notes TEXT                  # Notizen
+- created_at TEXT
+```
 
-### Automatische Erkennung
+### fixed_costs (Fixe Ausgaben)
+```sql
+- id INTEGER PRIMARY KEY
+- name TEXT NOT NULL          # Name (z.B. "Miete")
+- amount REAL NOT NULL        # Betrag
+- category TEXT               # Kategorie
+- is_active INTEGER DEFAULT 1 # Aktiv?
+- end_date TEXT               # Enddatum (temporär) oder NULL
+- notes TEXT                  # Notizen
+- created_at TEXT
+```
+
+### monthly_summary (Monats-Zusammenfassungen)
+```sql
+- id INTEGER PRIMARY KEY
+- year INTEGER NOT NULL
+- month INTEGER NOT NULL
+- total_income REAL           # Einkommen
+- total_fixed REAL            # Fixkosten
+- total_variable REAL         # Variable Ausgaben
+- total_savings REAL          # Ersparnisse
+- variable_by_category TEXT   # JSON mit Kategorien
+- created_at TEXT
+- UNIQUE(year, month)
+```
+
+## Automatische Kategorie-Erkennung
 
 | Keyword | Kategorie |
 |---------|-----------|
@@ -76,60 +156,17 @@ Kategorien werden in `config/categories.json` gespeichert.
 | Amazon, Zalando, Media Markt... | Shopping |
 | Schule, Bücher, Lernen... | Schule |
 | Apotheke, Arzt, Sport... | Gesundheit |
+| Crypto, Bitcoin, Krypto... | Anlagevermögen |
 
-### Beispiele
-```
-"Habe 23,40€ bei Rewe für Lebensmittel ausgegeben"
-→ 23.40€, Lebensmittel, Rewe
-
-"Bahn-Ticket gekostet 18,50"
-→ 18.50€, Transport, Bahn
-
-"Bei Amazon 45 Euro für Bücher"
-→ 45.00€, Shopping, Amazon
-```
-
-## In Python nutzen
-
-```python
-from skills.expense_tracker.scripts.expense_tracker import add_expense, get_monthly_report
-
-# Ausgabe hinzufügen
-add_expense("12,50€ bei Lidl")
-
-# Report abrufen
-report = get_monthly_report()
-print(report)
-```
-
-## Cron-Job für automatische Reports
+## Cron-Jobs
 
 ```bash
-# Wöchentlich (Sonntags 20:00)
-0 20 * * 0 python3 skills/expense-tracker/scripts/expense_tracker.py --weekly
+# Wöchentlicher Report (Sonntags 20:05)
+5 20 * * 0 python3 skills/expense-tracker/scripts/expense_tracker.py --weekly
 
-# Monatlich (Letzter Tag des Monats)
-0 20 28-31 * * [ $(date +\%m -d tomorrow) != $(date +\%m) ] && python3 skills/expense-tracker/scripts/expense_tracker.py --monthly
+# Monats-Zusammenfassung (Letzter Tag des Monats)
+0 20 28-31 * * python3 skills/expense-tracker/scripts/expense_tracker.py --full-month
 ```
-
-## Datenbank
-
-**Pfad:** `~/.openclaw/workspace/data/expenses.db`
-
-**Struktur (unverändert):**
-```sql
-expenses:
-- id (INTEGER PRIMARY KEY)
-- amount (REAL NOT NULL)           # Betrag
-- category (TEXT NOT NULL)          # Kategorie
-- store (TEXT)                      # Händler (optional)
-- description (TEXT)                # Beschreibung
-- date (TEXT)                       # ISO-8601 Datum
-- created_at (TEXT)                 # Timestamp
-```
-
-**Backup:** Vor jedem Update wird automatisch ein Backup erstellt (`expense_tracker.py.backup.YYYYMMDD_HHMMSS`)
 
 ---
-*Skill erstellt für Eure Lordschaft* 🎩
-*Version 2.0 - Robusteres Error Handling*
+*Expense Tracker v3.0 – Komplettes Budget-Tracking für Eure Lordschaft* 🎩
