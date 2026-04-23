@@ -19,6 +19,9 @@ import sys
 import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+from email.mime.base import MIMEBase
+from email import encoders
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -151,6 +154,48 @@ def get_provider_config(provider: str) -> dict:
     return config
 
 
+def add_attachments(msg: MIMEMultipart, attachments: List[str]) -> List[str]:
+    """
+    Fügt einer E-Mail Dateianhänge hinzu
+    
+    Args:
+        msg: MIMEMultipart Nachricht
+        attachments: Liste von Dateipfaden
+    
+    Returns:
+        Liste der erfolgreich angehängten Dateinamen
+    """
+    added = []
+    for filepath in attachments:
+        path = Path(filepath)
+        if not path.exists():
+            logger.warning(f"Anhang nicht gefunden: {filepath}")
+            continue
+        
+        filename = path.name
+        
+        # PDF und gängige Dokumente als MIMEApplication
+        if path.suffix.lower() in ('.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.zip', '.tar', '.gz'):
+            with open(path, 'rb') as f:
+                part = MIMEApplication(f.read(), Name=filename)
+            part['Content-Disposition'] = f'attachment; filename="{filename}"'
+            msg.attach(part)
+            added.append(filename)
+            logger.info(f"   📎 Anhang: {filename} ({path.stat().st_size} Bytes)")
+        else:
+            # Alle anderen Dateien als MIMEBase
+            part = MIMEBase('application', 'octet-stream')
+            with open(path, 'rb') as f:
+                part.set_payload(f.read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
+            msg.attach(part)
+            added.append(filename)
+            logger.info(f"   📎 Anhang: {filename} ({path.stat().st_size} Bytes)")
+    
+    return added
+
+
 def send_email_with_retry(
     to: Union[str, List[str]],
     subject: str,
@@ -160,6 +205,7 @@ def send_email_with_retry(
     cc: Optional[Union[str, List[str]]] = None,
     bcc: Optional[Union[str, List[str]]] = None,
     html: bool = False,
+    attachments: Optional[List[str]] = None,
     timeout: int = 30,
     max_retries: int = 3,
     retry_delay: float = 2.0
@@ -222,9 +268,16 @@ def send_email_with_retry(
     logger.info(f"   Betreff: {subject}")
     logger.info(f"   Server: {smtp_server}:{smtp_port}")
     logger.info(f"   HTML: {html}")
+    if attachments:
+        logger.info(f"   Anhänge: {len(attachments)}")
     
     # E-Mail erstellen
-    msg = MIMEMultipart('alternative')
+    if attachments:
+        msg = MIMEMultipart('mixed')  # mixed = Body + Anhänge
+        alt_part = MIMEMultipart('alternative')  # Plain + HTML Alternative
+    else:
+        msg = MIMEMultipart('alternative')
+        alt_part = None
     msg['From'] = email
     msg['To'] = ', '.join(to_list)
     
@@ -234,14 +287,26 @@ def send_email_with_retry(
     msg['Subject'] = subject
     
     # Body hinzufügen (Plain Text und/oder HTML)
+    target = alt_part if alt_part else msg
+    
     if html:
         # HTML-Version
-        msg.attach(MIMEText(body, 'html', 'utf-8'))
+        target.attach(MIMEText(body, 'html', 'utf-8'))
         # Plain Text als Fallback
         plain_text = re.sub(r'<[^>]+>', '', body)  # HTML-Tags entfernen
-        msg.attach(MIMEText(plain_text, 'plain', 'utf-8'))
+        target.attach(MIMEText(plain_text, 'plain', 'utf-8'))
     else:
-        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        target.attach(MIMEText(body, 'plain', 'utf-8'))
+    
+    # Wenn Anhänge: Alternative-Teil an mixed anhängen
+    if alt_part:
+        msg.attach(alt_part)
+    
+    # Anhänge hinzufügen
+    if attachments:
+        added = add_attachments(msg, attachments)
+        if not added and attachments:
+            logger.warning("Keine Anhänge konnten hinzugefügt werden!")
     
     # Alle Empfänger für send_message
     all_recipients_for_send = to_list + cc_list + bcc_list
@@ -349,6 +414,8 @@ Beispiele:
     parser.add_argument('--bcc', help='BCC Empfänger (kommagetrennt)')
     parser.add_argument('--html', action='store_true', 
                        help='E-Mail als HTML senden')
+    parser.add_argument('--attach', '-a', action='append', default=[],
+                       help='Dateianhang (mehrfach verwendbar)')
     parser.add_argument('--timeout', type=int, default=30,
                        help='Timeout in Sekunden (Default: 30)')
     parser.add_argument('--retries', type=int, default=3,
@@ -394,6 +461,7 @@ Beispiele:
             cc=cc_list,
             bcc=bcc_list,
             html=args.html,
+            attachments=args.attach if args.attach else None,
             timeout=args.timeout,
             max_retries=args.retries
         )
