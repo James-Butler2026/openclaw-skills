@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import sys
 
-DB_PATH = Path(__file__).parent.parent.parent.parent / "data" / "bison_portfolio.db"
+DB_PATH = Path(__file__).parent.parent.parent / "data" / "bison_portfolio.db"
 DATA_DIR = DB_PATH.parent
 
 # Konfiguration
