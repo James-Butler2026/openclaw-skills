@@ -4,13 +4,12 @@ Eine Sammlung nützlicher Skills für OpenClaw – vollständig lokal nutzbar, d
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **16 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
+Diese Sammlung enthält **14 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
-| [ap1-training-tracker](#ap1-training-tracker) | IHK Fiche-informatiker AP1 Training mit 280 Fragen | Lernen |
+| [ap1-training-tracker](#ap1-training-tracker) | IHK Fachinformatiker AP1 Training mit 280 Fragen | Lernen |
 | [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
-| [backup-manager](#backup-manager) | Automatische Workspace-Backups mit Git | Sicherung |
 | [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe | Produktivität |
 | [crypto-tracker](#crypto-tracker) | Krypto-Portfolio-Tracking für BTC, ETH, SOL, XRP | Finanzen |
 | [elevenlabs-tts](#elevenlabs-tts) | Text-to-Speech via ElevenLabs API | Audio |
@@ -22,7 +21,6 @@ Diese Sammlung enthält **16 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai | Entwicklung |
 | [meme-architect](#meme-architect) | Meme-Generierung mit imgflip API | Spaß |
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
-| [newsletter-monitor](#newsletter-monitor) | KI-gestützte Fleisch-Angebotsüberwachung | Monitoring |
 | [package-tracking](#package-tracking) | Einheitliches Paket-Tracking für Hermes + DHL | Tracking |
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
@@ -106,25 +104,6 @@ python3 scripts/bison_tracker.py --status
 ```
 
 → [Details ansehen](crypto-tracker/README.md)
-
----
-
-### backup-manager
-**Automatisches Workspace-Backup**
-
-- Automatische Backups in definierten Intervallen
-- Git-basierte Versionskontrolle
-- Ausschluss von sensiblen Daten (memory, .env, etc.)
-- SQLite-Datenbank-Backups
-- Einfaches Restore möglich
-
-```bash
-python3 scripts/backup_manager.py --init
-python3 scripts/backup_manager.py --backup
-python3 scripts/backup_manager.py --restore
-```
-
-→ [Details ansehen](backup-manager/README.md)
 
 ---
 
@@ -251,7 +230,7 @@ python3 scripts/generate_image.py "A beautiful sunset" --width 1024 --height 768
 - Höhere Qualität als Pollinations allein
 
 ```bash
-python3 scripts/leonardo_generate.py "Ein elegantes Maskottchen" --model flux-schnell
+python3 scripts/leonardo_generate.py "Ein elegantes Maskestück" --model flux-schnell
 ```
 
 → [Details ansehen](leonardo-image-gen/README.md)
@@ -304,22 +283,6 @@ python3 scripts/mega_manager.py upload /pfad/zur/datei.txt
 ```
 
 → [Details ansehen](mega-filehoster/README.md)
-
----
-
-### newsletter-monitor
-**KI-gestützte Fleisch-Angebotsüberwachung**
-
-- Web.de IMAP Integration
-- KI-Analyse statt Keywords
-- SQLite-Datenbank mit Preisverlauf
-- Tägliche Überwachung um 10:00 Uhr
-
-```bash
-python3 scripts/webde_newsletter_monitor.py
-```
-
-→ [Details ansehen](newsletter-monitor/README.md)
 
 ---
 
@@ -426,7 +389,7 @@ Siehe die einzelnen Skill-READMEs für die benötigten Variablen.
 ├── skills/
 │   ├── audio-transcription/
 │   ├── crypto-tracker/
-│   ├── package-tracking/         # ← NEU: Einheitliches Tracking
+│   ├── package-tracking/
 │   ├── ...
 │   └── wordpress-manager/
 ├── scripts/                      # Skill-Scripts
