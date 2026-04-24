@@ -1,12 +1,24 @@
 ---
 name: expense-tracker
-description: Ausgaben-Tracking per Sprachnachricht mit automatischer Kategorie-Erkennung, Budget-Planung, Einkommen/Fixkosten-Verwaltung und Reports (wöchentlich/monatlich/jährlich)
-version: 3.0
+description: Ausgaben-Tracking per Sprachnachricht mit automatischer Kategorie-Erkennung, Budget-Planung, Einkommen/Fixkosten-Verwaltung, Sparzielen, Trends, Spar-Tipps und Reports (wöchentlich/monatlich/jährlich)
+version: 3.1
 ---
 
-# Expense Tracker v3.0
+# Expense Tracker v3.1
 
-Komplettes Budget-Tracking: Ausgaben per Sprachnachricht oder Text, automatische Kategorie-Erkennung, Einkommen, Fixkosten, Ersparnisse und detaillierte Reports.
+Komplettes Budget-Tracking: Ausgaben per Sprachnachricht oder Text, automatische Kategorie-Erkennung, Einkommen, Fixkosten, Ersparnisse, Sparziele, Trends, Spar-Tipps und detaillierte Reports.
+
+## 🆕 Neu in v3.1
+
+- 📈 **Trend-Pfeile** – Vormonat-Vergleich mit ↑↓↔ Pfeilen
+- 🎯 **Sparziele** – Ziele definieren mit Fortschrittsbalken
+- 💡 **Spar-Tipps** – Automatische Empfehlungen basierend auf Ausgabenmuster
+- ⚠️ **Budget-Warnungen** – Alarm bei 80% Budget-Auslastung
+- 🔄 **Monatsvergleich** – Dieser Monat vs. Vormonat (oder x Monate zurück)
+- 🏪 **Händler-Report** – Monats-Übersicht nach Händlern
+- 🏷️ **Eigene Kategorien** – Neue Kategorien mit Keywords hinzufügen
+- 💽 **Datenbank-Backup** – SQLite-Backup mit einem Befehl
+- 📤 **CSV-Export** – Alle Daten als CSV exportieren
 
 ## 🆕 Neu in v3.0
 
@@ -30,7 +42,6 @@ Komplettes Budget-Tracking: Ausgaben per Sprachnachricht oder Text, automatische
 - 💰 **Budget-Planung**: Einkommen, Fixkosten, variable Ausgaben, Ersparnisse
 - 📅 **Monatswochen**: 1.-7., 8.-14., 15.-21., 22.-Ende
 - 💾 **SQLite**: Lokale Datenbank, keine Cloud
-- 🛡️ **Datensicherheit**: Backup vor Updates
 
 ## Schnellstart
 
@@ -52,10 +63,7 @@ python3 skills/expense-tracker/scripts/expense_tracker.py "12,50€ bei Rewe"
 
 #### Wöchentlich (ISO-KW, Mo-So)
 ```bash
-# Diese Woche
 python3 skills/expense-tracker/scripts/expense_tracker.py --weekly
-
-# Letzte Woche
 python3 skills/expense-tracker/scripts/expense_tracker.py --last-week
 ```
 
@@ -67,7 +75,7 @@ python3 skills/expense-tracker/scripts/expense_tracker.py --month-to-date
 # Vollständiger Monatsbericht mit Budget
 python3 skills/expense-tracker/scripts/expense_tracker.py --monthly
 
-# Kompletter Monat (nur variabel, speichert Zusammenfassung)
+# Kompletter Monat (speichert Zusammenfassung)
 python3 skills/expense-tracker/scripts/expense_tracker.py --full-month
 ```
 
@@ -83,19 +91,47 @@ python3 skills/expense-tracker/scripts/expense_tracker.py --total
 python3 skills/expense-tracker/scripts/expense_tracker.py --savings
 ```
 
-#### Sonstiges
+#### Analyse & Tools
 ```bash
-# Händler-Vergleich
-python3 skills/expense-tracker/scripts/expense_tracker.py --stores
+# Trend-Pfeile (Vormonat-Vergleich)
+python3 skills/expense-tracker/scripts/expense_tracker.py --trends
 
-# Letzte Einträge
+# Spar-Tipps (automatische Empfehlungen)
+python3 skills/expense-tracker/scripts/expense_tracker.py --tips
+
+# Sparziele mit Fortschrittsbalken
+python3 skills/expense-tracker/scripts/expense_tracker.py --goals
+
+# Budget-Warnungen bei 80%
+python3 skills/expense-tracker/scripts/expense_tracker.py --budget-warnings
+
+# Monatsvergleich (dieser vs. Vormonat)
+python3 skills/expense-tracker/scripts/expense_tracker.py --compare
+
+# Vergleich mit 3 Monate zurück
+python3 skills/expense-tracker/scripts/expense_tracker.py --compare --months-back 3
+
+# Händler-Report diesen Monat
+python3 skills/expense-tracker/scripts/expense_tracker.py --stores-month
+```
+
+#### Verwaltung
+```bash
+# Letzte Einträge anzeigen
 python3 skills/expense-tracker/scripts/expense_tracker.py --list
+python3 skills/expense-tracker/scripts/expense_tracker.py --list --limit 20
+
+# Eigene Kategorie hinzufügen
+python3 skills/expense-tracker/scripts/expense_tracker.py --add-category "Streaming" --keywords "Netflix,Spotify,Disney"
 
 # CSV Export
 python3 skills/expense-tracker/scripts/expense_tracker.py --export
+
+# Datenbank sichern
+python3 skills/expense-tracker/scripts/expense_tracker.py --backup
 ```
 
-## Datenbank-Struktur (v3.0)
+## Datenbank-Struktur (v4.0)
 
 ### expenses
 ```sql
@@ -158,6 +194,11 @@ python3 skills/expense-tracker/scripts/expense_tracker.py --export
 | Apotheke, Arzt, Sport... | Gesundheit |
 | Crypto, Bitcoin, Krypto... | Anlagevermögen |
 
+Eigene Kategorien hinzufügen:
+```bash
+python3 skills/expense-tracker/scripts/expense_tracker.py --add-category "Haustier" --keywords "Futter,Tierarzt,Zoo"
+```
+
 ## Cron-Jobs
 
 ```bash
@@ -169,4 +210,4 @@ python3 skills/expense-tracker/scripts/expense_tracker.py --export
 ```
 
 ---
-*Expense Tracker v3.0 – Komplettes Budget-Tracking für Eure Lordschaft* 🎩
+*Expense Tracker v3.1 – Komplettes Budget-Tracking für Eure Lordschaft* 💰🎩
