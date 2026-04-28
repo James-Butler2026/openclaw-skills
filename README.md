@@ -4,7 +4,7 @@ Eine Sammlung nützlicher Skills für OpenClaw – vollständig lokal nutzbar, d
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **14 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
+Diese Sammlung enthält **19 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
@@ -23,6 +23,7 @@ Diese Sammlung enthält **14 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
 | [package-tracking](#package-tracking) | Einheitliches Paket-Tracking für Hermes + DHL | Tracking |
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
+| [sports-tracker](#sports-tracker) | Sport-Tracking mit Kalorien und Workout-Management | Fitness |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
 | [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
 | [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
@@ -375,6 +376,31 @@ python3 scripts/wordpress_manager.py --create "Titel" "HTML-Inhalt"
 ```
 
 → [Details ansehen](wordpress-manager/README.md)
+
+---
+
+### sports-tracker
+**Sport-Tracking mit Kalorien und Workout-Management**
+
+- 🏃 Aktivitäts-Tracking (Spazieren, Fahrrad, P90X)
+- 🔥 Automatische Kalorienberechnung (MET-basiert)
+- 💪 Workout-Management mit done/missed Status
+- 📊 Wochen-/Monatsberichte
+- 🎯 Sarkasmus-Modus bei verpassten Trainingstagen
+- ⚖️ Individuelles Gewicht für Kalorienberechnung
+
+```bash
+# Aktivität hinzufügen
+python3 scripts/sports_tracker.py --add "5 km Spazieren"
+
+# P90X als erledigt markieren
+python3 scripts/sports_tracker.py --done
+
+# Wochenbericht
+python3 scripts/sports_tracker.py --week
+```
+
+→ [Details ansehen](sports-tracker/README.md)
 
 ---
 
