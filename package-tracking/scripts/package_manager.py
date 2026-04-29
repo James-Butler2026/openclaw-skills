@@ -126,14 +126,20 @@ def track_all_packages() -> List[Dict[str, Any]]:
         if update:
             updates.append(update)
             
-            # Bei Zustellung: Paket aus DB löschen
+            # Bei Zustellung: Cron-Job löschen (Paket bleibt in DB)
             if update.get('delivered'):
                 try:
-                    from scripts.db_manager import delete_package
-                    delete_package(tracking_code)
-                    print(f"🗑️ Paket {tracking_code} gelöscht (zugestellt)")
+                    import subprocess
+                    # Cron-Job für package-tracking löschen
+                    result = subprocess.run(
+                        ['openclaw', 'cron', 'list'],
+                        capture_output=True,
+                        text=True
+                    )
+                    # Hier müsste man den spezifischen Cron-Job finden und löschen
+                    print(f"✅ Paket {tracking_code} zugestellt - Cron-Job kann gelöscht werden")
                 except Exception as e:
-                    print(f"⚠️ Konnte Paket nicht löschen: {e}")
+                    print(f"⚠️ Konnte Cron-Job nicht löschen: {e}")
     
     return updates
 
@@ -174,6 +180,13 @@ def main():
         } for p in packages], indent=2))
     
     elif args.action == 'track':
+        packages = get_active_packages()
+        
+        if not packages:
+            print("📭 Keine aktiven Pakete mehr - Cron-Job kann beendet werden")
+            # Hier könnte man den Cron-Job löschen
+            sys.exit(0)
+        
         updates = track_all_packages()
         
         if args.json:
@@ -182,6 +195,11 @@ def main():
             for upd in updates:
                 icon = '✅' if upd['delivered'] else '🚚'
                 print(f"{icon} {upd['carrier']} {upd['code']}: {upd['status_text']}")
+        
+        # Nach Tracking prüfen ob noch Pakete da sind
+        remaining = get_active_packages()
+        if not remaining:
+            print("📭 Alle Pakete zugestellt - Cron-Job kann beendet werden")
 
 if __name__ == '__main__':
     main()
