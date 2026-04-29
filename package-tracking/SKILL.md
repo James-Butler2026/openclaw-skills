@@ -49,7 +49,8 @@ package_manager.py      ← Hauptscript (Koordinator)
     │
     ├─► hermes_tracker.py   ← Browser + OCR
     │
-    └─► dhl_tracker.py      ← API + JSON
+    └─► dhl_tracker.py      ← DHL.de öffentlich + JSON
+        URL: https://www.dhl.de/int-verfolgen/data/search?piececode=TRACKING_CODE&language=de
 ```
 
 ## Automatisches Tracking (Cron)
