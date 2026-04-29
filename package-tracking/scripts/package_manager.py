@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
 from scripts.db_manager import add_package, get_active_packages, update_package_status
 
 def add_new_package(tracking_code: str, carrier: str, description: str = '') -> bool:
@@ -38,10 +38,9 @@ def track_carrier(tracking_code: str, carrier: str, current_status: str) -> Dict
     Returns:
         Update-Dict oder None wenn kein Change
     """
-    # Scripts befinden sich im selben Ordner
     scripts = {
-        'hermes': str(Path(__file__).parent / 'hermes_tracker.py'),
-        'dhl': str(Path(__file__).parent / 'dhl_tracker.py')
+        'hermes': 'skills/hermes-tracking/scripts/hermes_tracker.py',
+        'dhl': 'skills/dhl-tracking/scripts/dhl_tracker.py'
     }
     
     timeouts = {'hermes': 120, 'dhl': 60}
@@ -110,7 +109,11 @@ def normalize_dhl_status(status: str) -> str:
     return status
 
 def track_all_packages() -> List[Dict[str, Any]]:
-    """Trackt alle aktiven Pakete - Hauptfunktion für Cron"""
+    """Trackt alle aktiven Pakete - Hauptfunktion für Cron
+    
+    Returns:
+        Liste von Updates. Bei Zustellung wird Paket automatisch gelöscht.
+    """
     packages = get_active_packages()
     updates = []
     
@@ -122,6 +125,15 @@ def track_all_packages() -> List[Dict[str, Any]]:
         update = track_carrier(tracking_code, carrier, current_status)
         if update:
             updates.append(update)
+            
+            # Bei Zustellung: Paket aus DB löschen
+            if update.get('delivered'):
+                try:
+                    from scripts.db_manager import delete_package
+                    delete_package(tracking_code)
+                    print(f"🗑️ Paket {tracking_code} gelöscht (zugestellt)")
+                except Exception as e:
+                    print(f"⚠️ Konnte Paket nicht löschen: {e}")
     
     return updates
 
