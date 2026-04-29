@@ -98,7 +98,9 @@ apt-get install tesseract-ocr-deu
 | Carrier | Methode | Geschwindigkeit | Zuverlässigkeit |
 |---------|---------|-----------------|-----------------|
 | Hermes | Browser + OCR | Langsam (30-60s) | Sehr hoch |
-| DHL | API | Schnell (5-10s) | Hoch |
+| DHL | DHL.de öffentlich | Schnell (5-10s) | Hoch |
+
+**Wichtig:** DHL nutzt die öffentliche internationale Verfolgung (dhl.de/int-verfolgen). Kein API-Key nötig!
 
 ## GitHub
 

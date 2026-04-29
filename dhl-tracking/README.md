@@ -1,13 +1,14 @@
 # DHL Tracking Skill
 
-DHL Paketverfolgung via REST API – direkt und zuverlässig.
+DHL Paketverfolgung via **DHL.de internationale Verfolgung** – ohne API-Key, ohne Registrierung.
 
 ## Features
 
-- 📦 Direkte API-Abfrage (kein Browser nötig)
-- 🔔 Automatische Status-Erkennung
-- ⏰ Überwachung um 10:00 und 16:00 Uhr
-- 📱 JSON-Output für Weiterverarbeitung
+- 🚫 **Kein API-Key nötig** – Nutzt öffentliche DHL.de Verfolgung
+- 🌐 **International** – Funktioniert weltweit
+- 📦 **Automatische Status-Erkennung**
+- ⏰ **Überwachung um 10:00 und 16:00 Uhr**
+- 📱 **JSON-Output für Weiterverarbeitung**
 
 ## Installation
 
@@ -15,22 +16,29 @@ DHL Paketverfolgung via REST API – direkt und zuverlässig.
 cd ~/.openclaw/workspace/skills/dhl-tracking/
 ```
 
+**Keine Abhängigkeiten nötig!** Nutzt nur Python-Standard-Library.
+
 ## Verwendung
 
 ```bash
 # Paket tracken (20-stellige Nummer)
-python3 scripts/dhl_tracker.py 00340434886241560288
+python3 scripts/dhl_tracker.py 00340434797565060012
 
 # Nur bei relevantem Status
-python3 scripts/dhl_tracker.py 00340434886241560288 --quiet
+python3 scripts/dhl_tracker.py 00340434797565060012 --quiet
 
 # JSON-Output
-python3 scripts/dhl_tracker.py 00340434886241560288 --json
+python3 scripts/dhl_tracker.py 00340434797565060012 --json
 ```
 
-## Konfiguration
+## API-Details
 
-Keine API-Key nötig – DHL REST API ist öffentlich.
+- **URL:** `https://www.dhl.de/int-verfolgen/data/search`
+- **Parameter:**
+  - `piececode`: Tracking-Nummer
+  - `language`: Sprache (de, en, etc.)
+- **Response:** JSON mit Sendungsdetails
+- **Keine Authentifizierung nötig!**
 
 ## Sicherheit
 
@@ -39,4 +47,4 @@ Keine API-Key nötig – DHL REST API ist öffentlich.
 - Keine Weitergabe an Dritte
 
 ---
-*DHL Paketverfolgung für OpenClaw* 📦
+*DHL Paketverfolgung für OpenClaw – Ohne API-Key!* 📦
