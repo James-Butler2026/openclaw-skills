@@ -183,8 +183,26 @@ def main():
         packages = get_active_packages()
         
         if not packages:
-            print("📭 Keine aktiven Pakete mehr - Cron-Job kann beendet werden")
-            # Hier könnte man den Cron-Job löschen
+            print("📭 Keine aktiven Pakete mehr - Cron-Job wird gelöscht")
+            # Cron-Job über Namen löschen
+            try:
+                import subprocess
+                # Zuerst Job-ID finden
+                result = subprocess.run(
+                    ['openclaw', 'cron', 'list', '--json'],
+                    capture_output=True,
+                    text=True
+                )
+                import json
+                jobs = json.loads(result.stdout)
+                for job in jobs.get('jobs', []):
+                    if 'package' in job.get('name', '').lower() or 'paket' in job.get('name', '').lower():
+                        job_id = job.get('id')
+                        # Job löschen
+                        subprocess.run(['openclaw', 'cron', 'remove', job_id], capture_output=True)
+                        print(f"🗑️ Cron-Job '{job['name']}' gelöscht")
+            except Exception as e:
+                print(f"⚠️ Konnte Cron-Job nicht löschen: {e}")
             sys.exit(0)
         
         updates = track_all_packages()
@@ -199,7 +217,23 @@ def main():
         # Nach Tracking prüfen ob noch Pakete da sind
         remaining = get_active_packages()
         if not remaining:
-            print("📭 Alle Pakete zugestellt - Cron-Job kann beendet werden")
+            print("📭 Alle Pakete zugestellt - Cron-Job wird gelöscht")
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['openclaw', 'cron', 'list', '--json'],
+                    capture_output=True,
+                    text=True
+                )
+                import json
+                jobs = json.loads(result.stdout)
+                for job in jobs.get('jobs', []):
+                    if 'package' in job.get('name', '').lower() or 'paket' in job.get('name', '').lower():
+                        job_id = job.get('id')
+                        subprocess.run(['openclaw', 'cron', 'remove', job_id], capture_output=True)
+                        print(f"🗑️ Cron-Job '{job['name']}' gelöscht")
+            except Exception as e:
+                print(f"⚠️ Konnte Cron-Job nicht löschen: {e}")
 
 if __name__ == '__main__':
     main()
