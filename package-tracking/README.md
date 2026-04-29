@@ -1,5 +1,3 @@
-# package-tracking
-
 # Package Tracking Skill
 
 **Einheitliches Paket-Tracking für Hermes und DHL**
@@ -19,12 +17,14 @@ Zentralisierte Verwaltung aller Pakete mit automatischem Tracking, Datenbank-Int
 
 ```bash
 # Dependencies installieren
-pip install playwright requests pytesseract Pillow
+pip install playwright pytesseract Pillow
 playwright install chromium
 
 # Für OCR (Deutsch)
 apt-get install tesseract-ocr-deu
 ```
+
+**Wichtig:** Kein `requests` für DHL nötig! DHL nutzt urllib (Standard-Library).
 
 ## Schnellstart
 
@@ -51,7 +51,7 @@ package_manager.py      ← Hauptscript (Koordinator)
     │
     ├─► hermes_tracker.py   ← Browser + OCR
     │
-    └─► dhl_tracker.py      ← API + JSON
+    └─► dhl_tracker.py      ← DHL.de öffentlich + JSON
 ```
 
 ## Automatisches Tracking (Cron)
@@ -65,42 +65,14 @@ Alle aktiven Pakete werden geprüft. Bei Status-Änderung:
 2. Telegram-Post in Topic 695
 3. Bei Zustellung: `delivered_at` gespeichert
 
-## Datenbank-Schema
-
-Tabelle: `packages`
-| Spalte | Typ | Beschreibung |
-|--------|-----|--------------|
-| tracking_code | TEXT | Tracking-Nummer |
-| carrier | TEXT | hermes / dhl |
-| status | TEXT | aktueller Status |
-| delivered | INTEGER | 0/1 |
-| delivered_at | TEXT | ISO-Timestamp |
-| description | TEXT | Benutzer-Notiz |
-
-## Troubleshooting
-
-### "Playwright nicht installiert"
-```bash
-pip install playwright
-playwright install chromium
-```
-
-### "Tesseract OCR fehlgeschlagen"
-```bash
-apt-get install tesseract-ocr-deu
-```
-
-### Keine API-Daten (DHL)
-- DHL hat Rate-Limiting
-- Retry-Logik aktiv (3 Versuche)
-- Bei Dauerfehler: Manuell prüfen
-
 ## Carrier-Unterstützung
 
 | Carrier | Methode | Geschwindigkeit | Zuverlässigkeit |
 |---------|---------|-----------------|-----------------|
 | Hermes | Browser + OCR | Langsam (30-60s) | Sehr hoch |
-| DHL | API | Schnell (5-10s) | Hoch |
+| DHL | DHL.de öffentlich | Schnell (5-10s) | Hoch |
+
+**Wichtig:** DHL nutzt die öffentliche internationale Verfolgung (dhl.de/int-verfolgen). Kein API-Key nötig!
 
 ## GitHub
 
