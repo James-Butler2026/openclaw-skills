@@ -1,91 +1,97 @@
-# Sports Tracker
+# Sports Tracker with Komoot Integration
 
-Sport- und Fitness-Tracking mit Workout-Management, Kalorienberechnung und automatischer Auswertung.
+Track your workouts (P90X, cycling, hiking, running) with SQLite, CLI tools, automatic calorie calculation, and **automatic tour import from Komoot**.
 
 ## Features
 
-- 🏃 **Aktivitäts-Tracking** – Spazieren, Fahrrad, P90X und mehr
-- 🔥 **Kalorienberechnung** – Automatisch basierend auf MET-Werten und Gewicht
-- 💪 **Workout-Management** – P90X/P90X2/P90X3 mit done/missed Status
-- 📊 **Wochen-/Monatsberichte** – Übersichtliche Statistiken
-- 🎯 **Sarkasmus-Modus** – Motivation bei verpassten Trainingstagen
-- ⚖️ **Gewichts-Tracking** – Individuelles Gewicht für Kalorienberechnung
+- **Manual Logging** - P90X, cycling, hiking, running via CLI
+- **Automated Komoot Import** - Fetches tours every 4 hours, with dedup
+- **Auto-Calorie Calculation** - Based on MET formula and body weight
+- **Workout Tracking** - Training day management (Mon/Wed/Fri)
+- **GPX Export** - Download GPX data from Komoot tours
+- **Multi-format Reports** - Weekly, monthly, full-month, detailed stats
 
-## Installation
+## Categories
+
+| Activity  | Type        | Emoji |
+|-----------|-------------|-------|
+| P90X      | Strength    | 💪    |
+| Cycling   | Cardio      | 🚴    |
+| Hiking    | Cardio      | 🥾    |
+| Running   | Cardio      | 🏃    |
+
+> Walking and nordic walking are classified under Hiking.
+
+## Quick Start
 
 ```bash
-# In den Skill-Ordner wechseln
-cd sports-tracker/
+# Manual activity logging
+python3 skills/sports-tracker/scripts/sports_tracker.py --add "5 km Hiking"
 
-# Datenbank initialisieren
-python3 scripts/sports_tracker.py --init
+# Mark P90X as done
+python3 skills/sports-tracker/scripts/sports_tracker.py --done
+
+# Weekly report
+python3 skills/sports-tracker/scripts/sports_tracker.py --week
+
+# Import Komoot tours
+python3 skills/sports-tracker/scripts/komoot_import.py
+
+# With GPX download
+python3 skills/sports-tracker/scripts/komoot_import.py --export-gpx
 ```
 
-## Verwendung
+## Komoot Sport-Type Mapping
 
-### Aktivität hinzufügen
-```bash
-# Spazieren
-python3 scripts/sports_tracker.py --add "5 km Spazieren"
+| Komoot Type                          | Sport Tracker |
+|--------------------------------------|---------------|
+| touring_cycling, cycling, mtb        | Cycling       |
+| hiking, hike                         | Hiking        |
+| walking, walk, nordic_walking        | Hiking        |
+| running, run, trail_running          | Running       |
+| skiing, ski_touring, snowboard       | Skiing        |
 
-# Fahrrad
-python3 scripts/sports_tracker.py --add "17.6 km Fahrrad"
+## Calorie Calculation
 
-# P90X
-python3 scripts/sports_tracker.py --done P90X
-```
+Formula: `Kcal = MET × weight_kg × duration_hours`
 
-### Berichte anzeigen
-```bash
-# Wochenbericht
-python3 scripts/sports_tracker.py --week
+| Activity | MET | Duration Calculation |
+|----------|-----|---------------------|
+| Cycling  | 8.0 | km / 18 km/h        |
+| Hiking   | 3.5 | km / 4.5 km/h       |
+| P90X     | 6.0 | 60 min (default)    |
 
-# Monatsbericht
-python3 scripts/sports_tracker.py --month
+**Default weight:** 120 kg (configurable with `--weight`)
 
-# Statistiken
-python3 scripts/sports_tracker.py --stats
-```
+## Automated Scheduling
 
-### Workout-Tracking
-```bash
-# Als erledigt markieren
-python3 scripts/sports_tracker.py --done
+- **Every 4 hours** - Komoot sync via cron
+- **Mon/Wed/Fri 21:00** - Workout reminder
+- **On change only** - No spam on unchanged status
 
-# Als verpasst markieren
-python3 scripts/sports_tracker.py --missed
+## Database
 
-# Workout-Status prüfen
-python3 scripts/sports_tracker.py --workout-check
-```
+Local SQLite database at `data/sports_tracker.db`. Offline-first, private, portable.
 
-### Gewicht ändern
-```bash
-python3 scripts/sports_tracker.py --weight 118
-```
+### Setup
 
-## Kalorienberechnung
+1. Add Komoot credentials to `.env`:
+   ```
+   KOMOOT_EMAIL=your@email.com
+   KOMOOT_PASSWORD=your_password
+   KOMOOT_USER_ID=your_user_id
+   ```
 
-| Aktivität | MET | Ø Geschwindigkeit |
-|-----------|-----|-------------------|
-| Spazieren | 3.5 | 4.5 km/h |
-| Fahrrad | 8.0 | 18 km/h |
-| P90X | 6.0 | – |
+2. Initialize the database:
+   ```bash
+   python3 skills/sports-tracker/scripts/sports_tracker.py --init
+   ```
 
-**Formel:** `Kcal = MET × Gewicht(kg) × Dauer(h)`
+3. Test Komoot import:
+   ```bash
+   python3 skills/sports-tracker/scripts/komoot_import.py
+   ```
 
-## Datenbank
+## License
 
-- **SQLite**-basiert
-- Speicherort: `data/sports_tracker.db`
-- Automatische Migration bei Updates
-
-## Kirche des Bizeps 🏛️💪
-
-> *"Ein Butler ist nur so gut wie sein letzter Curl."*
-
-Bei verpassten Trainingstagen: Sarkasmus-Modus mit zufälligen Motivations-Sprüchen!
-
-## Lizenz
-
-MIT License – Für Eure Lordschaft und die Kirche des Bizeps.
+MIT
