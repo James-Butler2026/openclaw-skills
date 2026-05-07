@@ -207,17 +207,16 @@ def get_popular_templates():
         return []
 
 def search_template(query):
-    """Sucht nach Templates via imgflip API"""
+    """Sucht nach Templates via imgflip API (Top 100 populäre Templates)"""
     templates = get_popular_templates()
     query_lower = query.lower()
     
-    # Suche in Namen
     matches = []
     for t in templates:
         if query_lower in t['name'].lower():
             matches.append(t)
     
-    return matches[:10]  # Max 10 Ergebnisse
+    return matches[:15]
 
 def create_text_meme(text_top, text_bottom, emotion, output_path):
     """Erstellt ein einfaches Text-basiertes Meme"""
@@ -433,14 +432,17 @@ Konfiguration:
     use_imgflip = True
 
     # Parse Flags
+    output_path = None
     for i, arg in enumerate(sys.argv):
         if arg == "--emotion" and i + 1 < len(sys.argv):
             emotion = sys.argv[i + 1]
         elif arg == "--no-imgflip":
             use_imgflip = False
+        elif arg == "--output" and i + 1 < len(sys.argv):
+            output_path = sys.argv[i + 1]
 
     # Erstelle Meme
-    result = create_context_meme(context, emotion, use_imgflip=use_imgflip)
+    result = create_context_meme(context, emotion, output_path=output_path, use_imgflip=use_imgflip)
 
     if result:
         print(f"\n💾 Gespeichert unter: {result}")
