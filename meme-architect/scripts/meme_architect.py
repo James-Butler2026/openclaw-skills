@@ -15,7 +15,7 @@ import os
 import sys
 import json
 import subprocess
-import re
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 
@@ -114,8 +114,15 @@ def analyze_emotion(text):
     return max(emotion_scores, key=emotion_scores.get) if emotion_scores else "irony"
 
 def generate_meme_text(context, emotion):
-    """Gibt Default-Text für Emotion zurück"""
+    """Gibt Default-Text für Emotion zurück, mit一点点 Kontext"""
     info = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])
+    
+    # Bei Frustration: nimm ersten Teil des Kontexts als Text
+    if emotion == "frustration" and context:
+        words = context.split()[:6]
+        top = " ".join(words) + ("..." if len(context.split()) > 6 else "")
+        return top, info['default_bottom']
+    
     return info['default_top'], info['default_bottom']
 
 def extract_keywords(context):
@@ -138,7 +145,10 @@ def get_popular_templates():
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         data = json.loads(result.stdout)
         return data["data"]["memes"] if data.get("success") else []
-    except:
+    except json.JSONDecodeError:
+        return []
+    except subprocess.TimeoutExpired:
+        print("⚠️  Timeout beim Laden der Templates")
         return []
 
 def search_templates(query):
@@ -152,17 +162,17 @@ def find_best_template(context, emotion=None):
     keywords = extract_keywords(context)
     templates = get_popular_templates()
 
-    # Priorität: Keywords > Emotion > Fallback
     candidates = []
 
-    # 1. Keywords matchen
+    # Keywords matchen (nur EIN Durchlauf, nicht zwei!)
     if keywords:
         for t in templates:
             name_lower = t['name'].lower()
             if any(kw in name_lower for kw in keywords):
-                candidates.append(t)
+                if t not in candidates:  # Keine Duplikate
+                    candidates.append(t)
 
-    # 2. Emotion-Template
+    # Emotion-Template als Fallback
     if not candidates and emotion:
         emotion_info = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])
         template_key = emotion_info["template"]
@@ -172,24 +182,21 @@ def find_best_template(context, emotion=None):
                 candidates.append(t)
                 break
 
-    # 3. Direkter Keyword-Vergleich
-    if not candidates:
-        for t in templates:
-            name_lower = t['name'].lower()
-            if any(kw in name_lower for kw in keywords):
-                candidates.append(t)
-
     if candidates:
         return candidates[0]
 
-    # 4. Fallback: success kid
+    # Fallback: success kid
     return {"id": 61544, "name": "success kid", "box_count": 2}
 
 def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
-    """Erstellt Meme via imgflip API mit curl"""
+    """Erstellt Meme via imgflip API mit curl - MIT SHELL-INJECTION SCHUTZ"""
     if not IMGFLIP_USERNAME or not IMGFLIP_PASSWORD:
         print("⚠️  Keine imgflip Credentials in .env!")
         return None
+
+    # URL-Encode user input to prevent shell injection
+    text_top_enc = urllib.parse.quote(text_top, safe='')
+    text_bottom_enc = urllib.parse.quote(text_bottom, safe='')
 
     cmd = [
         "curl", "-s", "-X", "POST",
@@ -198,8 +205,8 @@ def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
         "-d", f"template_id={template_id}",
         "-d", f"username={IMGFLIP_USERNAME}",
         "-d", f"password={IMGFLIP_PASSWORD}",
-        "-d", f"text0={text_top}",
-        "-d", f"text1={text_bottom}"
+        "-d", f"text0={text_top_enc}",
+        "-d", f"text1={text_bottom_enc}"
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -213,7 +220,11 @@ def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
                 capture_output=True, timeout=30
             )
             return str(output_path)
-    except Exception as e:
+    except json.JSONDecodeError:
+        print("❌ imgflip: Ungültige Antwort")
+    except subprocess.TimeoutExpired:
+        print("❌ imgflip: Timeout")
+    except subprocess.SubprocessError as e:
         print(f"❌ imgflip Fehler: {e}")
     return None
 
@@ -228,7 +239,7 @@ def create_text_meme(text_top, text_bottom, emotion, output_path):
     draw = ImageDraw.Draw(img)
     try:
         font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 44)
-    except:
+    except Exception:
         font = ImageFont.load_default()
     draw.text((400, 300), f"{text_top}\n\n{text_bottom}",
               fill="white", font=font, anchor="mm", align="center")
