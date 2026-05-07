@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
 """
 Context-Aware Meme Architect
-Erstellt Memes basierend auf Gesprächskontext und Emotion
-Nutzt imgflip API für echte Meme-Templates
+Erstellt Memes basierend auf Kontext und Emotion.
+Nutzt imgflip API für echte Meme-Templates (via curl).
+
+Workflow (--auto):
+  1. Analysiere Kontext → Emotion erkennen
+  2. Keywords extrahieren (schule, schlaf, arbeit, etc.)
+  3. Suche passendes Template in imgflip API (Top 100)
+  4. Erstelle Meme mit imgflip API
 """
 
 import os
 import sys
 import json
 import subprocess
+import re
 from datetime import datetime
 from pathlib import Path
 
-# Versuche Pillow zu importieren
+# Versuche Pillow für Fallback
 try:
     from PIL import Image, ImageDraw, ImageFont
     PILLOW_AVAILABLE = True
 except ImportError:
     PILLOW_AVAILABLE = False
-    print("⚠️  Pillow nicht installiert. Nur Text-Modus verfügbar.")
 
 SKILL_DIR = Path(__file__).parent.parent
-TEMPLATES_DIR = SKILL_DIR / "templates"
 OUTPUT_DIR = Path("/tmp/meme_architect")
 
-# imgflip API Konfiguration
 # .env laden
 env_path = Path.home() / '.openclaw' / 'workspace' / '.env'
 if env_path.exists():
@@ -38,7 +42,7 @@ if env_path.exists():
 IMGFLIP_USERNAME = os.environ.get("IMGFLIP_USERNAME", "")
 IMGFLIP_PASSWORD = os.environ.get("IMGFLIP_PASSWORD", "")
 
-# Template ID Mapping (imgflip Template IDs)
+# --- imgflip Template IDs ---
 IMGFLIP_TEMPLATES = {
     "success_kid": 61544,
     "distracted_boyfriend": 112126428,
@@ -50,100 +54,143 @@ IMGFLIP_TEMPLATES = {
     "crying_wolverine": 91538330,
     "mocking_spongebob": 102156234,
     "always_has_been": 252600902,
+    "hide_the_pain_harold": 27813981,
 }
 
-# Emotions-Mapping zu Templates
+# --- Emotion → Template Mapping ---
 EMOTION_TEMPLATES = {
-    "success": {
-        "template": "success_kid",
-        "default_top": "Endlich...",
-        "default_bottom": "Es funktioniert!",
-        "color": "#4CAF50"
-    },
-    "frustration": {
-        "template": "this_is_fine",
-        "default_top": "Alles läuft",
-        "default_bottom": "(nicht)",
-        "color": "#FF5722"
-    },
-    "dilemma": {
-        "template": "two_buttons",
-        "default_top": "Schlafen",
-        "default_bottom": "Noch einen Cron-Job bauen",
-        "color": "#9C27B0"
-    },
-    "superiority": {
-        "template": "drake_pointing",
-        "default_top": "Manuell arbeiten",
-        "default_bottom": "Automatisieren wie ein Boss",
-        "color": "#2196F3"
-    },
-    "irony": {
-        "template": "distracted_boyfriend",
-        "default_top": "Ich: 'Nur noch ein kleiner Fix'",
-        "default_bottom": "Auch ich: *baut 47 Skills*",
-        "color": "#FF9800"
-    },
-    "nostalgia": {
-        "template": "crying_wolverine",
-        "default_top": "Erinnert sich an die Zeit",
-        "default_bottom": "Als wir nur 5 Cron-Jobs hatten",
-        "color": "#607D8B"
-    }
+    "success":    {"template": "success_kid",           "default_top": "Endlich...",                                "default_bottom": "Es funktioniert!",        "color": "#4CAF50"},
+    "frustration": {"template": "this_is_fine",          "default_top": "Alles läuft",                              "default_bottom": "(nicht)",                  "color": "#FF5722"},
+    "dilemma":    {"template": "two_buttons",            "default_top": "Schlafen",                                 "default_bottom": "Noch einen Skill bauen",   "color": "#9C27B0"},
+    "superiority": {"template": "drake_pointing",         "default_top": "Manuell arbeiten",                         "default_bottom": "Automatisieren wie ein Boss", "color": "#2196F3"},
+    "irony":      {"template": "distracted_boyfriend",   "default_top": "Ich: 'Nur noch ein kleiner Fix'",          "default_bottom": "Auch ich: *baut 47 Skills*", "color": "#FF9800"},
+    "nostalgia":  {"template": "crying_wolverine",        "default_top": "Erinnert sich an die Zeit",                "default_bottom": "Als wir nur 5 Cron-Jobs hatten", "color": "#607D8B"}
 }
 
-# Trigger-Wörter für Emotionserkennung
+# --- Emotions-Erkennung ---
 EMOTION_TRIGGERS = {
-    "success": ["funktioniert", "geschafft", "endlich", "läuft", "fertig", "done", "erfolg", "geht"],
+    "success":    ["funktioniert", "geschafft", "endlich", "läuft", "fertig", "done", "erfolg", "geht"],
     "frustration": ["down", "fehler", "nicht", "kaputt", "probleme", "error", "bug", "scheiße", "verdammt"],
-    "dilemma": ["oder", "vs", "entscheiden", "beides", "wählen", "dilemma"],
+    "dilemma":    ["oder", "vs", "entscheiden", "beides", "wählen", "dilemma"],
     "superiority": ["besser", "stattdessen", "nein", "upgrade", "neu", "baut"],
-    "irony": ["toll", "super", "perfekt", "schön", "ironisch", "natürlich", "klar"],
-    "nostalgia": ["früher", "damals", "erinnerst", "vorher", "alte zeiten", "früher war"]
+    "irony":      ["toll", "super", "perfekt", "schön", "ironisch", "natürlich", "klar"],
+    "nostalgia":  ["früher", "damals", "erinnerst", "vorher", "alte zeiten", "früher war"]
 }
+
+# --- Keyword-Mapping für Template-Suche ---
+KEYWORD_TAGS = [
+    (["schlaf", "pennen", "müde", "gähnen", "übermüdet", "nacht", "sleep", "tired", "exhausted"], "sleeping"),
+    (["schmerz", "wehtun", "kaputt", "erschöpft", "k.o.", "fertig", "pain", "hurt", "sore", "ache", "dead", "die", "dying"], "pain"),
+    (["lernen", "schule", "studium", "unterricht", "prüfung", "klausur", "schüler", "study", "exam", "class"], "studying"),
+    (["arbeit", "job", "arbeiten", "büro", "kollege", "work", "office", "boss"], "work"),
+    (["computer", "code", "programm", "pc", "server", "internet", "bug", "error", "programming"], "computer nerd"),
+    (["essen", "hunger", "futter", "pizza", "burger", "küche", "food", "hungry", "kitchen"], "food"),
+    (["geld", "arm", "reich", "sparen", "teuer", "gehalt", "money", "poor", "rich", "expensive"], "money"),
+    (["sport", "fitness", "gym", "training", "muskel", "workout", "gym", "muscle"], "gym"),
+    (["auto", "fahren", "straße", "verkehr", "fahrrad", "car", "drive", "road", "traffic"], "driving"),
+    (["frau", "freundin", "mädchen", "liebe", "beziehung", "girl", "girlfriend", "relationship"], "relationship"),
+    (["katze", "hund", "tier", "haustier", "cat", "dog", "pet"], "pet"),
+    (["krank", "krankheit", "arzt", "doktor", "schnupfen", "sick", "doctor", "hospital"], "sick"),
+    (["party", "feiern", "bier", "alkohol", "betrunken", "party", "celebrate", "drunk"], "party"),
+    (["spiel", "zocken", "gaming", "ps5", "xbox", "nintendo", "game", "gaming", "play"], "gaming"),
+]
 
 def analyze_emotion(text):
-    """Analysiert den Text und bestimmt die Emotion"""
+    """Erkennt Emotion basierend auf Trigger-Wörtern"""
     text_lower = text.lower()
-    
-    # Zähle Treffer pro Emotion
     emotion_scores = {}
+
     for emotion, triggers in EMOTION_TRIGGERS.items():
         score = sum(1 for trigger in triggers if trigger in text_lower)
         if score > 0:
             emotion_scores[emotion] = score
-    
-    # Fallback: Ironie erkennen bei "super" + negatives Wort
+
+    # Ironie: "super/toll" + negatives Wort
     if "super" in text_lower or "toll" in text_lower:
-        negative_words = ["down", "nicht", "fehler", "problem", "kaputt"]
-        if any(word in text_lower for word in negative_words):
+        negative = ["down", "nicht", "fehler", "problem", "kaputt"]
+        if any(w in text_lower for w in negative):
             emotion_scores["irony"] = emotion_scores.get("irony", 0) + 2
-    
-    # Wähle höchste Emotion
-    if emotion_scores:
-        return max(emotion_scores, key=emotion_scores.get)
-    
-    return "irony"  # Default
+
+    return max(emotion_scores, key=emotion_scores.get) if emotion_scores else "irony"
 
 def generate_meme_text(context, emotion):
-    """Generiert passenden Meme-Text basierend auf Kontext"""
-    template_info = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])
-    return template_info['default_top'], template_info['default_bottom']
+    """Gibt Default-Text für Emotion zurück"""
+    info = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])
+    return info['default_top'], info['default_bottom']
+
+def extract_keywords(context):
+    """Extrahiert Keywords aus Kontext für Template-Suche"""
+    context_lower = context.lower()
+    found = set()
+    for triggers, tag in KEYWORD_TAGS:
+        if any(t in context_lower for t in triggers):
+            found.add(tag)
+    return found
+
+def get_popular_templates():
+    """Holt Top 100 Templates von imgflip API"""
+    cmd = [
+        "curl", "-s",
+        "-H", "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "https://api.imgflip.com/get_memes"
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        data = json.loads(result.stdout)
+        return data["data"]["memes"] if data.get("success") else []
+    except:
+        return []
+
+def search_templates(query):
+    """Sucht Templates in imgflip Top 100 nach Query"""
+    templates = get_popular_templates()
+    query_lower = query.lower()
+    return [t for t in templates if query_lower in t['name'].lower()][:15]
+
+def find_best_template(context, emotion=None):
+    """Findet passendstes Template via Keyword-Matching + API-Fallback"""
+    keywords = extract_keywords(context)
+    templates = get_popular_templates()
+
+    # Priorität: Keywords > Emotion > Fallback
+    candidates = []
+
+    # 1. Keywords matchen
+    if keywords:
+        for t in templates:
+            name_lower = t['name'].lower()
+            if any(kw in name_lower for kw in keywords):
+                candidates.append(t)
+
+    # 2. Emotion-Template
+    if not candidates and emotion:
+        emotion_info = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])
+        template_key = emotion_info["template"]
+        template_id = IMGFLIP_TEMPLATES.get(template_key)
+        for t in templates:
+            if str(t['id']) == str(template_id):
+                candidates.append(t)
+                break
+
+    # 3. Direkter Keyword-Vergleich
+    if not candidates:
+        for t in templates:
+            name_lower = t['name'].lower()
+            if any(kw in name_lower for kw in keywords):
+                candidates.append(t)
+
+    if candidates:
+        return candidates[0]
+
+    # 4. Fallback: success kid
+    return {"id": 61544, "name": "success kid", "box_count": 2}
 
 def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
-    """Erstellt ein Meme über die imgflip API mit curl (zuverlässiger)"""
-    
-    # Ohne Auth geht's nicht
+    """Erstellt Meme via imgflip API mit curl"""
     if not IMGFLIP_USERNAME or not IMGFLIP_PASSWORD:
-        print("⚠️  Keine imgflip Credentials in .env gefunden!")
-        print("   Erstelle Account bei imgflip.com und setze:")
-        print("   IMGFLIP_USERNAME=dein_username")
-        print("   IMGFLIP_PASSWORD=dein_passwort")
+        print("⚠️  Keine imgflip Credentials in .env!")
         return None
-    
-    # Verwende curl für bessere Kompatibilität
-    import subprocess
-    
+
     cmd = [
         "curl", "-s", "-X", "POST",
         "https://api.imgflip.com/caption_image",
@@ -154,180 +201,64 @@ def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
         "-d", f"text0={text_top}",
         "-d", f"text1={text_bottom}"
     ]
-    
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        try:
-            data = json.loads(result.stdout)
-        except json.JSONDecodeError:
-            print("❌ imgflip API: Keine JSON-Antwort (evtl. blockiert oder Timeout)")
-            return None
-        
+        data = json.loads(result.stdout)
         if data.get("success"):
             image_url = data["data"]["url"]
-            # Lade Bild herunter (mit curl - User-Agent wichtig!)
-            download_cmd = [
-                "curl", "-s", "-L", "-o", output_path,
-                "-H", "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                image_url
-            ]
-            subprocess.run(download_cmd, capture_output=True, text=True, timeout=30)
-            print(f"✅ Meme erstellt via imgflip!")
-            return output_path
-        else:
-            error_msg = data.get("error_message", "Unbekannter Fehler")
-            print(f"❌ imgflip Fehler: {error_msg}")
-            return None
-            
+            subprocess.run(
+                ["curl", "-s", "-L", "-o", output_path,
+                 "-H", "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                 image_url],
+                capture_output=True, timeout=30
+            )
+            return str(output_path)
     except Exception as e:
-        print(f"❌ Fehler bei imgflip API: {e}")
-        return None
-
-def get_popular_templates():
-    """Holt populäre Templates von imgflip (nutzt curl statt urllib wegen Blockierung)"""
-    url = "https://api.imgflip.com/get_memes"
-    
-    try:
-        cmd = [
-            "curl", "-s",
-            "-H", "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            url
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        try:
-            data = json.loads(result.stdout)
-        except json.JSONDecodeError:
-            print("⚠️  Templates API: Keine JSON-Antwort")
-            return []
-        if data.get("success"):
-            return data["data"]["memes"]
-        return []
-    except Exception as e:
-        print(f"❌ Konnte Templates nicht laden: {e}")
-        return []
-
-def search_template(query):
-    """Sucht nach Templates via imgflip API (Top 100 populäre Templates)"""
-    templates = get_popular_templates()
-    query_lower = query.lower()
-    
-    matches = []
-    for t in templates:
-        if query_lower in t['name'].lower():
-            matches.append(t)
-    
-    return matches[:15]
+        print(f"❌ imgflip Fehler: {e}")
+    return None
 
 def create_text_meme(text_top, text_bottom, emotion, output_path):
-    """Erstellt ein einfaches Text-basiertes Meme"""
+    """Fallback: Text-Meme mit Pillow"""
     if not PILLOW_AVAILABLE:
         return None
-    
-    template_info = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])
-    
-    # Erstelle Bild mit passender Farbe
-    width, height = 800, 600
-    bg_color = template_info['color']
-    
-    # Konvertiere Hex zu RGB
-    bg_color = bg_color.lstrip('#')
-    bg_rgb = tuple(int(bg_color[i:i+2], 16) for i in (0, 2, 4))
-    
-    img = Image.new('RGB', (width, height), bg_rgb)
+    info = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])
+    bg = info['color'].lstrip('#')
+    rgb = tuple(int(bg[i:i+2], 16) for i in (0, 2, 4))
+    img = Image.new('RGB', (800, 600), rgb)
     draw = ImageDraw.Draw(img)
-    
-    # Versuche Schriftart zu laden
     try:
-        # System-Fonts
-        font_paths = [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
-            "/System/Library/Fonts/Helvetica.ttc",  # macOS
-            "C:\\Windows\\Fonts\\Arial.ttf",  # Windows
-        ]
-        
-        font_large = None
-        for path in font_paths:
-            if os.path.exists(path):
-                font_large = ImageFont.truetype(path, 48)
-                font_small = ImageFont.truetype(path, 36)
-                break
-        
-        if font_large is None:
-            font_large = ImageFont.load_default()
-            font_small = ImageFont.load_default()
-            
-    except Exception:
-        font_large = ImageFont.load_default()
-        font_small = ImageFont.load_default()
-    
-    # Zeichne Text
-    # Oberer Text
-    draw.text((width//2, 80), text_top, fill="white", font=font_large, anchor="mm", stroke_width=2, stroke_fill="black")
-    
-    # Meme-Name in der Mitte
-    meme_name = template_info['template'].replace('_', ' ').upper()
-    draw.text((width//2, height//2), f"[ {meme_name} ]", fill="white", font=font_small, anchor="mm", stroke_width=1, stroke_fill="black")
-    
-    # Unterer Text
-    draw.text((width//2, height - 80), text_bottom, fill="white", font=font_large, anchor="mm", stroke_width=2, stroke_fill="black")
-    
-    # Speichere
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 44)
+    except:
+        font = ImageFont.load_default()
+    draw.text((400, 300), f"{text_top}\n\n{text_bottom}",
+              fill="white", font=font, anchor="mm", align="center")
     img.save(output_path)
-    return output_path
+    return str(output_path)
 
-def create_context_meme(context, emotion=None, output_path=None, use_imgflip=True):
-    """Hauptfunktion: Erstellt Meme aus Kontext"""
-
-    # Stelle sicher, dass Output-Verzeichnis existiert
+def create_auto_meme(context, emotion=None, output_path=None):
+    """--auto Modus: Automatische Template-Suche + Meme-Erstellung"""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_path = output_path or OUTPUT_DIR / f"meme_auto_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
-    if output_path is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = OUTPUT_DIR / f"meme_{timestamp}.png"
-
-    # Analysiere Emotion falls nicht angegeben
-    if emotion is None:
+    if not emotion:
         emotion = analyze_emotion(context)
 
-    print(f"🎭 Erkannte Emotion: {emotion}")
-
-    # Generiere Text
     text_top, text_bottom = generate_meme_text(context, emotion)
-    print(f"📝 Oberer Text: {text_top}")
-    print(f"📝 Unterer Text: {text_bottom}")
+    template = find_best_template(context, emotion)
+    template_id = template['id']
+    template_name = template['name']
 
-    # Wähle Template
-    template_key = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])["template"]
-    template_id = IMGFLIP_TEMPLATES.get(template_key, 61544)  # Default: success kid
+    print(f"🎭 Emotion: {emotion}")
+    print(f"📝 Text: \"{text_top}\" / \"{text_bottom}\"")
+    print(f"🎨 Template: {template_name} (ID: {template_id})")
 
-    # Versuche imgflip API zuerst (wenn gewünscht und Credentials vorhanden)
-    if use_imgflip and IMGFLIP_USERNAME and IMGFLIP_PASSWORD:
-        print(f"🎨 Erstelle Meme via imgflip API...")
+    if IMGFLIP_USERNAME and IMGFLIP_PASSWORD:
         result = create_imgflip_meme(template_id, text_top, text_bottom, output_path)
         if result:
-            print(f"✅ Meme erstellt: {result}")
-            return str(result)
-        else:
-            print("⚠️  imgflip fehlgeschlagen, versuche lokale Erstellung...")
+            print(f"✅ Meme: {result}")
+            return result
 
-    # Fallback: Lokale Erstellung
-    result = create_text_meme(text_top, text_bottom, emotion, output_path)
-
-    if result:
-        print(f"✅ Meme erstellt: {result}")
-        return str(result)
-    else:
-        # Fallback: Nur Text ausgeben
-        print(f"\n🎨 MEME VORSCHLAG ({emotion.upper()}):")
-        print(f"   ┌{'─' * 50}┐")
-        print(f"   │ {text_top:^48} │")
-        print(f"   │{' ' * 48}│")
-        print(f"   │     [ {template_key.replace('_', ' ').upper()} ]")
-        print(f"   │{' ' * 48}│")
-        print(f"   │ {text_bottom:^48} │")
-        print(f"   └{'─' * 50}┘")
-        return None
+    return create_text_meme(text_top, text_bottom, emotion, output_path)
 
 def main():
     if len(sys.argv) < 2:
@@ -335,117 +266,87 @@ def main():
 🎩 Context-Aware Meme Architect
 
 Nutzung:
-  python3 meme_architect.py "Dein Text hier"
-  python3 meme_architect.py "Text" --emotion success
-  python3 meme_architect.py --demo
-  python3 meme_architect.py --list           # Zeigt verfügbare Templates
+  python3 meme_architect.py --auto "Dein Text hier"   # Automatische Suche!
+  python3 meme_architect.py "Text" --emotion success  # Manuel
+  python3 meme_architect.py --search 'drake'          # Templates suchen
+  python3 meme_architect.py --create 61544 "Oben" "Unten"  # Eigenes Template
+  python3 meme_architect.py --list                     # Alle Templates
+  python3 meme_architect.py --demo                      # Demo-Modus
 
-Beispiele:
-  python3 meme_architect.py "Mein Code kompiliert endlich"
-  python3 meme_architect.py "Pollinations ist down aber Supadata läuft" --emotion irony
+Emotionen: success, frustration, dilemma, superiority, irony, nostalgia
 
-Verfügbare Emotionen:
-  success, frustration, dilemma, superiority, irony, nostalgia
-
-Konfiguration:
-  IMGFLIP_USERNAME und IMGFLIP_PASSWORD in .env setzen
-  für echte Meme-Templates von imgflip.com
+Beispiel:
+  python3 meme_architect.py --auto "3 Monate Schule, heute Prüfung, nichts verstanden"
 """)
         sys.exit(1)
 
-    # Parse Argumente
+    # --demo
     if sys.argv[1] == "--demo":
-        # Demo-Modus: Mehrere Beispiele
-        examples = [
-            ("Endlich! Der Cron-Job läuft seit 3 Tagen ohne Fehler!", None),
-            ("Pollinations streikt wieder, aber wenigstens haben wir noch 97 Supadata Credits", None),
+        for text, _ in [
+            ("Endlich! Der Cron-Job läuft ohne Fehler!", None),
+            ("Pollinations streikt, aber Supadata läuft", None),
             ("Soll ich schlafen oder noch einen Skill bauen?", None),
-            ("Erinnert sich noch jemand an die Zeit als wir nur 5 Cron-Jobs hatten?", None),
-        ]
-
-        print("🎨 DEMO-MODUS: Erstelle Beispiel-Memes\n")
-        for text, emotion in examples:
-            print(f"\n{'='*60}")
-            print(f"Input: {text}")
-            create_context_meme(text, emotion)
-
+            ("Früher hatten wir nur 5 Cron-Jobs...", None),
+        ]:
+            print(f"\n{'='*50}\nInput: {text}")
+            create_auto_meme(text)
         sys.exit(0)
 
-    elif sys.argv[1] == "--list":
-        # Liste verfügbare Templates
-        print("🎨 Verfügbare Meme-Templates:\n")
-        print(f"{'Template':<25} {'imgflip ID':<12} {'Emotion'}")
+    # --list
+    if sys.argv[1] == "--list":
+        print("🎨 Templates:\nID         Name                    Emotion")
         print("-" * 55)
-        for emotion, info in EMOTION_TEMPLATES.items():
-            template = info['template']
-            template_id = IMGFLIP_TEMPLATES.get(template, 'N/A')
-            print(f"{template:<25} {template_id:<12} {emotion}")
-        print("\n💡 Tipp: Erstelle Account bei imgflip.com für echte Meme-Bilder!")
-        print("💡 Suche nach Templates: python3 meme_architect.py --search 'drake'")
-        sys.exit(0)
-    
-    elif sys.argv[1] == "--search":
-        if len(sys.argv) < 3:
-            print("❌ Bitte Suchbegriff angeben!")
-            print("Nutzung: --search 'drake'")
-            sys.exit(1)
-        
-        query = sys.argv[2]
-        print(f"🔍 Suche nach '{query}'...")
-        results = search_template(query)
-        
-        if results:
-            print(f"\n✅ {len(results)} Templates gefunden:\n")
-            print(f"{'ID':<12} {'Name':<35} {'Boxen'}")
-            print("-" * 60)
-            for t in results:
-                print(f"{t['id']:<12} {t['name'][:34]:<35} {t.get('box_count', 2)}")
-            print(f"\n💡 Nutze: python3 meme_architect.py --create {results[0]['id']} \"Text oben\" \"Text unten\"")
-        else:
-            print("❌ Keine Templates gefunden")
+        for em, info in EMOTION_TEMPLATES.items():
+            tid = IMGFLIP_TEMPLATES.get(info["template"], "N/A")
+            print(f"{tid:<10} {info['template']:<22} {em}")
         sys.exit(0)
 
-    # Parse Template ID (falls --create verwendet)
+    # --search
+    if sys.argv[1] == "--search":
+        if len(sys.argv) < 3:
+            print("❌ Nutzung: --search 'begriff'")
+            sys.exit(1)
+        results = search_templates(sys.argv[2])
+        if results:
+            print(f"✅ {len(results)} Templates:")
+            for t in results:
+                print(f"  {t['id']:<12} {t['name'][:35]}")
+        else:
+            print("❌ Keine gefunden")
+        sys.exit(0)
+
+    # --create
     if sys.argv[1] == "--create":
         if len(sys.argv) < 5:
-            print("❌ Zu wenige Argumente!")
-            print("Nutzung: --create <template_id> \"Text oben\" \"Text unten\"")
+            print("❌ Nutzung: --create <id> \"Oben\" \"Unten\" [output]")
             sys.exit(1)
-        
-        template_id = sys.argv[2]
-        text_top = sys.argv[3]
-        text_bottom = sys.argv[4]
-        output = sys.argv[5] if len(sys.argv) > 5 else "/tmp/meme_custom.png"
-        
-        print(f"🎨 Erstelle Meme mit Template {template_id}...")
-        result = create_imgflip_meme(template_id, text_top, text_bottom, output)
-        
-        if result:
-            print(f"✅ Meme erstellt: {result}")
-        else:
-            print("❌ Fehler beim Erstellen")
+        tid, top, bottom = sys.argv[2], sys.argv[3], sys.argv[4]
+        out = sys.argv[5] if len(sys.argv) > 5 else "/tmp/meme.png"
+        result = create_imgflip_meme(tid, top, bottom, out)
+        print(f"✅ Meme: {result}" if result else "❌ Fehler")
         sys.exit(0)
-    
-    # Normaler Modus (Context-based)
-    context = sys.argv[1]
-    emotion = None
-    use_imgflip = True
 
-    # Parse Flags
-    output_path = None
-    for i, arg in enumerate(sys.argv):
-        if arg == "--emotion" and i + 1 < len(sys.argv):
-            emotion = sys.argv[i + 1]
-        elif arg == "--no-imgflip":
-            use_imgflip = False
-        elif arg == "--output" and i + 1 < len(sys.argv):
-            output_path = sys.argv[i + 1]
+    # --auto
+    if sys.argv[1] == "--auto":
+        if len(sys.argv) < 3:
+            print("❌ Nutzung: --auto \"Kontext\"")
+            sys.exit(1)
+        ctx, em, out = sys.argv[2], None, None
+        for i, a in enumerate(sys.argv):
+            if a == "--emotion" and i+1 < len(sys.argv): em = sys.argv[i+1]
+            if a == "--output" and i+1 < len(sys.argv): out = sys.argv[i+1]
+        result = create_auto_meme(ctx, em, out)
+        print(f"\n💾 {result}" if result else "❌ Fehler")
+        sys.exit(0)
 
-    # Erstelle Meme
-    result = create_context_meme(context, emotion, output_path=output_path, use_imgflip=use_imgflip)
+    # Default: Kontext-basiert
+    ctx, em, out = sys.argv[1], None, None
+    for i, a in enumerate(sys.argv):
+        if a == "--emotion" and i+1 < len(sys.argv): em = sys.argv[i+1]
+        if a == "--output" and i+1 < len(sys.argv): out = sys.argv[i+1]
 
-    if result:
-        print(f"\n💾 Gespeichert unter: {result}")
+    result = create_auto_meme(ctx, em, out)
+    print(f"\n💾 {result}" if result else "❌ Fehler")
 
 if __name__ == "__main__":
     main()

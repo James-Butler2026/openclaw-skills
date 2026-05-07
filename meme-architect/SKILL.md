@@ -3,44 +3,33 @@ name: meme-architect
 description: |
   Context-Aware Meme Architect – Ein KI-Agent, der Gespräche, Texte und News 
   in passende Memes verwandelt. Nutzt die imgflip API für echte Meme-Templates 
-  mit automatischer Emotionserkennung und Text-Generierung.
+  mit automatischer Emotionserkennung, Keyword-basierter Template-Suche und Text-Generierung.
   
   Use when:
   1. Jemand einen lustigen Moment aus einer Konversation meme-n will
   2. Ein Erfolg/Misserfolg meme-würdig ist
-  3. Ein aktuelles Ereignis als Meme visualisiert werden soll
-  4. Automatische Meme-Generierung aus Chat-Kontext gewünscht ist
+  3. Automatische Meme-Generierung aus Chat-Kontext gewünscht ist
 ---
 
 # 🎨 Context-Aware Meme Architect
 
-Ein intelligenter Meme-Generator, der Gesprächskontext analysiert und passende Memes über die imgflip API erstellt.
+Ein intelligenter Meme-Generator, der Gesprächskontext analysiert und automatisch das passende Template via imgflip API sucht.
 
 ## ✨ Features
 
-- **🎭 Emotionserkennung** – Analysiert Text und wählt das passende Template
+- **🎭 Emotionserkennung** – Analysiert Text und erkennt Emotion (success, frustration, irony, etc.)
+- **🔑 Keyword-basierte Template-Suche** – Extrahiert Themen aus Kontext (Schule, Arbeit, Sport, etc.) und matcht mit imgflip Top 100
 - **📝 Kontext-basierte Texte** – Generiert automatisch Ober-/Untertext
-- **🖼️ Echte Meme-Templates** – Via imgflip API (keine lokalen Bilder nötig)
-- **🎯 8+ Templates** – Von Success Kid bis Crying Wolverine
-- **⚡ Schnell** – Direkte API-Integration mit curl
+- **🤖 Auto-Modus** – Ein Befehl: Kontext rein, Meme raus
+- **🎯 10+ Templates** – Inkl. Hide the Pain Harold, Sleeping Shaq, Success Kid uvm.
+- **⚡ imgflip API via curl** – Kein Python-urllib (wird blockiert)
 
 ## 🚀 Schnellstart
 
-### Installation
+### Voraussetzungen
 
-1. **Abhängigkeiten installieren:**
-```bash
-pip install Pillow
-```
-
-2. **imgflip Account erstellen:**
-   - Gehe zu https://imgflip.com/signup
-   - Erstelle kostenlosen Account
-   - Notiere Username und Passwort
-
-3. **.env konfigurieren:**
-
-   Füge zu deiner `.env` Datei hinzu (sollte bereits existieren):
+1. **imgflip Account erstellen:** https://imgflip.com/signup
+2. **.env konfigurieren:**
    ```bash
    IMGFLIP_USERNAME=dein_username
    IMGFLIP_PASSWORD=dein_passwort
@@ -49,193 +38,80 @@ pip install Pillow
 ### Nutzung
 
 ```bash
-# Einzelnes Meme erstellen
-python3 skills/meme-architect/scripts/meme_architect.py "Mein Code kompiliert endlich"
+# 🤖 AUTO-MODUS (empfohlen)
+python3 skills/meme-architect/scripts/meme_architect.py --auto "3 Monate Schule, heute Prüfung, nichts verstanden"
 
-# Mit spezifischer Emotion
-python3 skills/meme-architect/scripts/meme_architect.py "Pollinations ist down" --emotion irony
+# Manuell mit Emotion
+python3 meme_architect.py "Text" --emotion irony
 
-# Alle Templates anzeigen
-python3 skills/meme-architect/scripts/meme_architect.py --list
+# Templates suchen
+python3 meme_architect.py --search "sleeping"
 
-# Demo-Modus (4 Beispiele)
-python3 skills/meme-architect/scripts/meme_architect.py --demo
+# Mit bestimmter ID
+python3 meme_architect.py --create 27813981 "Oben" "Unten"
 ```
 
-### In Python nutzen
+## 🎭 Emotionserkennung
 
-```python
-from skills.meme_architect.scripts.meme_architect import create_context_meme
+| Emotion | Typische Trigger |
+|---------|-----------------|
+| `success` | funktioniert, geschafft, endlich, läuft, done |
+| `frustration` | fehler, nicht, kaputt, bug, scheiße |
+| `dilemma` | oder, vs, entscheiden, dilemma |
+| `superiority` | besser, nein, upgrade, baut |
+| `irony` | toll, super, perfekt (+ negatives Wort) |
+| `nostalgia` | früher, damals, erinnerst, alte zeiten |
 
-# Erstelle Meme aus Kontext
-result = create_context_meme(
-    context="Endlich läuft der Cron-Job nach 3 Tagen",
-    emotion="success"  # Optional: "success", "frustration", "irony", etc.
-)
+## 🔑 Keyword-Kategorien
 
-# Gibt den Pfad zum gespeicherten Meme zurück
-print(f"Meme erstellt: {result}")
-```
+| Kategorie | Trigger-Wörter | Template-Suche |
+|-----------|---------------|----------------|
+| `sleeping` | schlaf, müde, pennen, tired | sleeping |
+| `studying` | schule, lernen, prüfung, unterricht | studying |
+| `pain` | kaputt, schmerzen, erschöpft, dead | pain hide the pain harold |
+| `work` | arbeit, job, büro | work |
+| `computer` | pc, server, code, bug | computer nerd |
+| `food` | essen, pizza, hunger | food |
+| `gym` | sport, fitness, workout | gym |
+| `driving` | auto, fahren, verkehr | driving |
+| ... und 6 weitere | | |
 
-## 🎭 Unterstützte Emotionen & Templates
-
-| Emotion | Template | imgflip ID | Best für |
-|---------|----------|------------|----------|
-| `success` | Success Kid | 61544 | Erfolge, kleine Siege |
-| `frustration` | This Is Fine | 55311130 | Katastrophe ignorieren |
-| `dilemma` | Two Buttons | 87743020 | Schwierige Entscheidungen |
-| `superiority` | Drake Pointing | 181913649 | Ablehnung vs. Akzeptanz |
-| `irony` | Distracted Boyfriend | 112126428 | Ablenkung, neue Ideen |
-| `nostalgia` | Crying Wolverine | 91538330 | Nostalgie, Melancholie |
-| `mocking` | Mocking Spongebob | 102156234 | Sarkasmus, Spott |
-| `revelation` | Expanding Brain | 93895088 | Erleuchtung, Einsicht |
-
-## 🏗️ Architektur
-
-```
-Input Text
-    ↓
-Emotionsanalyse (Keywords)
-    ↓
-Template-Auswahl (imgflip ID)
-    ↓
-Text-Generierung (Ober-/Untertext)
-    ↓
-API-Call an imgflip
-    ↓
-Bild-Download & Speicherung
-    ↓
-Ausgabe als PNG
-```
-
-## 📁 Dateistruktur
-
-```
-meme-architect/
-├── SKILL.md                      # Diese Datei
-├── README.md                     # Projekt-Übersicht
-├── scripts/
-│   └── meme_architect.py         # Hauptskript
-└── references/
-    └── imgflip-api.md            # API-Dokumentation
-```
-
-## 🔧 Konfiguration
-
-### Umgebungsvariablen (.env)
-
-```bash
-# Erforderlich
-IMGFLIP_USERNAME=dein_username
-IMGFLIP_PASSWORD=dein_passwort
-
-# Optional
-MEME_OUTPUT_DIR=/tmp/meme_architect  # Standard
-```
-
-### Emotions-Trigger
-
-Der Skill erkennt automatisch Emotionen anhand von Keywords:
-
-```python
-EMOTION_TRIGGERS = {
-    "success": ["funktioniert", "geschafft", "endlich", "läuft"],
-    "frustration": ["down", "fehler", "nicht", "kaputt", "bug"],
-    "irony": ["toll", "super", "perfekt"],  # + negatives Kontextwort
-    # ...
-}
-```
-
-## 📝 Beispiele
-
-### Beispiel 1: Erfolg
-```bash
-python3 meme_architect.py "Der Cron-Job läuft seit 3 Tagen ohne Fehler"
-```
-**Ergebnis:** Success Kid Meme mit passendem Text
-
-### Beispiel 2: Ironie
-```bash
-python3 meme_architect.py "Pollinations streikt wieder, aber wenigstens haben wir noch 97 Supadata Credits"
-```
-**Ergebnis:** Distracted Boyfriend Meme
-
-### Beispiel 3: Direkte Ausgabe
-```bash
-$ python3 meme_architect.py "API streikt? Wir bauen unseren eigenen Generator"
-🎭 Erkannte Emotion: superiority
-📝 Oberer Text: Manuell arbeiten
-📝 Unterer Text: Automatisieren wie ein Boss
-✅ Meme erstellt: /tmp/meme_architect/meme_20260410_094838.png
-💾 Gespeichert unter: /tmp/meme_architect/meme_20260410_094838.png
-```
-
-**Direkter Link:** https://i.imgflip.com/aou2sd.jpg
+**So funktioniert's:** Der Skill extrahiert Keywords aus deinem Text (z.B. "kaputt" + "training" → `pain` + `gym`), durchsucht die imgflip Top 100 nach passenden Template-Namen und wählt das beste.
 
 ## 🔧 Technische Details
 
-### API-Zugriff (wichtig!)
+### Warum curl?
 
 **imgflip blockiert Python's urllib/requests!**
-
 - ❌ `urllib.request.urlopen()` → 403 Forbidden
-- ❌ `requests.post()` → 403 Forbidden
 - ✅ `curl` mit User-Agent → funktioniert
 
-Daher verwendet der Skill **curl** (subprocess) für:
-- Meme-Erstellung (`POST caption_image`)
-- Template-Suche (`GET get_memes`)
-- Bild-Download
+### Auto-Modus vs. Manuell
 
-### Template-Suche
+| Modus | Befehl | Template-Suche | Am besten für |
+|-------|--------|---------------|--------------|
+| Auto | `--auto "..."` | Keyword-Matching + API | Alltag, Chat-Kontext |
+| Manuell | `--emotion irony` | Feste Emotion | Kontrolle |
+| Direkt | `--create ID "O" "U"` | Eigene ID | Spezial-Templates |
+| Suche | `--search "begriff"` | Top 100 durchsuchen | Template finden |
 
-```bash
-# Nach passenden Templates suchen
-python3 scripts/meme_architect.py --search "sleeping"
-python3 scripts/meme_architect.py --search "football"
-```
+### Neue Templates (Top 100 Found)
 
-Die imgflip API gibt nur die Top-100 populären Templates zurück.
-Bei exotischen Templates muss die ID manuell ergänzt werden.
-
-### Direkte API-Nutzung mit curl
-
-```bash
-# Meme erstellen
-curl -s -X POST "https://api.imgflip.com/caption_image" \
-  -H "User-Agent: Mozilla/5.0 ..." \
-  -d "template_id=18140117" \
-  -d "username=\$IMGFLIP_USERNAME" \
-  -d "password=\$IMGFLIP_PASSWORD" \
-  -d "text0=Text oben" \
-  -d "text1=Text unten"
-```
+| Name | ID | Gefunden via |
+|------|-----|-------------|
+| Hide the Pain Harold | 27813981 | `pain`-Keyword |
+| Sleeping Shaq | 99683372 | `sleeping`-Keyword |
+| Soldier protecting sleeping child | 171305372 | `sleeping`-Keyword |
 
 ## 🐛 Fehlerbehebung
 
 | Problem | Lösung |
 |---------|--------|
-| "Keine imgflip Credentials" | `.env` prüfen, Account erstellen |
-| "HTTP Error 403" | Immer curl verwenden, nie Python-Libs |
-| "Keine Templates gefunden" | Template nicht in Top 100 – ID direkt nutzen |
-| "Pillow nicht installiert" | `pip install Pillow` ausführen |
-| Falsche Emotion erkannt | `--emotion` Flag verwenden |
-
-## 🔒 Sicherheit
-
-- **Credentials** werden nie im Code hartkodiert
-- **Nur aus .env** geladen
-- **Nie committen** – `.env` ist in `.gitignore`
-
-## 📜 Lizenz
-
-MIT License – Feel free to use and modify!
-
-## 🎩 Credits
-
-Erstellt für Eure Lordschaft von James, dem ergebensten Butler.
-
-*"Ein Bild sagt mehr als 1000 Worte – aber ein Meme sagt alles auf einmal."*
+| Keine Credentials | `.env` prüfen |
+| "This Is Fine" bei P90X | Keyword `kaputt`/`schmerzen` fehlt ggf. → manuell `--create 27813981` |
+| 403 Forbidden | Immer curl verwenden |
+| Template nicht gefunden | Nicht in Top 100 → ID direkt via `--create` |
+| Pillow fehlt | `pip install Pillow` (nur Fallback) |
 
 ---
 
