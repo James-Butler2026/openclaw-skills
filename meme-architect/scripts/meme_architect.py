@@ -8,10 +8,7 @@ Nutzt imgflip API für echte Meme-Templates
 import os
 import sys
 import json
-import re
 import subprocess
-import urllib.request
-import urllib.parse
 from datetime import datetime
 from pathlib import Path
 
@@ -131,56 +128,7 @@ def analyze_emotion(text):
 def generate_meme_text(context, emotion):
     """Generiert passenden Meme-Text basierend auf Kontext"""
     template_info = EMOTION_TEMPLATES.get(emotion, EMOTION_TEMPLATES["irony"])
-    
-    # Nutze llm für bessere Text-Generierung falls verfügbar
-    try:
-        # Versuche mit lokalen Qwen
-        prompt = f"""Erstelle einen kurzen, witzigen Meme-Text für ein "{template_info['template']}" Meme.
-
-Kontext: {context}
-Emotion: {emotion}
-
-Gib mir EXAKT zwei Zeilen zurück:
-Zeile 1 (Oberer Text, kurz): 
-Zeile 2 (Unterer Text, kurz):
-
-Beispiel:
-Oberer Text: "Wenn du 47 Cron-Jobs hast"
-Unterer Text: "Aber Pollinations ist down"
-
-Dein Text:"""
-        
-        result = subprocess.run(
-            ["python3", "-c", f"""
-import sys
-sys.path.insert(0, '/home/node/.openclaw/workspace')
-# Simple Text-Generierung ohne LLM für jetzt
-top = "{template_info['default_top']}"
-bottom = "{template_info['default_bottom']}"
-print(f"Oberer Text: {{top}}")
-print(f"Unterer Text: {{bottom}}")
-"""],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-        
-        # Parse Ergebnis
-        lines = result.stdout.strip().split('\n')
-        top_text = template_info['default_top']
-        bottom_text = template_info['default_bottom']
-        
-        for line in lines:
-            if "Oberer Text:" in line or "Zeile 1" in line:
-                top_text = line.split(":", 1)[-1].strip().strip('"')
-            elif "Unterer Text:" in line or "Zeile 2" in line:
-                bottom_text = line.split(":", 1)[-1].strip().strip('"')
-        
-        return top_text, bottom_text
-        
-    except Exception as e:
-        # Fallback zu Default-Texten
-        return template_info['default_top'], template_info['default_bottom']
+    return template_info['default_top'], template_info['default_bottom']
 
 def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
     """Erstellt ein Meme über die imgflip API mit curl (zuverlässiger)"""
@@ -209,7 +157,11 @@ def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
     
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        data = json.loads(result.stdout)
+        try:
+            data = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            print("❌ imgflip API: Keine JSON-Antwort (evtl. blockiert oder Timeout)")
+            return None
         
         if data.get("success"):
             image_url = data["data"]["url"]
@@ -242,7 +194,11 @@ def get_popular_templates():
             url
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        data = json.loads(result.stdout)
+        try:
+            data = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            print("⚠️  Templates API: Keine JSON-Antwort")
+            return []
         if data.get("success"):
             return data["data"]["memes"]
         return []
