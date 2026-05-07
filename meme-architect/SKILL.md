@@ -172,12 +172,52 @@ $ python3 meme_architect.py "API streikt? Wir bauen unseren eigenen Generator"
 
 **Direkter Link:** https://i.imgflip.com/aou2sd.jpg
 
+## 🔧 Technische Details
+
+### API-Zugriff (wichtig!)
+
+**imgflip blockiert Python's urllib/requests!**
+
+- ❌ `urllib.request.urlopen()` → 403 Forbidden
+- ❌ `requests.post()` → 403 Forbidden
+- ✅ `curl` mit User-Agent → funktioniert
+
+Daher verwendet der Skill **curl** (subprocess) für:
+- Meme-Erstellung (`POST caption_image`)
+- Template-Suche (`GET get_memes`)
+- Bild-Download
+
+### Template-Suche
+
+```bash
+# Nach passenden Templates suchen
+python3 scripts/meme_architect.py --search "sleeping"
+python3 scripts/meme_architect.py --search "football"
+```
+
+Die imgflip API gibt nur die Top-100 populären Templates zurück.
+Bei exotischen Templates muss die ID manuell ergänzt werden.
+
+### Direkte API-Nutzung mit curl
+
+```bash
+# Meme erstellen
+curl -s -X POST "https://api.imgflip.com/caption_image" \
+  -H "User-Agent: Mozilla/5.0 ..." \
+  -d "template_id=18140117" \
+  -d "username=\$IMGFLIP_USERNAME" \
+  -d "password=\$IMGFLIP_PASSWORD" \
+  -d "text0=Text oben" \
+  -d "text1=Text unten"
+```
+
 ## 🐛 Fehlerbehebung
 
 | Problem | Lösung |
 |---------|--------|
 | "Keine imgflip Credentials" | `.env` prüfen, Account erstellen |
-| "HTTP Error 403" | curl verwendet statt urllib, funktioniert trotzdem |
+| "HTTP Error 403" | Immer curl verwenden, nie Python-Libs |
+| "Keine Templates gefunden" | Template nicht in Top 100 – ID direkt nutzen |
 | "Pillow nicht installiert" | `pip install Pillow` ausführen |
 | Falsche Emotion erkannt | `--emotion` Flag verwenden |
 
@@ -199,4 +239,4 @@ Erstellt für Eure Lordschaft von James, dem ergebensten Butler.
 
 ---
 
-**GitHub:** https://github.com/James-Butler2026/meme-architect
+**GitHub:** https://github.com/James-Butler2026/openclaw-skills/tree/main/meme-architect

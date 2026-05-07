@@ -126,7 +126,8 @@ python3 scripts/meme_architect.py "Test Text" --emotion success
 |---------|--------|
 | "Keine Credentials" | `.env` erstellen mit `IMGFLIP_USERNAME` und `IMGFLIP_PASSWORD` |
 | "Pillow nicht gefunden" | `pip install Pillow` ausführen |
-| "403 Forbidden" | Normal bei urllib, curl-Implementierung funktioniert |
+| "403 Forbidden" | **Immer curl statt urllib/requests!** imgflip blockiert Python-Libs |
+| Kein passendes Template | API gibt nur Top 100 zurück – Template-ID manuell ergänzen |
 
 ## 🤝 Mitwirken
 
