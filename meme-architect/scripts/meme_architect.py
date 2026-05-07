@@ -199,6 +199,7 @@ def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
     cmd = [
         "curl", "-s", "-X", "POST",
         "https://api.imgflip.com/caption_image",
+        "-H", "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "-d", f"template_id={template_id}",
         "-d", f"username={IMGFLIP_USERNAME}",
         "-d", f"password={IMGFLIP_PASSWORD}",
@@ -212,8 +213,13 @@ def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
         
         if data.get("success"):
             image_url = data["data"]["url"]
-            # Lade Bild herunter
-            urllib.request.urlretrieve(image_url, output_path)
+            # Lade Bild herunter (mit curl - User-Agent wichtig!)
+            download_cmd = [
+                "curl", "-s", "-L", "-o", output_path,
+                "-H", "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                image_url
+            ]
+            subprocess.run(download_cmd, capture_output=True, text=True, timeout=30)
             print(f"✅ Meme erstellt via imgflip!")
             return output_path
         else:
@@ -226,15 +232,20 @@ def create_imgflip_meme(template_id, text_top, text_bottom, output_path):
         return None
 
 def get_popular_templates():
-    """Holt populäre Templates von imgflip"""
+    """Holt populäre Templates von imgflip (nutzt curl statt urllib wegen Blockierung)"""
     url = "https://api.imgflip.com/get_memes"
     
     try:
-        with urllib.request.urlopen(url, timeout=30) as response:
-            data = json.loads(response.read().decode())
-            if data.get("success"):
-                return data["data"]["memes"]
-            return []
+        cmd = [
+            "curl", "-s",
+            "-H", "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            url
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        data = json.loads(result.stdout)
+        if data.get("success"):
+            return data["data"]["memes"]
+        return []
     except Exception as e:
         print(f"❌ Konnte Templates nicht laden: {e}")
         return []
