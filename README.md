@@ -4,7 +4,7 @@ Eine Sammlung nützlicher Skills für OpenClaw – vollständig lokal nutzbar, d
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **19 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
+Diese Sammlung enthält **20 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
@@ -26,6 +26,7 @@ Diese Sammlung enthält **19 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [sports-tracker](#sports-tracker) | Sport-Tracking mit Kalorien und Workout-Management | Fitness |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
 | [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
+| [vodafone-sender-monitor](#vodafone-sender-monitor) | Vodafone Kabel-Senderlisten überwachen | Tracking |
 | [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
 
 ---
@@ -363,6 +364,26 @@ python3 scripts/tavily_search.py "KI Entwicklungen 2026" --depth advanced
 
 ---
 
+### vodafone-sender-monitor
+**Vodafone Kabel-Senderlisten überwachen**
+
+- 📡 Enigma2-Export für Vodafone Kabel-Senderlisten
+- 🔔 Automatische Alerts bei neuen Sendern
+- 📊 SQLite-Datenbank mit Metadaten
+- 🔄 Wöchentlicher Scan (jeden Samstag um 20:00 Uhr)
+
+```bash
+# Initialisierung
+python3 scripts/vodafone_monitor.py --init
+
+# Manuelles Scannen
+python3 scripts/vodafone_monitor.py --scan
+```
+
+→ [Details ansehen](vodafone-sender-monitor/README.md)
+
+---
+
 ### wordpress-manager
 **WordPress Beiträge verwalten**
 
@@ -427,6 +448,7 @@ Siehe die einzelnen Skill-READMEs für die benötigten Variablen.
 │   ├── crypto-tracker/
 │   ├── package-tracking/
 │   ├── ...
+│   ├── vodafone-sender-monitor/
 │   └── wordpress-manager/
 ├── scripts/                      # Skill-Scripts
 └── data/                         # Datenbanken, Caches
