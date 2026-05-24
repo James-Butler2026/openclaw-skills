@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Optional
 
 # Zentrales Logging importieren
-sys.path.insert(0, '/home/node/.openclaw/workspace/scripts')
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'scripts'))
 from logger_config import get_logger
 
 logger = get_logger(__name__)
@@ -71,7 +71,7 @@ def load_api_key() -> str:
     Raises:
         MammouthAPIKeyError: Wenn kein gültiger Key gefunden
     """
-    env_path = Path("/home/node/.openclaw/workspace/.env")
+    env_path = Path(__file__).parent.parent.parent.parent / '.env'
     
     if env_path.exists():
         try:
