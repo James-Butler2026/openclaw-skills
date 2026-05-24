@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import sys
 
-DB_PATH = Path(__file__).parent.parent.parent / "data" / "bison_portfolio.db"
+DB_PATH = Path(__file__).parent.parent.parent.parent / "data" / "bison_portfolio.db"
 DATA_DIR = DB_PATH.parent
 
 # Konfiguration
@@ -224,17 +224,22 @@ def add_trade(coin, amount, total_eur, price_usd=None):
 
 
 def add_initial_holdings():
-    """Fügt initiale Bestände hinzu"""
-    # XRP: 100€ / 84.241025 XRP
-    add_trade('XRP', 84.241025, 100.0)
+    """Fügt initiale Bestände hinzu
     
-    # BTC: 100€ / 0.00157188 BTC
-    add_trade('BTC', 0.00157188, 100.0)
+    WARNUNG: Nur bei --init aufrufen! Korrekte Positionen ab 15.04.2026.
+    BTC/XRP: 15.04.2026 | ETH/SOL: 20.04.2026
+    ETH: 50€ Eigen + 20€ Registrierungs-Bonus
+    """
+    # BTC: 150€ / 0.00234248 BTC (Kauf: 15.04.2026)
+    add_trade('BTC', 0.00234248, 150.0)
     
-    # ETH: 70€ (50€ gekauft + 20€ geschenkt) / 0.03473428 ETH
-    add_trade('ETH', 0.03473428, 70.0)
+    # XRP: 150€ / 124.931742 XRP (Kauf: 15.04.2026)
+    add_trade('XRP', 124.931742, 150.0)
     
-    # SOL: 50€ / 0.68268873 SOL
+    # ETH: 70€ (50€ + 20€ Bonus) / 0.035018 ETH (Kauf: 20.04.2026)
+    add_trade('ETH', 0.035018, 70.0)
+    
+    # SOL: 50€ / 0.68268873 SOL (Kauf: 20.04.2026)
     add_trade('SOL', 0.68268873, 50.0)
 
 
@@ -583,6 +588,16 @@ def main():
     args = parser.parse_args()
     
     if args.init:
+        # Backup bestehende DB falls vorhanden
+        if DB_PATH.exists():
+            import shutil
+            backup_path = DB_PATH.with_suffix('.db.bak')
+            shutil.copy2(DB_PATH, backup_path)
+            print(f"⚠️  Bestehende DB gefunden! Backup erstellt: {backup_path}")
+            print(f"⚠️  --init erstellt Tabellen mit IF NOT EXISTS – bestehende Daten bleiben erhalten!")
+            print(f"⚠️  Aber add_initial_holdings() fügt Doppeleinträge hinzu! Abbruch.")
+            print(f"💡  Für neue Käufe: --buy COIN --amount X --eur Y verwenden!")
+            return 1
         init_db()
         add_initial_holdings()
         return 0
@@ -779,35 +794,42 @@ def main():
         lines.append(f"   **Gewinn/Verlust: {total_profit:+.2f} € ({total_profit_pct:+.2f}%)**")
         lines.append("")
         
-        # VERGLEICH ZUR VORWOCHE (7 Tage)
+        # VERGLEICH ZUR VORWOCHE (7 Tage) - ROI-basiert, nicht absolute Werte
         lines.append("=" * 55)
         lines.append("📊 VERGLEICH ZUR VORWOCHE (7 Tage)")
         lines.append("=" * 55)
         lines.append("")
         
-        # Snapshot von vor einer Woche holen (nur Gesamtwert)
+        # Hole ROI von vor einer Woche (Gewinn% seit Kauf)
         cursor.execute('''
-            SELECT total_value_eur FROM hourly_snapshots 
+            SELECT total_invested, total_value_eur, total_profit_eur, total_profit_percent 
+            FROM hourly_snapshots 
             WHERE timestamp_hour <= ? 
             ORDER BY timestamp_hour DESC LIMIT 1
         ''', (week_ago.strftime('%Y-%m-%d %H:00'),))
         week_old_row = cursor.fetchone()
         
         if week_old_row:
-            week_ago_total = week_old_row[0]
-            weekly_change = total_value - week_ago_total
-            weekly_change_pct = (weekly_change / week_ago_total * 100) if week_ago_total > 0 else 0
+            week_ago_invested, week_ago_value, week_ago_profit, week_ago_roi = week_old_row
             
-            lines.append(f"📅 Vor einer Woche: {week_ago_total:.2f} €")
-            lines.append(f"📅 Heute: {total_value:.2f} €")
-            lines.append(f"📈 **Änderung: {weekly_change:+.2f} € ({weekly_change_pct:+.2f}%)**")
+            # Reiner Kursgewinn dieser Woche = aktueller Gewinn - Gewinn vor einer Woche
+            weekly_profit_change = total_profit - week_ago_profit
+            weekly_roi_change = total_profit_pct - week_ago_roi
             
-            if weekly_change > 0:
-                lines.append("🟢 Diese Woche im Plus!")
-            elif weekly_change < 0:
-                lines.append("🔴 Diese Woche im Minus")
+            lines.append(f"📅 Vor einer Woche: {week_ago_profit:+.2f}€ ({week_ago_roi:+.2f}%)")
+            lines.append(f"📅 Heute:           {total_profit:+.2f}€ ({total_profit_pct:+.2f}%)")
+            lines.append(f"📈 **Kursgewinn diese Woche: {weekly_profit_change:+.2f}€ ({weekly_roi_change:+.2f}%)**")
+            
+            if weekly_roi_change > 0:
+                lines.append("🟢 ROI verbessert!")
+            elif weekly_roi_change < 0:
+                lines.append("🔴 ROI verschlechtert")
             else:
-                lines.append("⚪ Keine Veränderung")
+                lines.append("⚪ Keine ROI-Änderung")
+            
+            # Zusatzinfo: Investitionssummen
+            if total_invested != week_ago_invested:
+                lines.append(f"💡 Neue Käufe: +{total_invested - week_ago_invested:.0f}€ seit letzter Woche")
         else:
             lines.append("⚠️ Keine Daten von vor einer Woche vorhanden")
             lines.append("   (Erst nach nächstem --hourly verfügbar)")
@@ -874,8 +896,101 @@ def main():
             print("❌ Noch keine Daten vorhanden. Führe zuerst --hourly aus.")
         return 0
     
+    elif args.status:
+        # STATUS - Aktuellen Portfolio-Status anzeigen
+        import json
+        import urllib.request
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Aktuelle Preise für ALLE 4 Coins
+        url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ripple,ethereum,solana&vs_currencies=eur'
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as response:
+            prices = json.loads(response.read().decode())
+        
+        btc_price = prices['bitcoin']['eur']
+        xrp_price = prices['ripple']['eur']
+        eth_price = prices['ethereum']['eur']
+        sol_price = prices['solana']['eur']
+        
+        # Holdings laden
+        cursor.execute('SELECT coin, amount, invested_eur, avg_buy_price FROM holdings')
+        holdings = cursor.fetchall()
+        
+        if not holdings:
+            print("❌ Keine Bestände gefunden. Führe zuerst --init aus.")
+            return 1
+        
+        total_invested = 0
+        total_value = 0
+        
+        lines = []
+        lines.append("📊 **PORTFOLIO STATUS**")
+        lines.append(f"📅 {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+        lines.append("")
+        lines.append("💰 Aktuelle Preise:")
+        lines.append(f"   BTC: {btc_price:,.2f} €")
+        lines.append(f"   XRP: {xrp_price:.4f} €")
+        lines.append(f"   ETH: {eth_price:,.2f} €")
+        lines.append(f"   SOL: {sol_price:.2f} €")
+        lines.append("")
+        
+        for row in holdings:
+            coin, amount, invested, avg_price = row
+            if coin == 'BTC':
+                current = btc_price * amount
+            elif coin == 'XRP':
+                current = xrp_price * amount
+            elif coin == 'ETH':
+                current = eth_price * amount
+            elif coin == 'SOL':
+                current = sol_price * amount
+            else:
+                current = invested
+            
+            profit = current - invested
+            profit_pct = (profit / invested * 100) if invested > 0 else 0
+            
+            if profit > 0:
+                ampel = "🟢"
+            else:
+                ampel = "🔴"
+            
+            lines.append(f"🪙 **{coin}:**")
+            lines.append(f"   Bestand: {amount:.8f}")
+            lines.append(f"   Investiert: {invested:.2f} €")
+            lines.append(f"   Ø Kaufpreis: {avg_price:,.2f} €")
+            lines.append(f"   Wert: {current:.2f} €")
+            lines.append(f"   {ampel} P/L: {profit:+.2f} € ({profit_pct:+.2f}%)")
+            lines.append("")
+            
+            total_invested += invested
+            total_value += current
+        
+        total_profit = total_value - total_invested
+        total_profit_pct = (total_profit / total_invested * 100) if total_invested > 0 else 0
+        
+        if total_profit > 0:
+            total_ampel = "🟢"
+        else:
+            total_ampel = "🔴"
+        
+        lines.append("=" * 50)
+        lines.append(f"💰 **GESAMT:**")
+        lines.append(f"   Investiert: {total_invested:.2f} €")
+        lines.append(f"   Aktueller Wert: {total_value:.2f} €")
+        lines.append(f"   {total_ampel} **Gewinn/Verlust: {total_profit:+.2f} € ({total_profit_pct:+.2f}%)**")
+        
+        conn.close()
+        
+        report = '\n'.join(lines)
+        print(report)
+        return 0
+    
     else:
-        print("Verwendung: bison_tracker.py [--init|--hourly|--max-profit|--max-verlust|--buy COIN --amount X --eur Y]")
+        print("Verwendung: bison_tracker.py [--init|--status|--daily|--weekly|--history|--performance|--hourly|--max-profit|--max-verlust|--buy COIN --amount X --eur Y]")
         return 1
 
 
