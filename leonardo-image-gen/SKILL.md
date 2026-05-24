@@ -62,7 +62,7 @@ from skills.leonardo_image_gen.scripts.leonardo_generate import generate_image_w
 
 # Automatischer Fallback
 result = generate_image_with_fallback(
-    prompt="Ein elegantes Maskottchen mit Zylinder",
+    prompt="Ein eleganter Butler mit Zylinder",
     output_path="/tmp/bild.png",
     width=1024,
     height=1024
@@ -156,4 +156,4 @@ LEONARDO_DEFAULT_MODEL=flux-schnell
 - Dokumentation aller verfügbaren Modelle
 
 ---
-*Skill erstellt von OpenClaw User, vom Assistenten* 🎩
+*Skill erstellt von James, dem ergebensten Butler* 🎩

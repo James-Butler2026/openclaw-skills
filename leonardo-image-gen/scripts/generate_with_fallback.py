@@ -44,7 +44,7 @@ def generate_with_pollinations(prompt, width=1024, height=1024, seed=None, outpu
             # Bild speichern
             if output_path is None:
                 timestamp = int(time.time())
-                output_dir = Path("/home/node/.openclaw/workspace/output")
+                output_dir = Path(__file__).parent.parent.parent.parent / 'output'
                 output_dir.mkdir(exist_ok=True)
                 output_path = output_dir / f"pollinations_{timestamp}.png"
             else:
@@ -108,7 +108,7 @@ def generate_with_leonardo(prompt, width=1024, height=1024, model="flux-schnell"
                 # Speichern
                 if output_path is None:
                     timestamp = int(time.time())
-                    output_dir = Path("/home/node/.openclaw/workspace/output/leonardo")
+                    output_dir = Path(__file__).parent.parent.parent.parent / 'output' / 'leonardo'
                     output_dir.mkdir(parents=True, exist_ok=True)
                     output_path = output_dir / f"leonardo_{timestamp}_1.png"
                 else:
@@ -199,7 +199,7 @@ def main():
         epilog="""
 Beispiele:
   # Standard (Pollinations zuerst, dann Leonardo)
-  python3 generate_with_fallback.py "Ein elegantes Maskottchen"
+  python3 generate_with_fallback.py "Ein eleganter Butler"
   
   # Eigene Auflösung
   python3 generate_with_fallback.py "Eine Katze" --width 768 --height 1024

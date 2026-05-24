@@ -14,7 +14,7 @@ import requests
 from dotenv import load_dotenv
 
 # Lade .env Datei
-load_dotenv("/home/node/.openclaw/workspace/.env")
+load_dotenv(str(Path(__file__).parent.parent.parent.parent / '.env'))
 
 # Farben für Output
 class Colors:
@@ -181,7 +181,7 @@ def main():
         epilog="""
 Beispiele:
   # Mit API Key direkt
-  python3 leonardo_generate.py "Ein elegantes Maskottchen" --key DEIN_KEY
+  python3 leonardo_generate.py "Ein eleganter Butler" --key DEIN_KEY
   
   # Mit Umgebungsvariable
   export LEONARDO_API_KEY="dein_key"
@@ -266,7 +266,7 @@ Beispiele:
             sys.exit(1)
         
         # Bilder speichern
-        output_dir = Path("/home/node/.openclaw/workspace/output/leonardo")
+        output_dir = Path(__file__).parent.parent.parent.parent / 'output' / 'leonardo'
         output_dir.mkdir(parents=True, exist_ok=True)
         
         saved_files = []

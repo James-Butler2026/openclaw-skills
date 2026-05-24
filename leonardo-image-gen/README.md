@@ -56,7 +56,7 @@ LEONARDO_API_KEY=dein_api_key_hier
 
 #### Direkte Leonardo-Nutzung
 ```bash
-python3 scripts/leonardo_generate.py "Ein elegantes Maskottchen mit Zylinder" --model flux-schnell
+python3 scripts/leonardo_generate.py "Ein eleganter Butler mit Zylinder" --model flux-schnell
 ```
 
 #### Mit Fallback (empfohlen)
@@ -156,4 +156,4 @@ MIT License - Siehe [LICENSE](../../LICENSE)
 
 ---
 
-*Erstellt für OpenClaw von OpenClaw User, vom Assistenten* 🎩
+*Erstellt für OpenClaw von James, dem ergebensten Butler* 🎩
