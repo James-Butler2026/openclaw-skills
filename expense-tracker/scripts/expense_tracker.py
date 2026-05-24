@@ -116,30 +116,84 @@ def init_db():
 
 
 def parse_amount(text):
-    """Parst deutsche Beträge korrekt (1.234,56€)"""
+    """Parst deutsche Beträge korrekt (1.234,56€, 3 Euro 10, 19,73)
+    
+    Unterstützte Formate:
+    - 3 Euro 10 -> 3,10
+    - 5 Euro 50 -> 5,50
+    - 10 Euro -> 10,00
+    - 1.234,56 -> 1234.56
+    - 12,50 -> 12.50
+    - 12.50 -> 12.50
+    - 19,73 -> 19.73 (Dezimalzahl mit Komma)
+    """
     # Entferne Währungssymbole
     text = text.replace('€', '').replace('$', '')
+    text_lower = text.lower()
     
-    # Suche nach deutschem Format: 1.234,56 oder 12,50
+    # Berechne Description: entferne Betragsmuster
+    description = text_lower
+    # "19,73" oder "19.73" -> entferne (muss VOR Euro stehen!)
+    description = re.sub(r'\d+[,.]\d{1,2}', '', description)
+    # "3 Euro 10" -> entferne
+    description = re.sub(r'\d+[\s]*euro[\s]*\d{1,2}', '', description)
+    # "3 Euro" -> entferne
+    description = re.sub(r'\d+[\s]*euro', '', description)
+    # Zahl am Ende entfernen
+    description = re.sub(r'\d+\s*$', '', description)
+    # Bereinige
+    description = description.strip()
+    description = re.sub(r'\s+', ' ', description)
+    
+    # WICHTIGE REIHENFOLGE:
+    # 1. Zuerst Dezimalzahl mit Komma: "19,73" -> 19.73
+    #    (muss VOR Euro-Pattern kommen!)
+    match = re.search(r'(^|\s)(\d+),(\d{1,2})(\s|$|[^a-z])', text_lower)
+    if match:
+        euro = match.group(2)
+        cent = match.group(3)
+        cent = cent.ljust(2, '0')[:2]
+        return float(f"{euro}.{cent}"), description
+    
+    # 2. Dezimalzahl mit Punkt: "19.73" -> 19.73
+    match = re.search(r'(^|\s)(\d+)\.(\d{1,2})(\s|$|[^a-z])', text_lower)
+    if match:
+        euro = match.group(2)
+        cent = match.group(3)
+        cent = cent.ljust(2, '0')[:2]
+        return float(f"{euro}.{cent}"), description
+    
+    # 3. Euro-Pattern: "19 Euro 73" oder "19 Euro"
+    match = re.search(r'(\d+)[\s]*euro[\s]*(\d{1,2})?', text_lower)
+    if match:
+        euro = match.group(1)
+        cent = match.group(2)
+        if cent:
+            # "3 Euro 10" -> 3,10
+            cent = cent.ljust(2, '0')[:2]
+            return float(f"{euro}.{cent}"), description
+        else:
+            # "10 Euro" -> 10,00
+            return float(euro), description
+    
+    # 4. Suche nach deutschem Format: 1.234,56 (Tausenderpunkt + Dezimalkomma)
     match = re.search(r'(\d{1,3}(?:\.\d{3})*,\d{2})', text)
     if match:
         amount_str = match.group(1).replace('.', '').replace(',', '.')
-        return float(amount_str)
+        return float(amount_str), description
     
-    # Suche nach einfachem Format: 12.50 oder 12,50
-    match = re.search(r'(\d+[,.]\d{2})', text)
+    # 5. Suche nach einfachem Format: 12.50 oder 12,50
+    match = re.search(r'(\d+[,\.]\d{2})', text)
     if match:
         amount_str = match.group(1).replace(',', '.')
-        return float(amount_str)
+        return float(amount_str), description
     
-    # Suche nach ganzer Zahl
+    # 6. Suche nach ganzer Zahl
     match = re.search(r'(\d+)', text)
     if match:
-        return float(match.group(1))
+        return float(match.group(1)), description
     
-    return None
-
-
+    return None, description
 def detect_category(text, categories):
     """Erkennt Kategorie basierend auf Keywords"""
     text_lower = text.lower()
@@ -204,7 +258,13 @@ def calc_kw_and_month_week(dt):
 
 def add_expense(text):
     """Fügt eine Ausgabe hinzu"""
-    amount = parse_amount(text)
+    # Parse Betrag und Beschreibung
+    parsed = parse_amount(text)
+    if isinstance(parsed, tuple):
+        amount, description = parsed
+    else:
+        amount = parsed
+        description = text
     
     if amount is None:
         print("❌ Konnte keinen Betrag erkennen!")
@@ -215,11 +275,6 @@ def add_expense(text):
     categories = load_categories()
     category = detect_category(text, categories)
     store = detect_store(text)
-    
-    # Beschreibung extrahieren (alles außer Betrag)
-    description = re.sub(r'\d{1,3}(?:\.\d{3})*,\d{2}', '', text).strip()
-    description = re.sub(r'\d+[,.]?\d*', '', description).strip()
-    description = re.sub(r'\s+', ' ', description)
     
     # Duplikat-Check
     if check_duplicate(amount, description, store):
