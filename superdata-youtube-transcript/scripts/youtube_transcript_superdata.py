@@ -21,8 +21,8 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent))
 from superdata_transcript import SuperDataClient
 
-CREDIT_FILE = Path("/home/node/.openclaw/workspace/memory/superdata_credits.json")
-TRANSCRIPT_CACHE = Path("/home/node/.openclaw/workspace/memory/superdata_cache.json")
+CREDIT_FILE = Path(__file__).parent.parent.parent.parent / "memory" / "superdata_credits.json"
+TRANSCRIPT_CACHE = Path(__file__).parent.parent.parent.parent / "memory" / "superdata_cache.json"
 
 MAX_CREDITS_PER_MONTH = 100
 WARNING_THRESHOLD = 80

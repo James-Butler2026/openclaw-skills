@@ -20,9 +20,9 @@ from pathlib import Path
 def load_api_key():
     """Lädt SUPERDATA_API_KEY aus .env"""
     env_paths = [
-        Path('/home/node/.openclaw/workspace/.env'),
         Path(__file__).parent.parent.parent.parent / '.env',
-        Path(__file__).parent.parent.parent / '.env',
+        Path(__file__).parent.parent.parent.parent / '.env',
+        Path(__file__).parent.parent.parent.parent / '.env',
         Path('.env')
     ]
     
