@@ -25,7 +25,7 @@ from shared_db import (
     invalidate_stats_cache
 )
 
-DB_PATH = '/home/node/.openclaw/workspace/data/james.db'
+DB_PATH = str(Path(__file__).parent.parent.parent.parent / 'data' / 'james.db')
 
 
 def save_answer(question_id, user_answer, is_correct, category=""):

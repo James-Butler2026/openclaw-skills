@@ -13,8 +13,8 @@ from contextlib import contextmanager
 from functools import wraps
 from typing import Optional, List, Dict, Any
 
-DB_MAIN = '/home/node/.openclaw/workspace/data/james.db'
-DB_QUESTIONS = '/home/node/.openclaw/workspace/skills/ap1-training-tracker/data/questions.db'
+DB_MAIN = str(Path(__file__).parent.parent.parent.parent / 'data' / 'james.db')
+DB_QUESTIONS = str(Path(__file__).parent.parent / 'data' / 'questions.db')
 
 
 class CacheEntry:

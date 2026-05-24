@@ -130,22 +130,8 @@ def format_result(state):
     return "\n".join(lines)
 
 
-def format_daily_questions(questions):
-    output = []
-    output.append("=" * 50)
-    output.append("📚 TÄGLICHE AP1-ÜBUNG")
-    output.append("=" * 50)
-    output.append("")
-    
-    for i, q in enumerate(questions, 1):
-        output.append(f"📱 {q['category']}")
-        output.append(f"\n{i}. {q['question']}")
-        for opt in q['options']:
-            output.append(f"   {opt}")
-        output.append("")
-    
-    output.append("Antwortet mit A, B, C oder D!")
-    return "\n".join(output)
+def format_daily_error():
+    return "❌ **FEHLER:** `--daily` ist deaktiviert! Nutze `--start` für den Einzelfrage-Modus."
 
 
 # ── Interactive Commands ─────────────────────────────
@@ -246,7 +232,7 @@ def main():
     parser.add_argument('--answer', help='Antwort auf aktuelle Frage (A/B/C/D)')
     parser.add_argument('--status', action='store_true', help='Aktuellen Status anzeigen')
     parser.add_argument('--cancel', action='store_true', help='Quiz abbrechen')
-    parser.add_argument('--daily', action='store_true', help='3 zufällige Fragen (alt)')
+    parser.add_argument('--daily', action='store_true', help='❌ DEPRECATED - nutze --start')
     parser.add_argument('--save', nargs=4, help='Antwort speichern: ID ANSWER CORRECT CATEGORY')
     parser.add_argument('--stats', action='store_true', help='Statistiken anzeigen')
     parser.add_argument('--refresh', action='store_true', help='Cache leeren und neu laden')
@@ -273,10 +259,16 @@ def main():
         print(cmd_cancel())
     
     elif args.daily:
-        questions = get_random_questions_efficient(3)
-        print(format_daily_questions(questions))
-        print("\n---JSON---")
-        print(json.dumps({'questions': questions}, ensure_ascii=False))
+        print(format_daily_error())
+        print()
+        print("💡 Der `--daily`-Modus wurde entfernt, weil er alle 3 Fragen auf einmal ausgibt.")
+        print("   Nutze stattdessen `--start` für eine Frage nach der anderen:")
+        print("   ")
+        print("   python3 ap1_training.py --start    # Frage 1")
+        print("   python3 ap1_training.py --answer A # Antwort auf Frage 1")
+        print("   python3 ap1_training.py --answer B # Antwort auf Frage 2")
+        print("   python3 ap1_training.py --answer C # Antwort auf Frage 3")
+        sys.exit(1)
     
     elif args.save:
         qid, ans, corr, cat = args.save
