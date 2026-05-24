@@ -37,7 +37,7 @@ def manage_cron_job(action: str) -> bool:
         # Cron-Text für systemEvent
         cron_text = f"""CRON_PACKAGE_TRACKING: Führe automatisches Paket-Tracking durch und poste Updates!
 
-1. Führe aus: cd /home/node/.openclaw/workspace && . /home/node/.openclaw/venv/bin/activate && python3 skills/package-tracking/scripts/package_manager.py track --json
+1. Führe aus: cd [workspace] && . [venv]/bin/activate && python3 skills/package-tracking/scripts/package_manager.py track --json
 2. Parse JSON-Output nach Updates
 3. Bei Status-Änderung:
    - Poste SOFORT in Telegram Topic 695 mit message(action='send', target='{TOPIC_695}', ...)
@@ -118,7 +118,7 @@ def track_carrier(tracking_code: str, carrier: str, current_status: str) -> Dict
     
     timeouts = {'hermes': 120, 'dhl': 60}
     
-    script_path = Path(__file__).parent.parent.parent / scripts[carrier]
+    script_path = Path(__file__).parent.parent.parent.parent / scripts[carrier]
     
     try:
         result = subprocess.run(

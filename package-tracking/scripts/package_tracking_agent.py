@@ -11,7 +11,7 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, '/home/node/.openclaw/workspace')
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from scripts.db_manager import (
     get_active_packages, update_package_status, 
     mark_package_delivered, log_system, add_package
@@ -66,7 +66,7 @@ def track_hermes_package(tracking_code):
     import subprocess
     import os
     
-    tracker_script = Path('/home/node/.openclaw/workspace/scripts/hermes_tracker.py')
+    tracker_script = Path(__file__).parent.parent.parent.parent / 'scripts' / 'hermes_tracker.py'
     if not tracker_script.exists():
         log_system('package_agent', 'error', f'Hermes Tracker nicht gefunden: {tracker_script}')
         return None
@@ -74,11 +74,11 @@ def track_hermes_package(tracking_code):
     try:
         # Starte Hermes Tracker
         result = subprocess.run(
-            ['/home/node/.openclaw/venv/bin/python3', str(tracker_script), tracking_code],
+            ['python3', str(tracker_script), tracking_code],
             capture_output=True,
             text=True,
             timeout=120,
-            cwd='/home/node/.openclaw/workspace'
+            cwd=str(Path(__file__).parent.parent.parent.parent)
         )
         
         output = result.stdout + result.stderr

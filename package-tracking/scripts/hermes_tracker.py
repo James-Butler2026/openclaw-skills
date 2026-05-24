@@ -32,7 +32,7 @@ from logger_config import get_logger
 logger = get_logger(__name__)
 
 # Konfiguration
-WORKSPACE = Path(os.getenv('OPENCLAW_WORKSPACE', '/home/node/.openclaw/workspace'))
+WORKSPACE = Path(__file__).parent.parent.parent.parent
 DB_PATH = WORKSPACE / 'data' / 'james.db'
 
 # Status-Muster die wir erkennen
