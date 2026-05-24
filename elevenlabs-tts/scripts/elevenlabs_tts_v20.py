@@ -26,7 +26,7 @@ def load_api_key():
     """API Key aus .env laden"""
     env_paths = [
         Path(__file__).parent.parent / ".env",
-        Path("/home/node/.openclaw/workspace/.env"),
+        Path(__file__).parent.parent.parent.parent / '.env',
         Path(".env")
     ]
     

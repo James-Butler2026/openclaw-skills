@@ -10,11 +10,11 @@ import json
 import time
 from pathlib import Path
 
-sys.path.insert(0, "/home/node/.openclaw/workspace")
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from scripts.elevenlabs_tts import generate_speech, load_api_key
 
 # Stats File
-STATS_FILE = "/home/node/.openclaw/workspace/data/elevenlabs_stats.json"
+STATS_FILE = str(Path(__file__).parent.parent.parent.parent / "data" / "elevenlabs_stats.json")
 
 
 def load_stats():

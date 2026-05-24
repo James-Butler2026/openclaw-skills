@@ -9,7 +9,7 @@ import sys
 import time
 
 # Setup paths
-sys.path.insert(0, '/home/node/.openclaw/workspace')
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from scripts.elevenlabs_tts import generate_speech, load_api_key
 
