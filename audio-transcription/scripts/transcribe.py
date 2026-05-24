@@ -77,8 +77,8 @@ def format_timestamp(seconds: float) -> str:
     return f"[{minutes:02d}:{secs:02d}]"
 
 
-def get_model(model_name: str = "medium", compute_type: str = "int8"):
-    """Lädt Whisper-Modell mit Caching"""
+def get_model(model_name: str = "small", compute_type: str = "int8"):
+    """Lädt Whisper-Modell mit Caching – bevorzugt lokales Modell aus Workspace"""
     global _model_cache
     
     cache_key = f"{model_name}_{compute_type}"
@@ -90,15 +90,42 @@ def get_model(model_name: str = "medium", compute_type: str = "int8"):
     try:
         from faster_whisper import WhisperModel
         
-        logger.info(f"🔄 Lade Modell: {model_name} (compute_type={compute_type})")
-        
-        model = WhisperModel(
-            model_name,
-            device="cpu",
-            compute_type=compute_type,
-            cpu_threads=os.cpu_count() or 4,
-            num_workers=2
-        )
+        # Lokales Modell: HuggingFace-Cache nutzen (persistent im Cache-Verzeichnis)
+        # Medium-Modell liegt in ~/.cache/huggingface/hub/
+        local_medium_path = os.path.expanduser("~/.cache/huggingface/hub/models--Systran--faster-whisper-medium/snapshots")
+        if os.path.isdir(local_medium_path) and model_name in ("medium", "small"):
+            # Neuesten Snapshot finden
+            snapshots = [d for d in os.listdir(local_medium_path) if os.path.isdir(os.path.join(local_medium_path, d))]
+            if snapshots:
+                latest = sorted(snapshots)[-1]
+                local_path = os.path.join(local_medium_path, latest)
+                logger.info(f"🔄 Lade lokales Modell: {local_path}")
+                model = WhisperModel(
+                    local_path,
+                    device="cpu",
+                    compute_type=compute_type,
+                    cpu_threads=os.cpu_count() or 4,
+                    num_workers=2
+                )
+            else:
+                # Fallback auf Download
+                logger.info(f"🔄 Lade Modell: {model_name} (compute_type={compute_type})")
+                model = WhisperModel(
+                    model_name,
+                    device="cpu",
+                    compute_type=compute_type,
+                    cpu_threads=os.cpu_count() or 4,
+                    num_workers=2
+                )
+        else:
+            logger.info(f"🔄 Lade Modell: {model_name} (compute_type={compute_type})")
+            model = WhisperModel(
+                model_name,
+                device="cpu",
+                compute_type=compute_type,
+                cpu_threads=os.cpu_count() or 4,
+                num_workers=2
+            )
         
         _model_cache[cache_key] = model
         logger.info(f"✅ Modell geladen und gecached")
