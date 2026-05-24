@@ -61,7 +61,7 @@ python3 skills/sports-tracker/scripts/komoot_import.py --export-gpx
 |----------|-----------|------|-------|
 | P90X     | done (session count) | strength | 💪 |
 | Fahrrad  | km        | cardio | 🚴 |
-| Wandern  | km        | cardio | 🥾 |
+| Spazieren | km        | cardio | 🥾 |
 | Laufen   | km        | cardio | 🏃 |
 
 ## Calorie Calculation (Automatic)
@@ -94,7 +94,7 @@ The `komoot_import.py` script connects to the Komoot API and imports tours into 
 | Komoot Type | Sports Tracker |
 |------------|---------------|
 | touring_cycling, cycling, mtb, race_cycling | Fahrrad |
-| hiking, hike | Wandern |
+| hiking, hike | Spazieren |
 | walking, walk, nordic_walking | Wandern |
 | running, run, trail_running | Laufen |
 | skiing, ski_touring, snowboard | Skifahren |

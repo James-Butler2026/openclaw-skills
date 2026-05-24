@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
 
-DB_PATH = Path("/home/node/.openclaw/workspace/data/sports_tracker.db")
+DB_PATH = Path(__file__).parent.parent.parent.parent / "data" / "sports_tracker.db"
 
 CATEGORIES = ["P90X", "Spazieren", "Fahrrad"]
 
@@ -77,10 +77,11 @@ def _set_weight(kg):
     conn.close()
 
 
-def _calculate_calories(category, km_or_done, duration_min=None, weight_kg=None):
+def _calculate_calories(category, km_or_done, duration_min=None, weight_kg=None, elevation_m=0):
     """
-    Berechnet Kalorien basierend auf MET-Wert, Gewicht und Dauer.
-    Formel: Kcal = MET * Gewicht_kg * Dauer_h
+    Berechnet Kalorien basierend auf MET-Wert, Gewicht, Dauer und Höhenmetern.
+    Formel Basis: Kcal = MET * Gewicht_kg * Dauer_h
+    Höhenmeter-Zuschlag: +0.15 kcal pro Höhenmeter (bei Fahrrad)
     """
     if weight_kg is None:
         weight_kg = _get_weight()
@@ -96,7 +97,16 @@ def _calculate_calories(category, km_or_done, duration_min=None, weight_kg=None)
         speed = SPEED_KMH.get(category, 5.0)
         duration_h = km / speed if speed > 0 else 0
         duration_min = int(duration_h * 60)
+        # Basis-Kalorien aus MET
         calories = int(met * weight_kg * duration_h)
+        # Höhenmeter-Zuschlag: pro hm ca. 0.15 kcal/kg extra
+        try:
+            hm = float(elevation_m)
+            if hm > 0 and category in ("Fahrrad", "Spazieren"):
+                hm_bonus = int(hm * 0.15 * weight_kg / 70)  # skaliert auf 70kg Basis
+                calories += hm_bonus
+        except (ValueError, TypeError):
+            pass
         return calories, duration_min, speed
 
     elif category == "P90X":
@@ -129,6 +139,25 @@ def _migrate_v1_to_v2():
         cursor.execute("ALTER TABLE activities ADD COLUMN speed_kmh REAL")
     if "weight_kg" not in cols:
         cursor.execute("ALTER TABLE activities ADD COLUMN weight_kg REAL DEFAULT 120")
+    if "elevation_gain_m" not in cols:
+        cursor.execute("ALTER TABLE activities ADD COLUMN elevation_gain_m REAL")
+    if "elevation_loss_m" not in cols:
+        cursor.execute("ALTER TABLE activities ADD COLUMN elevation_loss_m REAL")
+    if "avg_speed_kmh" not in cols:
+        cursor.execute("ALTER TABLE activities ADD COLUMN avg_speed_kmh REAL")
+    if "max_speed_kmh" not in cols:
+        cursor.execute("ALTER TABLE activities ADD COLUMN max_speed_kmh REAL")
+    if "source" not in cols:
+        cursor.execute("ALTER TABLE activities ADD COLUMN source TEXT")
+    if "komoot_id" not in cols:
+        cursor.execute("ALTER TABLE activities ADD COLUMN komoot_id TEXT")
+    if "gpx_file" not in cols:
+        cursor.execute("ALTER TABLE activities ADD COLUMN gpx_file TEXT")
+
+    # Migration: Alte "Wandern"-Einträge aus Komoot → "Spazieren"
+    cursor.execute("UPDATE activities SET category = 'Spazieren' WHERE category = 'Wandern'")
+    if cursor.rowcount > 0:
+        print(f"✅ {cursor.rowcount} 'Wandern'-Einträge nach 'Spazieren' migriert")
 
     # user_settings Tabelle (key/value Store)
     cursor.execute("""
@@ -201,7 +230,14 @@ def init_db():
             duration_min INTEGER,
             calories INTEGER,
             speed_kmh REAL,
-            weight_kg REAL DEFAULT 120
+            weight_kg REAL DEFAULT 120,
+            elevation_gain_m REAL,
+            elevation_loss_m REAL,
+            avg_speed_kmh REAL,
+            max_speed_kmh REAL,
+            source TEXT,
+            komoot_id TEXT,
+            gpx_file TEXT
         )
     """)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_date ON activities(date)")
@@ -250,12 +286,18 @@ def parse_date(text):
 
 
 def parse_activity(text):
-    """Parst eine Aktivität aus dem Text"""
+    """Parst eine Aktivität aus dem Text (inkl. Höhenmeter)"""
     text_lower = text.lower()
     category = None
     value = None
     description = ""
     duration_min = None
+    elevation_m = 0.0
+
+    # Höhenmeter aus Text extrahieren
+    hm_match = re.search(r'(\d+(?:[.,]\d+)?)\s*(?:hm|höhenmeter|höhenmeters|höhenmetern)', text_lower)
+    if hm_match:
+        elevation_m = float(hm_match.group(1).replace(',', '.'))
 
     # Kategorie erkennen
     if "p90x" in text_lower:
@@ -300,6 +342,9 @@ def parse_activity(text):
 
         # Beschreibung extrahieren
         desc = re.sub(r'(?i)gestern|vorgestern|heute|\d{1,2}\.\d{1,2}\.\d{0,4}', '', text)
+        # Höhenmeter zuerst entfernen (bevor die Zahl verschwindet)
+        desc = re.sub(r'\d+(?:[.,]\d+)?\s*(?:hm|höhenmeter|höhen|höhe)', '', desc, flags=re.IGNORECASE)
+        desc = re.sub(r'(?i)\bhm\b', '', desc)  # Rest-HM falls Zahl schon weg
         desc = re.sub(r'\d+(?:[.,]\d+)?\s*(?:km|kilometer)?', '', desc, flags=re.IGNORECASE)
         desc = re.sub(r'(?i)fahrrad|rad|bike|spazieren|spaziergang|wandern|gehen', '', desc)
         desc = re.sub(r'(?i)\d+\s*min', '', desc)
@@ -313,6 +358,7 @@ def parse_activity(text):
         "value": value,
         "description": description,
         "duration_min": duration_min,
+        "elevation_m": elevation_m,
     }
 
 
@@ -324,11 +370,13 @@ def add_activity(text):
 
     # Kalorien berechnen
     weight = _get_weight()
+    elevation_m = activity.get("elevation_m", 0)
     calories, duration_min, speed = _calculate_calories(
         activity["category"],
         activity["value"],
         activity.get("duration_min"),
-        weight
+        weight,
+        elevation_m
     )
 
     # activity.type ableiten
@@ -338,8 +386,8 @@ def add_activity(text):
         conn = _get_conn()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO activities (date, category, value, description, type, duration_min, calories, speed_kmh, weight_kg)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO activities (date, category, value, description, type, duration_min, calories, speed_kmh, weight_kg, elevation_gain_m)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             activity["date"],
             activity["category"],
@@ -350,6 +398,7 @@ def add_activity(text):
             calories,
             speed,
             weight,
+            elevation_m if elevation_m > 0 else None,
         ))
         conn.commit()
         conn.close()
@@ -366,6 +415,8 @@ def add_activity(text):
             print(f"   📏 {activity['value']} km | {duration_min} min | {calories} kcal")
             if speed:
                 print(f"   🚀 Ø {speed} km/h")
+            if elevation_m > 0:
+                print(f"   ⛰️  {elevation_m:.0f} Höhenmeter")
         weight = _get_weight()
         print(f"   ⚖️  Gewicht: {weight} kg")
         print(f"   📝 {activity['description']}")

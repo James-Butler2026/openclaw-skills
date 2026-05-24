@@ -20,10 +20,11 @@ import argparse
 import subprocess
 from datetime import datetime
 
-# .env laden (relativer Pfad über Workspace-Root)
-ENV_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '.env'
-)
+# .env laden (Workspace-Root)
+ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), '.env')
+FALLBACK_ENV = '/home/node/.openclaw/workspace/.env'
+if not os.path.exists(ENV_PATH) and os.path.exists(FALLBACK_ENV):
+    ENV_PATH = FALLBACK_ENV
 if os.path.exists(ENV_PATH):
     with open(ENV_PATH) as f:
         for line in f:
@@ -36,9 +37,8 @@ KOMOOT_EMAIL = os.environ.get('KOMOOT_EMAIL', '')
 KOMOOT_PASSWORD = os.environ.get('KOMOOT_PASSWORD', '') or os.environ.get('KOMOOT_PASSWD', '')
 KOMOOT_USER_ID = os.environ.get('KOMOOT_USER_ID', '')
 
-# Pfade (relativ zum Workspace-Root)
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-WORKSPACE_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, '..', '..', '..'))
+# Workspace-Root (2 Ebenen hoch von skills/sports-tracker/scripts/)
+WORKSPACE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 DB_PATH = os.path.join(WORKSPACE_ROOT, 'data', 'sports_tracker.db')
 GPX_DIR = os.path.join(WORKSPACE_ROOT, 'data', 'komoot_gpx')
@@ -53,8 +53,8 @@ SPORT_MAP = {
     'e_cycling': 'Fahrrad',
     'e_mtb': 'Fahrrad',
     'e_touring_cycling': 'Fahrrad',
-    'hiking': 'Spazieren',
-    'hike': 'Spazieren',
+    'hiking': 'Wandern',
+    'hike': 'Wandern',
     'walking': 'Spazieren',
     'walk': 'Spazieren',
     'running': 'Laufen',
@@ -171,11 +171,8 @@ def tour_to_activity(tour):
         try:
             from dateutil.parser import parse as parse_date
             date_str = parse_date(date_raw).strftime('%Y-%m-%d')
-        except (ImportError, Exception):
-            try:
-                date_str = date_raw[:10] if len(date_raw) >= 10 else date_raw
-            except Exception:
-                date_str = None
+        except Exception:
+            date_str = date_raw[:10] if len(date_raw) >= 10 else date_raw
     else:
         date_str = None
     
@@ -502,7 +499,7 @@ def main():
                 import sys; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
                 from scripts.gpx_analyzer import analyze_gpx, generate_chart as gen_detail_chart
                 import glob
-                os.makedirs(os.path.join(WORKSPACE_ROOT, 'data', 'komoot_charts'), exist_ok=True)
+                os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'komoot_charts'), exist_ok=True)
                 gpx_files = sorted(glob.glob(os.path.join(GPX_DIR, '*.gpx')))
                 for gpx_file in gpx_files:
                     basename = os.path.basename(gpx_file)
@@ -513,7 +510,7 @@ def main():
                     analysis = analyze_gpx(gpx_file, category=cat)
                     if analysis:
                         chart_name = basename.replace('.gpx', '_analysis.png')
-                        chart_out = os.path.join(WORKSPACE_ROOT, 'data', 'komoot_charts', chart_name)
+                        chart_out = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'komoot_charts', chart_name)
                         gen_detail_chart(analysis, chart_out)
                         # Kalorien in DB updaten
                         if analysis['total_calories'] > 0:
