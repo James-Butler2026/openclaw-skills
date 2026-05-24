@@ -4,7 +4,7 @@ Eine Sammlung nützlicher Skills für OpenClaw – vollständig lokal nutzbar, d
 
 ## 📋 Übersicht
 
-Diese Sammlung enthält **20 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
+Diese Sammlung enthält **19 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
 
 | Skill | Beschreibung | Kategorie |
 |-------|--------------|-----------|
@@ -25,7 +25,6 @@ Diese Sammlung enthält **20 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
 | [sports-tracker](#sports-tracker) | Sport-Tracking mit Kalorien und Workout-Management | Fitness |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
-| [tavily-search](#tavily-search) | Websuche via Tavily API | Recherche |
 | [vodafone-sender-monitor](#vodafone-sender-monitor) | Vodafone Kabel-Senderlisten überwachen | Tracking |
 | [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
 
@@ -345,24 +344,6 @@ result = get_transcript_summary(video_id="...")
 ```
 
 → [Details ansehen](superdata-youtube-transcript/README.md)
-
----
-
-### tavily-search
-**Websuche via Tavily API**
-
-- AI-generierte Zusammenfassungen
-- Relevance Scores
-- Strukturierte Ergebnisse
-- Quellenangaben
-
-```bash
-python3 scripts/tavily_search.py "KI Entwicklungen 2026" --depth advanced
-```
-
-→ [Details ansehen](tavily-search/README.md)
-
----
 
 ### vodafone-sender-monitor
 **Vodafone Kabel-Senderlisten überwachen**
