@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Täglicher Termin-Überblick für OpenClaw Calendar
+Täglicher Termin-Überblick für James Calendar
 Postet alle Termine des Tages um 08:00 Uhr in Topic 12.
 """
 
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from openclaw_calendar import Calendar
+from james_calendar import Calendar
 
 def get_daily_overview():
     """Holt den täglichen Termin-Überblick."""

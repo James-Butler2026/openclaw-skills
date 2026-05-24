@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenClaw Calendar - Hauptmodul
+James Calendar - Hauptmodul
 SQLite-basierter Kalender mit natürlicher Spracheingabe und Cron-Integration.
 """
 
@@ -17,7 +17,7 @@ CRON_JOBS_FILE = os.path.expanduser("~/.openclaw/workspace/cron/jobs.json")
 
 
 class Calendar:
-    """Hauptklasse für den OpenClaw Calendar."""
+    """Hauptklasse für den James Calendar."""
     
     def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path

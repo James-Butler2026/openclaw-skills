@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Importiert bestehende Termine aus Cron-Jobs in den OpenClaw Calendar.
+Importiert bestehende Termine aus Cron-Jobs in den James Calendar.
 """
 
 import sys
@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from openclaw_calendar import Calendar
+from james_calendar import Calendar
 
 def parse_cron_jobs():
     """Parst Cron-Jobs und extrahiert Termine."""
@@ -124,7 +124,7 @@ def parse_event_from_job(job):
 def import_events():
     """Importiert alle gefundenen Events."""
     
-    print("🎩 OpenClaw Calendar - Import Tool\n")
+    print("🎩 James Calendar - Import Tool\n")
     print("Suche nach bestehenden Terminen in Cron-Jobs...\n")
     
     events = parse_cron_jobs()

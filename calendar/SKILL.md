@@ -1,4 +1,4 @@
-# Calendar Skill - OpenClaw Calendar
+# Calendar Skill - James Calendar
 
 Ein schlanker, lokaler Kalender für OpenClaw mit SQLite-Backend und natürlicher Spracheingabe.
 
@@ -162,9 +162,9 @@ Die Datenbank liegt unter:
 
 Wird automatisch mit dem täglichen Git+SQLite Backup gesichert.
 
-## Automatische Eintragung
+## Automatische Eintragung durch James
 
-**WICHTIGE REGEL:** Wenn Euer folgende Begriffe verwendet, trage ich automatisch in den Kalender ein:
+**WICHTIGE REGEL:** Wenn Eure Lordschaft folgende Begriffe verwendet, trage ich automatisch in den Kalender ein:
 
 | Begriff | Beispiel | Aktion |
 |---------|----------|--------|
@@ -184,4 +184,4 @@ Wird automatisch mit dem täglichen Git+SQLite Backup gesichert.
 - Absolute Stille bei leeren Tagen
 
 ---
-*Erstellt für* 🎩
+*Erstellt für Eure Lordschaft* 🎩

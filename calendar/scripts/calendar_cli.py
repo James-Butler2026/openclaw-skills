@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenClaw Calendar CLI - Kommandozeilen-Interface
+James Calendar CLI - Kommandozeilen-Interface
 Natürliche Spracheingabe und Termin-Verwaltung.
 """
 
@@ -13,7 +13,7 @@ from datetime import timedelta
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from openclaw_calendar import Calendar, DB_PATH
+from james_calendar import Calendar, DB_PATH
 
 
 class NaturalLanguageParser:
@@ -281,7 +281,7 @@ def format_event(event: dict) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='OpenClaw Calendar - Termin-Verwaltung')
+    parser = argparse.ArgumentParser(description='James Calendar - Termin-Verwaltung')
     parser.add_argument('text', nargs='?', help='Natürliche Spracheingabe für Termin')
     parser.add_argument('--init', action='store_true', help='Datenbank initialisieren')
     parser.add_argument('--today', action='store_true', help='Heutige Termine anzeigen')
