@@ -22,7 +22,7 @@ cd ~/.openclaw/workspace/skills/image-generation/
 python3 scripts/generate_image.py "A beautiful sunset"
 
 # Mit Dimensionen
-python3 scripts/generate_image.py "Ein elegantes Maskottchen" \
+python3 scripts/generate_image.py "Ein eleganter Butler" \
     --width 1024 --height 768
 
 # Mit Seed (reproduzierbar)

@@ -92,8 +92,8 @@ result = generate_image(
 ## Beispiele
 
 ```bash
-# Example Image Generation Prompt
-python3 scripts/generate_image.py "A digital art portrait of an elegant butler named Assistant in Victorian style black suit white shirt bow tie tall top hat friendly sophisticated expression digital art clean lines warm lighting professional character design" --width 512 --height 512 --seed 42
+# Butler-Portrait (wie erstellt am 09.04.2026)
+python3 scripts/generate_image.py "A digital art portrait of an elegant butler named James in Victorian style black suit white shirt bow tie tall top hat friendly sophisticated expression digital art clean lines warm lighting professional character design" --width 512 --height 512 --seed 42
 
 # Landschaft
 python3 scripts/generate_image.py "A serene mountain lake at sunrise with misty peaks reflected in crystal clear water"
@@ -112,4 +112,4 @@ python3 scripts/generate_image.py "Abstract geometric patterns in blue and gold,
 
 ---
 
-*Erstellt am 09.04.2026 für* 🎩
+*Erstellt am 09.04.2026 für Eure Lordschaft* 🎩
