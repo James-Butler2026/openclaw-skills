@@ -21,7 +21,7 @@ Diese Sammlung enthält **19 praxisnahe Skills** für OpenClaw – von Audio-Tra
 | [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai | Entwicklung |
 | [meme-architect](#meme-architect) | Meme-Generierung mit imgflip API | Spaß |
 | [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
-| [package-tracking](#package-tracking) | Einheitliches Paket-Tracking für Hermes + DHL | Tracking |
+| [package-tracking](#package-tracking) | Einheitliches Paket-Tracking für Hermes + DHL + GLS (DPD in Planung) | Tracking |
 | [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
 | [sports-tracker](#sports-tracker) | Sport-Tracking mit Kalorien und Workout-Management | Fitness |
 | [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
