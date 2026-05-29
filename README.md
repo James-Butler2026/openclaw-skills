@@ -127,34 +127,34 @@ python3 scripts/calendar_cli.py --today
 ---
 
 ### package-tracking
-**Einheitliches Paket-Tracking für DHL + Hermes + GLS (DPD in Planung)**
+**Einheitliches Paket-Tracking für Hermes + DHL**
 
-| Carrier | Methode | API-Key | Geschwindigkeit | Status |
-|---------|---------|---------|-----------------|--------|
-| 🚚 DHL | REST API (öffentlich) | ❌ | ~2s | ✅ |
-| 📦 Hermes | Browser + OCR | ❌ | ~30s | ✅ |
-| 🔵 GLS | REST API (öffentlich) | ❌ | ~2s | ✅ (NEU) |
-| ⚪ DPD | offen | ❓ | offen | ❓ Test ausstehend |
-
-- Zentraler Manager für alle Pakete (DHL, Hermes, GLS)
+- Zentraler Manager für alle Pakete
 - SQLite-Datenbank mit Tracking-Verlauf
 - Automatische Checks um 10:00 und 16:00 Uhr
 - Telegram-Updates bei Status-Änderungen
-- Kein API-Key nötig bei DHL und GLS
+- Retry-Logik für API-Fehler
 
-ℹ️  Paket bereits vorhanden oder Fehler
-ℹ️  Paket bereits vorhanden oder Fehler
-[]
+```bash
+# Paket hinzufügen
+python3 scripts/package_manager.py add -c [CODE] -r hermes -d "Beschreibung"
+
+# Alle Pakete tracken
+python3 scripts/package_manager.py track --json
+
+# Übersicht anzeigen
+python3 scripts/package_manager.py list
+```
 
 **Architektur:**
 - `package_manager.py` - Hauptscript (Koordination, DB)
-- `dhl_tracker.py` - DHL via REST API
 - `hermes_tracker.py` - Hermes via Browser + OCR
-- `gls_tracker.py` - GLS via REST API (NEU!)
-- `package_tracking_agent.py` - OpenClaw Agent
-- **DPD** - in Planung
+- `dhl_tracker.py` - DHL via REST API
 
 → [Details ansehen](package-tracking/SKILL.md)
+
+---
+
 ### email-sender
 **E-Mails via SMTP senden**
 
