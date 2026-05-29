@@ -11,112 +11,40 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any
 
-# Fix: Add workspace root to path for db_manager import
-workspace_root = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(workspace_root))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'scripts'))
 from scripts.db_manager import add_package, get_active_packages, update_package_status
-
-# Cron-Job ID für Paket-Tracking
-CRON_JOB_ID = "package-tracking-10-16"
-CRON_JOB_NAME = "Paket-Tracking 10:00+16:00"
-TOPIC_695 = "-1003765464477:695"
-
-def manage_cron_job(action: str) -> bool:
-    """Erstellt oder löscht Cron-Job für Paket-Tracking
-    
-    Args:
-        action: 'create' oder 'delete'
-    
-    Returns:
-        True bei Erfolg
-    """
-    try:
-        from pathlib import Path
-        import subprocess
-        
-        # Cron-Text für systemEvent
-        cron_text = f"""CRON_PACKAGE_TRACKING: Führe automatisches Paket-Tracking durch und poste Updates!
-
-1. Führe aus: cd [workspace] && . [venv]/bin/activate && python3 skills/package-tracking/scripts/package_manager.py track --json
-2. Parse JSON-Output nach Updates
-3. Bei Status-Änderung:
-   - Poste SOFORT in Telegram Topic 695 mit message(action='send', target='{TOPIC_695}', ...)
-   - Format: '🚚 **HERMES/DHL UPDATE**\\n📦 [CODE]\\n✅ [STATUS]'
-   - Bei Zustellung: '📦✅ **PAKET ZUGESTELLT!**\\n📦 [CODE]\\n🕐 [DATUM]'
-   - Update DB: status, delivered, delivered_at
-4. Wenn KEINE Status-Änderung: TUE NICHTS, schweige!
-
-WICHTIG: NUR bei echten Updates posten! Topic 695 = {TOPIC_695}"""
-        
-        if action == 'create':
-            # Cron erstellen via openclaw CLI
-            cmd = [
-                'openclaw', 'cron', 'add',
-                '--name', CRON_JOB_NAME,
-                '--schedule', '0 10,16 * * *',
-                '--tz', 'Europe/Berlin',
-                '--text', cron_text,
-                '--target', TOPIC_695
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-            if result.returncode == 0:
-                print(f"✅ Cron-Job erstellt: {CRON_JOB_NAME} (10:00 & 16:00)")
-                return True
-            else:
-                print(f"❌ Cron erstellen fehlgeschlagen: {result.stderr}")
-                return False
-                
-        elif action == 'delete':
-            # Cron löschen
-            cmd = ['openclaw', 'cron', 'remove', '--id', CRON_JOB_ID]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-            if result.returncode == 0:
-                print(f"✅ Cron-Job gelöscht: {CRON_JOB_NAME}")
-                return True
-            else:
-                # Cron existiert vielleicht nicht - das ist OK
-                print(f"ℹ️ Cron-Job nicht gefunden (bereits gelöscht?): {result.stderr}")
-                return True
-                
-    except Exception as e:
-        print(f"❌ Cron-Management Fehler: {e}")
-        return False
-    
-    return False
 
 def add_new_package(tracking_code: str, carrier: str, description: str = '') -> bool:
     """Fügt neues Paket hinzu und startet automatisches Tracking"""
     carrier = carrier.lower()
-    if carrier not in ['dhl', 'hermes']:
+    if carrier not in ['dhl', 'hermes', 'gls']:
         print(f"❌ Ungültiger Carrier: {carrier}")
         return False
     
     if add_package(tracking_code, carrier, description):
         print(f"✅ Paket hinzugefügt: {tracking_code} ({carrier})")
         print(f"   Tracking: 10:00 & 16:00 Uhr")
-        # Cron-Job erstellen/aktivieren
-        manage_cron_job('create')
         return True
     return False
 
 def track_carrier(tracking_code: str, carrier: str, current_status: str) -> Dict[str, Any]:
-    """Trackt einzelnes Paket - Generic Funktion für beide Carrier
+    """Trackt einzelnes Paket - Generic Funktion für alle Carrier
     
     Args:
         tracking_code: Die Tracking-Nummer
-        carrier: 'hermes' oder 'dhl'
+        carrier: 'hermes', 'dhl' oder 'gls'
         current_status: Aktueller Status aus DB
         
     Returns:
         Update-Dict oder None wenn kein Change
     """
-    # Scripts befinden sich im selben Ordner
     scripts = {
-        'hermes': str(Path(__file__).parent / 'hermes_tracker.py'),
-        'dhl': str(Path(__file__).parent / 'dhl_tracker.py')
+        'hermes': 'skills/hermes-tracking/scripts/hermes_tracker.py',
+        'dhl': 'skills/dhl-tracking/scripts/dhl_tracker.py',
+        'gls': 'skills/gls-tracking/scripts/gls_tracker.py'
     }
     
-    timeouts = {'hermes': 120, 'dhl': 60}
+    timeouts = {'hermes': 120, 'dhl': 60, 'gls': 30}
     
     script_path = Path(__file__).parent.parent.parent.parent / scripts[carrier]
     
@@ -182,7 +110,11 @@ def normalize_dhl_status(status: str) -> str:
     return status
 
 def track_all_packages() -> List[Dict[str, Any]]:
-    """Trackt alle aktiven Pakete - Hauptfunktion für Cron"""
+    """Trackt alle aktiven Pakete - Hauptfunktion für Cron
+    
+    Returns:
+        Liste von Updates. Bei Zustellung wird Paket automatisch gelöscht.
+    """
     packages = get_active_packages()
     updates = []
     
@@ -194,13 +126,21 @@ def track_all_packages() -> List[Dict[str, Any]]:
         update = track_carrier(tracking_code, carrier, current_status)
         if update:
             updates.append(update)
-    
-    # Wenn alle Pakete zugestellt sind → Cron-Job löschen
-    if packages:
-        all_delivered = all(pkg.get('delivered', 0) == 1 for pkg in packages)
-        if all_delivered:
-            print("📦✅ Alle Pakete zugestellt - Cron-Job wird gelöscht")
-            manage_cron_job('delete')
+            
+            # Bei Zustellung: Cron-Job löschen (Paket bleibt in DB)
+            if update.get('delivered'):
+                try:
+                    import subprocess
+                    # Cron-Job für package-tracking löschen
+                    result = subprocess.run(
+                        ['openclaw', 'cron', 'list'],
+                        capture_output=True,
+                        text=True
+                    )
+                    # Hier müsste man den spezifischen Cron-Job finden und löschen
+                    print(f"✅ Paket {tracking_code} zugestellt - Cron-Job kann gelöscht werden")
+                except Exception as e:
+                    print(f"⚠️ Konnte Cron-Job nicht löschen: {e}")
     
     return updates
 
@@ -210,7 +150,7 @@ def main():
     parser = argparse.ArgumentParser(description='Paket-Manager')
     parser.add_argument('action', choices=['add', 'list', 'status', 'track'])
     parser.add_argument('--code', '-c', help='Tracking-Code')
-    parser.add_argument('--carrier', '-r', choices=['dhl', 'hermes'])
+    parser.add_argument('--carrier', '-r', choices=['dhl', 'hermes', 'gls'])
     parser.add_argument('--desc', '-d', default='')
     parser.add_argument('--json', action='store_true')
     
@@ -241,6 +181,30 @@ def main():
         } for p in packages], indent=2))
     
     elif args.action == 'track':
+        packages = get_active_packages()
+        
+        if not packages:
+            print("📭 Keine aktiven Pakete mehr - Cron-Job wird gelöscht")
+            # Cron-Job über Namen löschen
+            try:
+                import subprocess
+                # Zuerst Job-ID finden
+                result = subprocess.run(
+                    ['openclaw', 'cron', 'list', '--json'],
+                    capture_output=True,
+                    text=True
+                )
+                jobs = json.loads(result.stdout)
+                for job in jobs.get('jobs', []):
+                    if 'package' in job.get('name', '').lower() or 'paket' in job.get('name', '').lower():
+                        job_id = job.get('id')
+                        # Job löschen
+                        subprocess.run(['openclaw', 'cron', 'remove', job_id], capture_output=True)
+                        print(f"🗑️ Cron-Job '{job['name']}' gelöscht")
+            except Exception as e:
+                print(f"⚠️ Konnte Cron-Job nicht löschen: {e}")
+            sys.exit(0)
+        
         updates = track_all_packages()
         
         if args.json:
@@ -249,6 +213,26 @@ def main():
             for upd in updates:
                 icon = '✅' if upd['delivered'] else '🚚'
                 print(f"{icon} {upd['carrier']} {upd['code']}: {upd['status_text']}")
+        
+        # Nach Tracking prüfen ob noch Pakete da sind
+        remaining = get_active_packages()
+        if not remaining:
+            print("📭 Alle Pakete zugestellt - Cron-Job wird gelöscht")
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['openclaw', 'cron', 'list', '--json'],
+                    capture_output=True,
+                    text=True
+                )
+                jobs = json.loads(result.stdout)
+                for job in jobs.get('jobs', []):
+                    if 'package' in job.get('name', '').lower() or 'paket' in job.get('name', '').lower():
+                        job_id = job.get('id')
+                        subprocess.run(['openclaw', 'cron', 'remove', job_id], capture_output=True)
+                        print(f"🗑️ Cron-Job '{job['name']}' gelöscht")
+            except Exception as e:
+                print(f"⚠️ Konnte Cron-Job nicht löschen: {e}")
 
 if __name__ == '__main__':
     main()

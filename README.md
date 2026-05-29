@@ -127,7 +127,7 @@ python3 scripts/calendar_cli.py --today
 ---
 
 ### package-tracking
-**Einheitliches Paket-Tracking für Hermes + DHL**
+**Einheitliches Paket-Tracking für Hermes + DHL + GLS**
 
 - Zentraler Manager für alle Pakete
 - SQLite-Datenbank mit Tracking-Verlauf
@@ -135,26 +135,59 @@ python3 scripts/calendar_cli.py --today
 - Telegram-Updates bei Status-Änderungen
 - Retry-Logik für API-Fehler
 
-```bash
-# Paket hinzufügen
-python3 scripts/package_manager.py add -c [CODE] -r hermes -d "Beschreibung"
+**Carrier:**
+| Carrier | Methode | API-Key nötig |
+|---------|---------|---------------|
+| 🚚 DHL | REST API (öffentlich) | ❌ |
+| 📦 Hermes | Browser + OCR | ❌ |
+| 🔵 GLS | REST API (öffentlich) | ❌ |
+| ⚪ DPD | ❓ Noch nicht integriert | ❓ |
 
-# Alle Pakete tracken
-python3 scripts/package_manager.py track --json
+✅ Paket hinzugefügt: [CODE] (hermes)
+   Beschreibung: Beschreibung
+   Tracking läuft automatisch um 10:00 und 16:00
+   ✨ Sie werden benachrichtigt bei Status-Änderungen
+[]
+📦 Aktive Pakete: 6
+============================================================
+1. HERMES: [CODE]
+   Status: registered
+   Beschreibung: Beschreibung
+   Letztes Update: 2026-05-29 08:27:17
 
-# Übersicht anzeigen
-python3 scripts/package_manager.py list
-```
+2. GLS: 30027797654
+   Status: registered
+   Beschreibung: GLS Paket
+   Letztes Update: 2026-05-29 08:18:02
+
+3. DHL: 354482702077
+   Status: registered
+   Beschreibung: Dokumentenscanner
+   Letztes Update: 2026-05-22 07:02:16
+
+4. DHL: 00340434697726027444
+   Status: Vorbereitung für Weitertransport
+   Beschreibung: Bodylab Sirup
+   Letztes Update: 2026-05-22 07:01:04
+
+5. DHL: 00340434886264680017
+   Status: elektronisch angekündigt
+   Beschreibung: Aktuelle Sendung
+   Letztes Update: 2026-05-15 08:57:24
+
+6. DHL: JJD000390016899000548
+   Status: abgeholt
+   Beschreibung: Von Filiale abgeholt
+   Letztes Update: 2026-05-06 14:06:49
 
 **Architektur:**
 - `package_manager.py` - Hauptscript (Koordination, DB)
 - `hermes_tracker.py` - Hermes via Browser + OCR
 - `dhl_tracker.py` - DHL via REST API
+- `gls_tracker.py` - GLS via REST API (NEU! 🆕)
+- **DPD** - offen (Test ausstehend)
 
 → [Details ansehen](package-tracking/SKILL.md)
-
----
-
 ### email-sender
 **E-Mails via SMTP senden**
 
