@@ -1,24 +1,55 @@
 #!/usr/bin/env python3
 """
-GLS Sendungsverfolgung via gls-group.eu (OHNE API-Key!)
-Nutzt den öffentlichen REST-Endpoint von GLS
-Mit PLZ-Support und automatischem DB-Update bei Zustellung
+GLS Sendungsverfolgung via Browser-Automation + OCR
+Extrahiert Status aus GLS-Tracking-Seite via Playwright + Tesseract
+Fallback für die kaputte GLS REST API
 """
 
 import argparse
-import json
-import re
 import sys
+import re
+import json
+import os
 import sqlite3
-import urllib.request
-import urllib.error
-from datetime import datetime
 from pathlib import Path
+from datetime import datetime
 
-GLS_URL = "https://gls-group.eu/app/service/search/rest/de/de/routing/parcel"
-DB_PATH = Path(__file__).parent.parent.parent / "data" / "packages.db"
+from logger_config import get_logger
 
-def update_db_delivered(tracking_code: str) -> bool:
+logger = get_logger(__name__)
+
+WORKSPACE = Path(__file__).parent.parent.parent.parent
+DB_PATH = WORKSPACE / 'data' / 'packages.db'
+
+STATUS_PATTERNS = {
+    'delivered': [
+        r"zugestellt",
+        r"Die Sendung wurde.*zugestellt",
+    ],
+    'in_delivery': [
+        r"ins Zustellfahrzeug geladen",
+        r"Zustellfahrzeug",
+    ],
+    'in_transit': [
+        r"Paketzentrum",
+        r"im Paketzentrum eingetroffen",
+        r"manuell sortiert",
+        r"Sortier",
+        r"verteilt",
+    ],
+    'picked_up': [
+        r"abgeholt",
+        r"durch GLS übernommen",
+    ],
+    'announced': [
+        r"Paketdaten.*erfasst",
+        r"elektronisch angekündigt",
+        r"zur Abholung.*bereitgestellt",
+    ],
+}
+
+
+def update_db_delivered(tracking_code: str):
     """Markiert Paket als delivered direkt in der DB"""
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -34,166 +65,168 @@ def update_db_delivered(tracking_code: str) -> bool:
     finally:
         conn.close()
 
+
 def extract_tracking_code(raw: str) -> str:
-    """Extrahiert Tracking-Nummer aus beliebigem Input (URL, Nummer, etc.)"""
+    """Extrahiert Tracking-Nummer aus beliebigem Input"""
     raw = raw.strip()
-    if '/' in raw or '#' in raw:
-        parts = re.split(r'[/#?&=]', raw)
-        for part in reversed(parts):
-            part = part.strip()
-            if re.match(r'^[A-Za-z0-9]{8,20}$', part):
-                return part
-    code = re.sub(r'[^A-Za-z0-9]', '', raw)
-    return code
+    if 'trackingNumber=' in raw:
+        m = re.search(r'trackingNumber=([A-Za-z0-9]+)', raw)
+        if m:
+            return m.group(1)
+    if '#' in raw:
+        return raw.split('#')[-1].strip()
+    m = re.search(r'(\d{8,20})', raw)
+    if m:
+        return m.group(1)
+    return raw
+
 
 def extract_postcode(raw: str) -> str:
-    """Extrahiert Postleitzahl aus URL oder String"""
+    """Extrahiert PLZ aus URL oder Input"""
+    m = re.search(r'postCode=(\d{5})', raw)
+    if m:
+        return m.group(1)
     parts = re.split(r'[/#?&=]', raw)
     for i, part in enumerate(parts):
-        if part.lower() in ('postcode', 'postalcode', 'plz', 'post_code', 'postal'):
+        if part.lower() in ('postcode', 'postalcode', 'plz', 'post_code'):
             if i + 1 < len(parts):
                 return parts[i + 1]
-        if re.match(r'^\d{5}$', part):
-            return part
     return ''
 
-def validate_tracking_code(code: str) -> tuple:
-    """Validiert GLS Tracking-Nummer und gibt (gueltig, format_name) zurueck"""
-    if re.match(r'^\d{14}$', code):
-        return True, '14-digit'
-    if re.match(r'^\d{12,16}$', code):
-        return True, 'numeric'
-    if re.match(r'^[A-Z0-9]{8,12}$', code):
-        return True, 'alphanumeric'
-    if re.match(r'^[A-Z]{2}\d{9}[A-Z]{2}$', code):
-        return True, 'international'
-    return False, 'unknown'
 
-def track_gls(tracking_code: str, post_code: str = '') -> dict:
-    """Trackt GLS-Paket – kein API-Key noetig"""
+def detect_status(ocr_text: str) -> tuple:
+    """Erkennt Paket-Status aus OCR-Text"""
+    text_lower = ocr_text.lower()
+    for status_code, patterns in STATUS_PATTERNS.items():
+        for pattern in patterns:
+            if re.search(pattern, text_lower, re.IGNORECASE):
+                return status_code, pattern
+    return 'unknown', 'Status unbekannt'
+
+
+def track_gls(tracking_code: str, post_code: str = '', headless: bool = True) -> dict:
+    """Trackt GLS-Paket via Browser + Screenshot + OCR"""
     code = extract_tracking_code(tracking_code)
-    is_valid, fmt = validate_tracking_code(code)
+    plz = post_code or extract_postcode(tracking_code)
 
-    if not post_code:
-        post_code = extract_postcode(tracking_code)
+    if not plz:
+        return {'error': True, 'message': 'Postleitzahl erforderlich für GLS-Tracking'}
 
-    if post_code:
-        url = f"{GLS_URL}?search={code}&postCode={post_code}"
-    else:
-        url = f"{GLS_URL}?search={code}"
+    url = f"https://www.gls-pakete.de/reach-sendungsverfolgung?trackingNumber={code}&postCode={plz}"
 
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'de-DE,de;q=0.9',
-        'Referer': 'https://www.gls-pakete.de/reach-sendungsverfolgung',
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    screenshot_path = Path(f"/tmp/gls_{code}_{timestamp}.png")
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+
+    logger.info(f"GLS Tracking: {code} mit PLZ {plz}")
+
+    from playwright.sync_api import sync_playwright
+    from PIL import Image
+    import pytesseract
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=headless)
+        context = browser.new_context(
+            viewport={'width': 1280, 'height': 1200},
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        )
+        page = context.new_page()
+
+        try:
+            page.goto(url, wait_until='networkidle', timeout=30000)
+            page.wait_for_timeout(4000)
+
+            # Cookie-Banner
+            try:
+                cookie_btn = page.locator('button:has-text("Akzeptieren"), button:has-text("Alle akzeptieren"), button:has-text("Accept")').first
+                if cookie_btn.is_visible(timeout=3000):
+                    cookie_btn.click()
+                    page.wait_for_timeout(1000)
+            except:
+                pass
+
+            # Warten auf Tracking-Ergebnisse
+            try:
+                page.wait_for_selector('table, .progress, .tracking-step, .status, .event, [class*="tracking"]', timeout=10000)
+                page.wait_for_timeout(2000)
+            except:
+                logger.info("Tracking-Selector nicht gefunden, Screenshot trotzdem")
+
+            page.screenshot(path=str(screenshot_path), full_page=True)
+            logger.info(f"Screenshot: {screenshot_path}")
+
+        except Exception as e:
+            logger.error(f"Browser-Fehler: {e}")
+            browser.close()
+            return {'error': True, 'message': f'Browser-Fehler: {e}'}
+
+        browser.close()
+
+    # OCR
+    try:
+        img = Image.open(screenshot_path)
+        ocr_text = pytesseract.image_to_string(img, lang='deu')
+        logger.debug(f"OCR ({len(ocr_text)} chars): {ocr_text[:300]}...")
+    except Exception as e:
+        logger.error(f"OCR-Fehler: {e}")
+        ocr_text = ''
+
+    status_code, status_desc = detect_status(ocr_text)
+
+    # Events aus OCR parsen
+    events = []
+    event_pattern = r'(.+?)\n(.+?)\n(\d{1,2}\.\d{1,2}\.\d{4}).*?(\d{1,2}:\d{2})'
+    for m in re.finditer(event_pattern, ocr_text, re.MULTILINE):
+        events.append({
+            'status': m.group(1).strip()[:80],
+            'location': m.group(2).strip()[:40] if m.group(2) else '',
+            'date': f"{m.group(3)} {m.group(4)}",
+        })
+
+    # Fallback: Einfache Zeilen parsen
+    if not events:
+        lines = [l.strip() for l in ocr_text.split('\n') if l.strip()]
+        for line in lines:
+            if re.search(r'\d{1,2}\.\d{1,2}\.\d{4}', line):
+                events.append({
+                    'status': re.sub(r'\d{1,2}\.\d{1,2}\.\d{4}.*', '', line).strip()[:80],
+                    'location': '',
+                    'date': re.search(r'(\d{1,2}\.\d{1,2}\.\d{4}.*?\d{1,2}:\d{2})', line).group(1) if re.search(r'(\d{1,2}\.\d{1,2}\.\d{4}.*?\d{1,2}:\d{2})', line) else '',
+                })
+
+    # Datum extrahieren
+    dates_found = list(set(re.findall(r'\d{1,2}\.\d{1,2}\.\d{4}', ocr_text)))[:5]
+
+    # DB-Update bei Zustellung
+    if status_code == 'delivered':
+        update_db_delivered(code)
+
+    result = {
+        'tracking_code': code,
+        'carrier': 'gls',
+        'status': status_code,
+        'status_description': status_desc,
+        'timestamp': datetime.now().isoformat(),
+        'screenshot': str(screenshot_path),
+        'dates_found': dates_found,
+        'events': events,
+        'ocr_text_preview': ocr_text[:1000],
     }
 
-    req = urllib.request.Request(url, headers=headers)
+    logger.info(f"GLS Ergebnis: {status_code} ({len(events)} Events)")
+    return result
 
-    try:
-        with urllib.request.urlopen(req, timeout=30) as response:
-            data = json.loads(response.read())
-
-            if data.get('exceptionText') or data.get('lastError'):
-                err_msg = data.get('exceptionText', data.get('lastError', 'Unbekannter Fehler'))
-                if 'internal system error' in err_msg.lower() or 'try again later' in err_msg.lower():
-                    return {'error': True, 'message': 'Ungueltige oder unbekannte GLS Tracking-Nummer'}
-                return {'error': True, 'message': err_msg}
-
-            parcels = data.get('parcels', data.get('shipments', []))
-            if not parcels:
-                return {'error': True, 'message': 'Keine Sendungsdaten gefunden'}
-
-            parcel = parcels[0] if isinstance(parcels, list) else parcels
-
-            status_raw = (
-                parcel.get('statusText')
-                or parcel.get('status')
-                or parcel.get('statusDescription')
-                or 'Unbekannt'
-            )
-
-            status_code_raw = (
-                parcel.get('statusCode')
-                or parcel.get('status_code')
-                or ''
-            )
-
-            status_code = normalize_status(status_raw, status_code_raw)
-
-            events = []
-            raw_events = (
-                parcel.get('events')
-                or parcel.get('history')
-                or parcel.get('statusEvents')
-                or []
-            )
-            if isinstance(raw_events, list):
-                for evt in raw_events:
-                    events.append({
-                        'datum': evt.get('dateTime', evt.get('date', evt.get('timestamp', ''))),
-                        'ort': evt.get('location', evt.get('city', '')),
-                        'status': evt.get('status', evt.get('description', evt.get('text', ''))),
-                    })
-
-            estimated_delivery = (
-                parcel.get('estimatedDeliveryDate')
-                or parcel.get('deliveryDate')
-                or parcel.get('expectedDelivery')
-                or None
-            )
-
-            return {
-                'tracking_code': code,
-                'carrier': 'gls',
-                'status': status_code,
-                'status_description': status_raw,
-                'timestamp': datetime.now().isoformat(),
-                'events': events,
-                'estimated_delivery': estimated_delivery,
-                'raw_response': data,
-            }
-
-    except urllib.error.HTTPError as e:
-        if e.code == 500:
-            return {'error': True, 'message': 'Ungueltige oder unbekannte GLS Tracking-Nummer'}
-        return {'error': True, 'message': f'HTTP Fehler {e.code}'}
-    except urllib.error.URLError as e:
-        return {'error': True, 'message': f'Verbindungsfehler: {e.reason}'}
-    except json.JSONDecodeError:
-        return {'error': True, 'message': 'Ungueltige Antwort vom GLS-Server'}
-    except Exception as e:
-        return {'error': True, 'message': str(e)}
-
-def normalize_status(status_text: str, status_code: str = '') -> str:
-    """Normalisiert GLS-Status auf gemeinsame Codes"""
-    t = (status_text + ' ' + status_code).lower()
-    if any(w in t for w in ['delivered', 'zugestellt', 'delivery_ok']):
-        return 'delivered'
-    if any(w in t for w in ['out_for_delivery', 'in_delivery', 'zustellfahrzeug', 'on delivery']):
-        return 'in_delivery'
-    if any(w in t for w in ['in_transit', 'transit', 'parcel center', 'paketzentrum', 'sorting', 'sortiert']):
-        return 'in_transit'
-    if any(w in t for w in ['picked_up', 'collected', 'abgeholt']):
-        return 'picked_up'
-    if any(w in t for w in ['parcel_shop', 'filiale', 'parcel shop', 'bereit']):
-        return 'in_store'
-    if any(w in t for w in ['announced', 'angekuendigt', 'electronic', 'elektronisch']):
-        return 'announced'
-    if any(w in t for w in ['exception', 'problem', 'delay', 'verzoegerung', 'error']):
-        return 'exception'
-    return 'unknown'
 
 def main():
-    parser = argparse.ArgumentParser(description='GLS Sendungsverfolgung (ohne API-Key)')
-    parser.add_argument('tracking_code', help='GLS Tracking-Nummer oder URL (mit/ohne PLZ)')
+    parser = argparse.ArgumentParser(description='GLS Sendungsverfolgung mit Browser + OCR')
+    parser.add_argument('tracking_code', help='GLS Tracking-Nummer oder URL')
+    parser.add_argument('--postal', '-p', default='', help='Postleitzahl')
+    parser.add_argument('--headless', action='store_true', default=True, help='Headless-Modus')
+    parser.add_argument('--show-browser', action='store_true', help='Browser sichtbar')
     parser.add_argument('--json', '-j', action='store_true', help='JSON-Output')
-    parser.add_argument('--quiet', '-q', action='store_true', help='Nur Ergebnisse')
-    parser.add_argument('--postal', '-p', default='', help='Postleitzahl fuer genauere Abfrage')
 
     args = parser.parse_args()
-    result = track_gls(args.tracking_code, args.postal)
+    result = track_gls(args.tracking_code, args.postal, headless=(args.headless and not args.show_browser))
 
     if result.get('error'):
         if args.json:
@@ -202,14 +235,10 @@ def main():
             print(f"❌ {result['message']}")
         sys.exit(1)
 
-    # DB automatisch updaten bei Zustellung
-    if result['status'] == 'delivered':
-        update_db_delivered(result['tracking_code'])
-
     if args.json:
-        clean = {k: v for k, v in result.items() if k != 'raw_response'}
+        clean = {k: v for k, v in result.items() if k != 'ocr_text_preview'}
         print(json.dumps(clean, indent=2, ensure_ascii=False))
-    elif not args.quiet:
+    else:
         icon = {
             'delivered': '✅', 'in_delivery': '🚚', 'in_transit': '📦',
             'picked_up': '📤', 'in_store': '🏪', 'announced': '📋',
@@ -217,23 +246,25 @@ def main():
         }.get(result['status'], '📦')
 
         print("=" * 60)
-        print(f"{icon} GLS SENDUNGSSTATUS")
+        print(f"{icon} GLS SENDUNGSSTATUS (Browser + OCR)")
         print(f"📦 {result['tracking_code']}")
         print("=" * 60)
         print(f"\n✅ Status: {result['status_description']}")
         print(f"   Code: {result['status']}")
-        if result.get('estimated_delivery'):
-            print(f"📅 Voraussichtliche Zustellung: {result['estimated_delivery']}")
         if result.get('events'):
             print(f"\n📋 Letzte Updates:")
             for evt in result['events'][:5]:
-                d = evt['datum'][:16] if evt['datum'] else 'Unbekannt'
-                o = f" ({evt['ort']})" if evt.get('ort') else ''
+                d = evt['date'] if evt['date'] else ''
                 s = evt['status'][:60] if evt['status'] else ''
-                print(f"   • {d}{o}: {s}")
+                l = f" ({evt['location']})" if evt.get('location') else ''
+                print(f"   • {d}{l}: {s}")
+        if result.get('dates_found'):
+            print(f"\n📅 Daten: {', '.join(result['dates_found'])}")
+        print(f"\n📸 Screenshot: {result['screenshot']}")
         print("=" * 60)
 
     return result
+
 
 if __name__ == '__main__':
     result = main()
