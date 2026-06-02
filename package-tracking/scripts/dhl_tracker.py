@@ -22,16 +22,20 @@ import json
 import sys
 import re
 import time
+import sqlite3
 from pathlib import Path
 from datetime import datetime
 from functools import wraps
 import requests
+import urllib.request
+import urllib.error
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'scripts'))
 from logger_config import get_logger
-from scripts.db_manager import update_package_status
 
 logger = get_logger(__name__)
+
+# DB Pfad (relativ zum Skill)
+DB_PATH = Path(__file__).parent.parent.parent / 'data' / 'packages.db'
 
 # API Konfiguration
 DHL_API_URL = "https://www.dhl.de/int-verfolgen/data/search"
@@ -134,21 +138,25 @@ def track_dhl(tracking_code: str) -> dict:
     return result
 
 def update_database(tracking_code: str, status: str) -> bool:
-    """Aktualisiert Paket-Status in DB bei Zustellung"""
+    """Aktualisiert Paket-Status in DB bei Zustellung - DIREKT, ohne externen Import"""
     if status == 'delivered':
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
         try:
-            update_package_status(
-                tracking_code,
-                status='delivered',
-                delivered=1,
-                delivered_at=datetime.now().isoformat(),
-                updated_at=datetime.now().isoformat()
+            cur.execute(
+                "UPDATE packages SET status='delivered', delivered=1, delivered_at=?, updated_at=? WHERE tracking_code=?",
+                (datetime.now().isoformat(), datetime.now().isoformat(), tracking_code)
             )
-            logger.info(f"DB-Update: {tracking_code} als delivered markiert")
-            return True
+            conn.commit()
+            ok = cur.rowcount > 0
+            if ok:
+                logger.info(f"DB-Update: {tracking_code} als delivered markiert")
+            return ok
         except Exception as e:
             logger.error(f"DB-Update fehlgeschlagen: {e}")
             return False
+        finally:
+            conn.close()
     return False
 
 def main():
