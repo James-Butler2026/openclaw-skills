@@ -9,14 +9,59 @@ Plugins: dhl_tracker.py, hermes_tracker.py, gls_tracker.py, dpd_tracker.py
 import sys
 import json
 import subprocess
+import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
-# Fix: Add workspace root to path for db_manager import
-workspace_root = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(workspace_root))
-from scripts.db_manager import add_package, get_active_packages, update_package_status
+# DB direkt nutzen (kein externer Import)
+DB_PATH = Path(__file__).parent.parent.parent / 'data' / 'packages.db'
+
+def add_package(tracking_code: str, carrier: str, description: str = '') -> bool:
+    """Fuegt neues Paket in die DB ein"""
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "INSERT OR IGNORE INTO packages (tracking_code, carrier, description, status, created_at, updated_at) VALUES (?, ?, ?, 'registered', ?, ?)",
+            (tracking_code, carrier, description, datetime.now().isoformat(), datetime.now().isoformat())
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    except Exception as e:
+        return False
+    finally:
+        conn.close()
+
+def get_active_packages() -> List[Dict]:
+    """Holt alle nicht-zugestellten Pakete"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT * FROM packages WHERE delivered = 0 ORDER BY updated_at DESC")
+        return [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
+
+def update_package_status(tracking_code: str, **kwargs) -> bool:
+    """Aktualisiert Paket-Status"""
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    try:
+        sets = []
+        params = []
+        for key in kwargs:
+            sets.append(f"{key} = ?")
+            params.append(kwargs[key])
+        params.append(tracking_code)
+        cur.execute(f"UPDATE packages SET {', '.join(sets)} WHERE tracking_code = ?", params)
+        conn.commit()
+        return cur.rowcount > 0
+    except Exception:
+        return False
+    finally:
+        conn.close()
 
 # Cron-Job ID für Paket-Tracking
 CRON_JOB_ID = "package-tracking-10-16"
