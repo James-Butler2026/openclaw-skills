@@ -13,7 +13,7 @@ Jeder Skill bringt eine `SKILL.md` (Anleitung für den Agenten), ein `README.md`
 
 [![Last Commit](https://img.shields.io/github/last-commit/James-Butler2026/openclaw-skills?style=flat-square)](https://github.com/James-Butler2026/openclaw-skills/commits)
 [![Repo Size](https://img.shields.io/github/repo-size/James-Butler2026/openclaw-skills?style=flat-square)](https://github.com/James-Butler2026/openclaw-skills)
-[![Website](https://img.shields.io/badge/Web-freibeuter.work-0A66C2?style=flat-square&logo=googlechrome&logoColor=white)](https://www.freibeuter.work)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 [Schnellstart](#-schnellstart) · [Skills](#-alle-skills-im-überblick) · [Details](#-skills-im-detail) · [Konfiguration](#%EF%B8%8F-konfiguration) · [Mitwirken](#-mitwirken)
 
@@ -444,7 +444,7 @@ Die Sammlung wächst laufend. Ideen, Fehlermeldungen und Pull Requests sind will
 
 ## 📜 Lizenz
 
-Alle Skills sind unter der MIT-Lizenz veröffentlicht.
+Alle Skills sind unter der [MIT-Lizenz](LICENSE) veröffentlicht.
 
 <div align="center">
 <sub>Gebaut mit 🦞 OpenClaw und viel ☕</sub>
