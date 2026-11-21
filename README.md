@@ -1,353 +1,156 @@
-# OpenClaw Skills Collection
+<div align="center">
 
-Eine Sammlung nützlicher Skills für OpenClaw – vollständig lokal nutzbar, dokumentiert und API-sicher konfiguriert.
+# 🧩 OpenClaw Skills
 
-## 📋 Übersicht
+**20 praxiserprobte Skills für OpenClaw-Agenten: Audio, Bild, Finanzen, Tracking, Produktivität und Entwicklung.**
 
-Diese Sammlung enthält **19 praxisnahe Skills** für OpenClaw – von Audio-Transkription über Bildgenerierung bis hin zu Krypto-Portfolio-Tracking. Alle Skills sind offline-fähig, datenschutzfreundlich und ohne Cloud-Abhängigkeit.
+Jeder Skill bringt eine `SKILL.md` (Anleitung für den Agenten), ein `README.md` und lauffähige Python-Skripte mit.
 
-| Skill | Beschreibung | Kategorie |
-|-------|--------------|-----------|
-| [ap1-training-tracker](#ap1-training-tracker) | IHK Fachinformatiker AP1 Training mit 280 Fragen | Lernen |
-| [audio-transcription](#audio-transcription) | Audio zu Text mit Whisper (faster-whisper) | Audio |
-| [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe | Produktivität |
-| [crypto-tracker](#crypto-tracker) | Krypto-Portfolio-Tracking für BTC, ETH, SOL, XRP | Finanzen |
-| [elevenlabs-tts](#elevenlabs-tts) | Text-to-Speech via ElevenLabs API | Audio |
-| [email-sender](#email-sender) | E-Mails via SMTP senden | Kommunikation |
-| [expense-tracker](#expense-tracker) | Budget-Tracking mit Einkommen, Fixkosten, Ersparnissen | Finanzen |
-| [github-manager](#github-manager) | Skills zu GitHub veröffentlichen | Entwicklung |
-| [image-generation](#image-generation) | Kostenlose Bildgenerierung via Pollinations.ai | Bild |
-| [leonardo-image-gen](#leonardo-image-gen) | Bildgenerierung mit Leonardo AI | Bild |
-| [mammouth-coding](#mammouth-coding) | Code-Generierung mit Mammouth.ai | Entwicklung |
-| [meme-architect](#meme-architect) | Meme-Generierung mit imgflip API | Spaß |
-| [mega-filehoster](#mega-filehoster) | MEGA.nz Cloud Storage Verwaltung | Storage |
-| [package-tracking](#package-tracking) | Einheitliches Paket-Tracking für Hermes + DHL + GLS (DPD in Planung) | Tracking |
-| [piper-tts](#piper-tts) | Deutsche Text-to-Speech (lokal) | Audio |
-| [sports-tracker](#sports-tracker) | Sport-Tracking mit Kalorien und Workout-Management | Fitness |
-| [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte mit Supadata API | Video |
-| [vodafone-sender-monitor](#vodafone-sender-monitor) | Vodafone Kabel-Senderlisten überwachen | Tracking |
-| [wordpress-manager](#wordpress-manager) | WordPress Beiträge via REST API verwalten | CMS |
+[![Skills](https://img.shields.io/badge/Skills-20-8A2BE2?style=for-the-badge)](#-alle-skills-im-überblick)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-lokal-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](#)
+[![Sprache](https://img.shields.io/badge/Sprache-Deutsch-black?style=for-the-badge)](#)
+
+[![Last Commit](https://img.shields.io/github/last-commit/James-Butler2026/openclaw-skills?style=flat-square)](https://github.com/James-Butler2026/openclaw-skills/commits)
+[![Repo Size](https://img.shields.io/github/repo-size/James-Butler2026/openclaw-skills?style=flat-square)](https://github.com/James-Butler2026/openclaw-skills)
+[![Website](https://img.shields.io/badge/Web-freibeuter.work-0A66C2?style=flat-square&logo=googlechrome&logoColor=white)](https://www.freibeuter.work)
+
+[Schnellstart](#-schnellstart) · [Skills](#-alle-skills-im-überblick) · [Details](#-skills-im-detail) · [Konfiguration](#%EF%B8%8F-konfiguration) · [Mitwirken](#-mitwirken)
+
+</div>
+
+---
+
+## ✨ Warum diese Sammlung?
+
+- 🏠 **Lokal zuerst:** Viele Skills laufen komplett auf dem eigenen Rechner, Daten liegen in SQLite statt in der Cloud.
+- 🔐 **Keine Schlüssel im Code:** API-Keys und Zugangsdaten kommen aus einer `.env`, die per `.gitignore` nie im Repo landet.
+- 🇩🇪 **Deutsch im Alltag:** Spracheingaben wie *„12,50 € bei Rewe“* oder *„Termin morgen 14 Uhr“* funktionieren direkt.
+- 🤖 **Für Agenten gebaut:** Jede `SKILL.md` sagt dem Agenten, wann und wie er den Skill nutzt.
+
+**Legende:** 🏠 läuft lokal · 🌐 öffentlicher Online-Dienst, kein Key · 🔑 API-Key oder Zugang nötig
+
+---
+
+## 📋 Alle Skills im Überblick
+
+### 🎧 Audio, Sprache & Video
+| Skill | Beschreibung | Betrieb |
+|---|---|:---:|
+| 🎙️ [audio-transcription](#audio-transcription) | Audio zu Text mit faster-whisper (MP3, OGG, WAV …) | 🏠 |
+| 🗣️ [piper-tts](#piper-tts) | Deutsche Sprachausgabe mit der Thorsten-Stimme | 🏠 |
+| 🔊 [elevenlabs-tts](#elevenlabs-tts) | Hochwertige Sprachausgabe, auch mit geklonten Stimmen | 🔑 |
+| 📺 [superdata-youtube-transcript](#superdata-youtube-transcript) | YouTube-Transkripte und KI-Zusammenfassungen | 🔑 |
+
+### 🎨 Bild & Spaß
+| Skill | Beschreibung | Betrieb |
+|---|---|:---:|
+| 🖼️ [image-generation](#image-generation) | Kostenlose Bildgenerierung via Pollinations.ai | 🌐 |
+| 🎨 [leonardo-image-gen](#leonardo-image-gen) | Leonardo AI (FLUX, Lucid, XL) mit Pollinations-Fallback | 🔑 |
+| 😂 [meme-architect](#meme-architect) | Memes passend zum Kontext über imgflip | 🔑 |
+
+### 💶 Finanzen
+| Skill | Beschreibung | Betrieb |
+|---|---|:---:|
+| 💰 [expense-tracker](#expense-tracker) | Budget mit Einkommen, Fixkosten und Ersparnissen, per Spracheingabe | 🏠 |
+| ₿ [crypto-tracker](#crypto-tracker) | Kurse und Gewinn/Verlust für BTC und XRP via CoinGecko | 🌐 |
+
+### 📅 Produktivität & Lernen
+| Skill | Beschreibung | Betrieb |
+|---|---|:---:|
+| 📅 [calendar](#calendar) | Lokaler Kalender mit natürlicher Spracheingabe und Erinnerungen | 🏠 |
+| ✉️ [email-sender](#email-sender) | E-Mails senden und lesen (SMTP/IMAP: Web.de, Gmail, GMX …) | 🔑 |
+| 🎓 [ap1-training-tracker](#ap1-training-tracker) | IHK-AP1-Training für Fachinformatiker mit 280 Fragen | 🏠 |
+
+### 📦 Tracking & Monitoring
+| Skill | Beschreibung | Betrieb |
+|---|---|:---:|
+| 📦 [package-tracking](#package-tracking) | Pakete von DHL, Hermes und GLS an einem Ort (DPD in Planung) | 🌐 |
+| 📡 [vodafone-sender-monitor](#vodafone-sender-monitor) | Vodafone-Kabel-Senderlisten überwachen, Enigma2-Export | 🌐 |
+| 🏃 [sports-tracker](#sports-tracker) | Training, Kalorien und Workouts (P90X, Rad, Laufen, Komoot-Import) | 🏠 |
+
+### 🛠️ Entwicklung & Betrieb
+| Skill | Beschreibung | Betrieb |
+|---|---|:---:|
+| 🐙 [github-manager](#github-manager) | Skills auf GitHub veröffentlichen und synchron halten | 🔑 |
+| 💻 [mammouth-coding](#mammouth-coding) | Code-Generierung über Mammouth.ai | 🔑 |
+| 📝 [wordpress-manager](#wordpress-manager) | WordPress-Beiträge per REST API verwalten | 🔑 |
+| ☁️ [mega-filehoster](#mega-filehoster) | MEGA.nz: Upload, Download, Share-Links | 🔑 |
+| 💾 [backup-manager](#backup-manager) | Git- und SQLite-Backups des Workspace mit Rotation | 🏠 |
 
 ---
 
 ## 🚀 Schnellstart
 
-### Einen Skill installieren
-
 ```bash
-# Repository klonen
+# 1. Repository klonen
 git clone https://github.com/James-Butler2026/openclaw-skills.git
+cd openclaw-skills
 
-# In den Skill-Ordner wechseln
-cd openclaw-skills/audio-transcription/
+# 2. Gewünschten Skill in den OpenClaw-Workspace kopieren
+cp -r audio-transcription ~/.openclaw/workspace/skills/
 
-# SKILL.md lesen für Setup-Anleitung
-cat SKILL.md
+# 3. Setup-Anleitung lesen (Abhängigkeiten, .env-Variablen)
+cat audio-transcription/SKILL.md
 ```
 
-### Voraussetzungen
-
-Die meisten Skills benötigen:
-- Python 3.8+
-- OpenClaw Workspace (empfohlen)
-- `.env` Datei im Workspace-Root mit entsprechenden API-Keys
+**Voraussetzungen**
+- 🐍 Python 3.8+
+- 🦞 OpenClaw-Workspace (empfohlen, die Skills laufen aber auch einzeln)
+- 🔑 `.env` im Workspace-Root mit den Keys der 🔑-Skills
 
 ---
 
 ## 📦 Skills im Detail
 
-### ap1-training-tracker
-**IHK Fachinformatiker AP1 Training**
+<details id="audio-transcription">
+<summary><b>🎙️ audio-transcription</b> – Audio zu Text mit faster-whisper</summary>
 
-- 280 Fragen aus dem IHK-Prüfungsstoff
-- 50 subnetting-spezifische Fragen
-- Interaktives Training mit Feedback
-- Automatische Statistiken und Fortschrittsanzeige
-- SQLite-basierte Datenbank
-
-```bash
-python3 scripts/ap1_training.py
-python3 scripts/ap1_tracker.py --daily
-```
-
-→ [Details ansehen](ap1-training-tracker/README.md)
-
----
-
-### audio-transcription
-**Audio zu Text Transkription mit faster-whisper**
-
-- Unterstützt: MP3, OGG, WAV, etc.
-- Mehrere Modelle: tiny bis large-v3
-- Auto-Detect Sprache oder explizit angeben
-- Deutsche Sprache nativ unterstützt
+- Unterstützt MP3, OGG, WAV und weitere Formate
+- Modelle von `tiny` bis `large-v3`
+- Sprache automatisch erkennen oder fest vorgeben, Deutsch nativ
 
 ```bash
 python3 scripts/transcribe.py audio.mp3 --language de
 ```
 
 → [Details ansehen](audio-transcription/README.md)
+</details>
 
----
-
-### crypto-tracker
-**Krypto-Portfolio-Tracking für BTC/XRP**
-
-- Echtzeit-Kurse via CoinGecko API
-- Gewinn/Verlust-Berechnung
-- Stop-Loss bei -20%, Take-Profit bei +25%
-- Performance-Vergleich
-- SQLite-basiert
-
-```bash
-python3 scripts/bison_tracker.py --init
-python3 scripts/bison_tracker.py --status
-```
-
-→ [Details ansehen](crypto-tracker/README.md)
-
----
-
-### calendar
-**Lokaler Kalender mit natürlicher Spracheingabe**
-
-- Natürliche Sprache: *"Termin morgen 14 Uhr"*
-- Geburtstage mit jährlichen Erinnerungen
-- Automatische Cron-Erinnerungen
-- Wiederholungen: täglich, wöchentlich, monatlich, jährlich
-- SQLite-basiert, keine Cloud
-
-```bash
-python3 scripts/calendar_cli.py "Termin morgen 14 Uhr mit Dr. Kaufmann"
-python3 scripts/calendar_cli.py --today
-```
-
-→ [Details ansehen](calendar/README.md)
-
----
-
-### package-tracking
-**Einheitliches Paket-Tracking für Hermes + DHL + GLS (DPD in Planung)**
-
-| Carrier | Methode | API-Key | Geschwindigkeit | Status |
-|---------|---------|---------|-----------------|--------|
-| 🚚 DHL | REST API (öffentlich) | ❌ | ~2s | ✅ |
-| 📦 Hermes | Browser + OCR | ❌ | ~30s | ✅ |
-| 🔵 GLS | REST API (öffentlich) | ❌ | ~2s | ✅ (NEU) |
-| ⚪ DPD | offen | ❓ | offen | ❓ Test ausstehend |
-
-- Zentraler Manager für alle Pakete (DHL + Hermes + GLS)
-- SQLite-Datenbank mit Tracking-Verlauf
-- Automatische Checks um 10:00 und 16:00 Uhr
-- Telegram-Updates bei Status-Änderungen
-- Kein API-Key nötig bei DHL und GLS
-
-```bash
-# Paket hinzufügen
-python3 scripts/package_manager.py add -c [CODE] -r hermes -d "Beschreibung"
-python3 scripts/package_manager.py add -c [CODE] -r dhl -d "Beschreibung"
-python3 scripts/package_manager.py add -c [CODE] -r gls -d "Beschreibung"
-
-# Alle Pakete tracken (DHL + Hermes + GLS)
-python3 scripts/package_manager.py track --json
-
-# Übersicht anzeigen
-python3 scripts/package_manager.py list
-```
-
-**Architektur:**
-- `package_manager.py` - Hauptscript (Koordination, DB)
-- `dhl_tracker.py` - DHL via REST API
-- `hermes_tracker.py` - Hermes via Browser + OCR
-- `gls_tracker.py` - GLS via REST API (NEU!)
-- `package_tracking_agent.py` - OpenClaw Agent
-
-→ [Details ansehen](package-tracking/SKILL.md)
-
----
-
-### email-sender
-**E-Mails via SMTP senden**
-
-- Unterstützt: Web.de, Gmail, GMX, eigene SMTP-Server
-- App-Passwörter für Gmail
-- Einfache Python API
-- Keine externen Abhängigkeiten
-
-```bash
-python3 scripts/send_email.py --to empfaenger@example.com \
-    --subject "Hallo" --body "Testnachricht"
-```
-
-→ [Details ansehen](email-sender/README.md)
-
----
-
-### expense-tracker
-**Budget-Tracking mit Einkommen, Fixkosten & Ersparnissen (v3.0)**
-
-- 🎤 Spracheingabe: *"Habe 12,50€ bei Rewe ausgegeben"*
-- 💰 Einkommen & Fixkosten-Verwaltung
-- 📊 Budget-Übersicht: Einkommen – Fixkosten – Variabel = Ersparnisse
-- 📅 ISO-KW (Mo-So) + Monatswochen (1.-7., 8.-14. etc.)
-- 📋 Detail-Aufschlüsselung bei jedem Report
-- 🗓️ Jahresübersicht & Gesamt-Übersicht
-- ⏱️ Temporäre Fixkosten mit Enddatum
-- 🔢 Cent-genaue Beträge, keine Rundung
-- 💾 Monats-Zusammenfassungen werden gespeichert
-- SQLite-basiert, keine Cloud
-
-```bash
-python3 scripts/expense_tracker.py "12,50€ bei Rewe"
-python3 scripts/expense_tracker.py --weekly          # Diese Woche (Mo-So)
-python3 scripts/expense_tracker.py --last-week        # Letzte Woche
-python3 scripts/expense_tracker.py --month-to-date    # 1. bis heute
-python3 scripts/expense_tracker.py --monthly          # Budget-Bericht
-python3 scripts/expense_tracker.py --year             # Jahresübersicht
-python3 scripts/expense_tracker.py --total             # Gesamt-Übersicht
-```
-
-→ [Details ansehen](expense-tracker/README.md)
-
----
-
-### github-manager
-**Skills zu GitHub veröffentlichen**
-
-- Repository erstellen
-- Einzelne oder alle Skills synchronisieren
-- Automatische README-Generierung
-- GitHub Actions Integration
-
-```bash
-python3 scripts/github_publish.py --skill image-generation --repo openclaw-skills
-```
-
-→ [Details ansehen](github-manager/README.md)
-
----
-
-### image-generation
-**Kostenlose Bildgenerierung via Pollinations.ai**
-
-- Kein API-Key nötig
-- Keine Rate-Limits bekannt
-- Custom Dimensionen und Seeds
-- Watermark-freier Output
-
-```bash
-python3 scripts/generate_image.py "A beautiful sunset" --width 1024 --height 768
-```
-
-→ [Details ansehen](image-generation/README.md)
-
----
-
-### leonardo-image-gen
-**Bildgenerierung mit Leonardo AI + Pollinations-Fallback**
-
-- Leonardo AI API (Daily Credits)
-- Automatischer Fallback zu Pollinations
-- FLUX.1, Lucid, Leonardo XL Modelle
-- Höhere Qualität als Pollinations allein
-
-```bash
-python3 scripts/leonardo_generate.py "Ein elegantes Maskestück" --model flux-schnell
-```
-
-→ [Details ansehen](leonardo-image-gen/README.md)
-
----
-
-### mammouth-coding
-**Code-Generierung mit Claude Opus 4-6**
-
-- **NUR für Code-Generierung**
-- Mammouth.ai API
-- Retry-Mechanismus mit Exponential Backoff
-- Bessere Fehlerbehandlung
-
-```bash
-python3 scripts/mammouth_coder.py "Erstelle eine Python-Klasse für..."
-```
-
-→ [Details ansehen](mammouth-coding/README.md)
-
----
-
-### meme-architect
-**Meme-Generierung mit imgflip API**
-
-- Automatische Meme-Erstellung aus Kontext
-- Unterstützung für imgflip Meme-Templates
-- Emotionserkennung für passende Memes
-- Text-Generierung basierend auf Vorlagen
-- Einfache CLI-Nutzung
-
-```bash
-python3 scripts/meme_architect.py "lustiger Moment"
-```
-
-→ [Details ansehen](meme-architect/README.md)
-
----
-
-### mega-filehoster
-**MEGA.nz Cloud Storage Verwaltung**
-
-- Dateien hochladen/herunterladen
-- Verzeichnisse auflisten
-- Share-Links generieren
-- Speicherplatz prüfen
-
-```bash
-python3 scripts/mega_manager.py upload /pfad/zur/datei.txt
-```
-
-→ [Details ansehen](mega-filehoster/README.md)
-
----
-
-### piper-tts
-**Deutsche Text-to-Speech (lokal)**
+<details id="piper-tts">
+<summary><b>🗣️ piper-tts</b> – Deutsche Sprachausgabe, lokal</summary>
 
 - Thorsten-Stimme (deutsch, männlich)
-- Kein API-Key nötig
-- Lokale Ausführung
-- Telegram Voice-Messages
+- Kein API-Key, läuft lokal
+- Kann direkt als Telegram-Sprachnachricht senden
 
 ```bash
 python3 scripts/piper_tts.py "Hallo Welt" --send
 ```
 
 → [Details ansehen](piper-tts/README.md)
+</details>
 
----
+<details id="elevenlabs-tts">
+<summary><b>🔊 elevenlabs-tts</b> – Sprachausgabe über ElevenLabs</summary>
 
-### elevenlabs-tts
-**Text-to-Speech via ElevenLabs API**
-
-- Unterstützung für 70+ Sprachen
-- Mehrere Modelle: multilingual_v2, turbo, flash
-- Custom Voice Cloning
-- Streaming-Unterstützung
-- Exzellente deutsche Aussprache
+- 70+ Sprachen, sehr gute deutsche Aussprache
+- Modelle: `multilingual_v2`, `turbo`, `flash`
+- Eigene geklonte Stimmen, Streaming
 
 ```bash
 python3 scripts/elevenlabs_tts.py speak "Hallo Welt" --voice VOICE_ID
 ```
 
 → [Details ansehen](elevenlabs-tts/README.md)
+</details>
 
----
+<details id="superdata-youtube-transcript">
+<summary><b>📺 superdata-youtube-transcript</b> – YouTube-Transkripte mit Supadata</summary>
 
-### superdata-youtube-transcript
-**YouTube-Transkripte mit Supadata API**
-
-- Supadata API (100 Credits/Monat Free)
+- Supadata API (100 Credits/Monat kostenlos)
 - KI-Zusammenfassungen
-- 30-Tage-Cache
-- Nur Credits bei Erfolg
+- 30-Tage-Cache, Credits werden nur bei Erfolg verbraucht
 
 ```python
 from scripts.youtube_transcript_superdata import get_transcript_summary
@@ -355,105 +158,294 @@ result = get_transcript_summary(video_id="...")
 ```
 
 → [Details ansehen](superdata-youtube-transcript/README.md)
+</details>
 
-### vodafone-sender-monitor
-**Vodafone Kabel-Senderlisten überwachen**
+<details id="image-generation">
+<summary><b>🖼️ image-generation</b> – Kostenlose Bilder via Pollinations.ai</summary>
 
-- 📡 Enigma2-Export für Vodafone Kabel-Senderlisten
-- 🔔 Automatische Alerts bei neuen Sendern
-- 📊 SQLite-Datenbank mit Metadaten
-- 🔄 Wöchentlicher Scan (jeden Samstag um 20:00 Uhr)
+- Kein API-Key nötig, keine bekannten Rate-Limits
+- Eigene Größen und Seeds
+- Ohne Wasserzeichen
 
 ```bash
-# Initialisierung
-python3 scripts/vodafone_monitor.py --init
+python3 scripts/generate_image.py "A beautiful sunset" --width 1024 --height 768
+```
 
-# Manuelles Scannen
+→ [Details ansehen](image-generation/README.md)
+</details>
+
+<details id="leonardo-image-gen">
+<summary><b>🎨 leonardo-image-gen</b> – Leonardo AI mit Pollinations-Fallback</summary>
+
+- Leonardo AI API (tägliche Credits)
+- Modelle: FLUX.1, Lucid, Leonardo XL
+- Fällt automatisch auf Pollinations zurück
+
+```bash
+python3 scripts/leonardo_generate.py "Ein elegantes Maskenstück" --model flux-schnell
+```
+
+→ [Details ansehen](leonardo-image-gen/README.md)
+</details>
+
+<details id="meme-architect">
+<summary><b>😂 meme-architect</b> – Memes mit der imgflip API</summary>
+
+- Erstellt Memes automatisch aus dem Gesprächskontext
+- Nutzt die imgflip-Vorlagen
+- Erkennt die Stimmung und wählt passende Vorlagen
+
+```bash
+python3 scripts/meme_architect.py "lustiger Moment"
+```
+
+→ [Details ansehen](meme-architect/README.md)
+</details>
+
+<details id="expense-tracker">
+<summary><b>💰 expense-tracker</b> – Budget mit Einkommen, Fixkosten und Ersparnissen (v3.0)</summary>
+
+- 🎤 Spracheingabe: *„Habe 12,50 € bei Rewe ausgegeben“*
+- 📊 Einkommen – Fixkosten – Variabel = Ersparnisse
+- 📅 ISO-KW (Mo–So) und Monatswochen (1.–7., 8.–14. …)
+- ⏱️ Befristete Fixkosten mit Enddatum
+- 🔢 Cent-genau, ohne Rundung
+- 🗓️ Monats-, Jahres- und Gesamtübersicht
+
+```bash
+python3 scripts/expense_tracker.py "12,50€ bei Rewe"
+python3 scripts/expense_tracker.py --weekly          # diese Woche (Mo–So)
+python3 scripts/expense_tracker.py --last-week       # letzte Woche
+python3 scripts/expense_tracker.py --month-to-date   # 1. bis heute
+python3 scripts/expense_tracker.py --monthly         # Budget-Bericht
+python3 scripts/expense_tracker.py --year            # Jahresübersicht
+python3 scripts/expense_tracker.py --total           # Gesamtübersicht
+```
+
+→ [Details ansehen](expense-tracker/README.md)
+</details>
+
+<details id="crypto-tracker">
+<summary><b>₿ crypto-tracker</b> – Krypto-Portfolio für BTC und XRP</summary>
+
+- Aktuelle Kurse in USD/EUR via CoinGecko
+- Gewinn/Verlust und 24-h-Änderung
+- Stop-Loss bei −20 %, Take-Profit bei +25 %
+
+```bash
+python3 scripts/bison_tracker.py --init
+python3 scripts/bison_tracker.py --status
+```
+
+→ [Details ansehen](crypto-tracker/README.md)
+</details>
+
+<details id="calendar">
+<summary><b>📅 calendar</b> – Lokaler Kalender mit Spracheingabe</summary>
+
+- Natürliche Sprache: *„Termin morgen 14 Uhr“*
+- Geburtstage mit jährlicher Erinnerung
+- Wiederholungen: täglich, wöchentlich, monatlich, jährlich
+- Erinnerungen per Cron
+
+```bash
+python3 scripts/calendar_cli.py "Termin morgen 14 Uhr beim Zahnarzt"
+python3 scripts/calendar_cli.py --today
+```
+
+→ [Details ansehen](calendar/README.md)
+</details>
+
+<details id="email-sender">
+<summary><b>✉️ email-sender</b> – E-Mails senden und lesen</summary>
+
+- Web.de, Gmail (App-Passwort), GMX oder eigener Server
+- Text, HTML, Anhänge, CC/BCC
+- Postfach lesen per IMAP
+
+```bash
+python3 scripts/send_email.py --to empfaenger@example.com \
+    --subject "Hallo" --body "Testnachricht"
+```
+
+→ [Details ansehen](email-sender/README.md)
+</details>
+
+<details id="ap1-training-tracker">
+<summary><b>🎓 ap1-training-tracker</b> – IHK AP1 für Fachinformatiker</summary>
+
+- 280 Fragen aus dem Prüfungsstoff, davon 50 zu Subnetting
+- Interaktives Training mit Feedback
+- Statistiken und Fortschritt in SQLite
+
+```bash
+python3 scripts/ap1_training.py
+python3 scripts/ap1_tracker.py --daily
+```
+
+→ [Details ansehen](ap1-training-tracker/README.md)
+</details>
+
+<details id="package-tracking">
+<summary><b>📦 package-tracking</b> – DHL, Hermes und GLS an einem Ort</summary>
+
+| Carrier | Methode | API-Key | Dauer | Status |
+|---|---|:---:|:---:|:---:|
+| 🚚 DHL | REST API (öffentlich) | ❌ | ~2 s | ✅ |
+| 📦 Hermes | Browser + OCR | ❌ | ~30 s | ✅ |
+| 🔵 GLS | REST API (öffentlich) | ❌ | ~2 s | ✅ |
+| ⚪ DPD | offen | ❓ | – | 🧪 Test ausstehend |
+
+- Ein Manager für alle Pakete, Verlauf in SQLite
+- Automatische Prüfung um 10:00 und 16:00 Uhr
+- Telegram-Meldung bei Statusänderung
+
+```bash
+python3 scripts/package_manager.py add -c [CODE] -r dhl -d "Beschreibung"
+python3 scripts/package_manager.py track --json    # alle Pakete prüfen
+python3 scripts/package_manager.py list            # Übersicht
+```
+
+**Aufbau:** `package_manager.py` (Koordination, DB) · `dhl_tracker.py` · `hermes_tracker.py` · `gls_tracker.py` · `package_tracking_agent.py` (OpenClaw-Agent)
+
+→ [Details ansehen](package-tracking/SKILL.md)
+</details>
+
+<details id="vodafone-sender-monitor">
+<summary><b>📡 vodafone-sender-monitor</b> – Senderlisten im Blick</summary>
+
+- Enigma2-Export der Vodafone-Kabel-Senderlisten
+- 🔔 Meldung bei neuen Sendern
+- 🔄 Wöchentlicher Scan (samstags 20:00 Uhr), Daten in SQLite
+
+```bash
+python3 scripts/vodafone_monitor.py --init
 python3 scripts/vodafone_monitor.py --scan
 ```
 
 → [Details ansehen](vodafone-sender-monitor/README.md)
+</details>
 
----
+<details id="sports-tracker">
+<summary><b>🏃 sports-tracker</b> – Training und Kalorien</summary>
 
-### wordpress-manager
-**WordPress Beiträge verwalten**
-
-- REST API Integration
-- Cloudflare-kompatibel
-- CRUD-Operationen
-- Kategorien & Tags
-
-```bash
-python3 scripts/wordpress_manager.py --create "Titel" "HTML-Inhalt"
-```
-
-→ [Details ansehen](wordpress-manager/README.md)
-
----
-
-### sports-tracker
-**Sport-Tracking mit Kalorien und Workout-Management**
-
-- 🏃 Aktivitäts-Tracking (Spazieren, Fahrrad, P90X)
-- 🔥 Automatische Kalorienberechnung (MET-basiert)
-- 💪 Workout-Management mit done/missed Status
-- 📊 Wochen-/Monatsberichte
+- Aktivitäten: Spazieren, Rad, Wandern, Laufen, P90X
+- 🔥 Kalorien nach MET-Werten, mit eigenem Körpergewicht
+- 💪 Workouts als erledigt/verpasst markieren
+- 📊 Wochen- und Monatsberichte, Komoot-Import
 - 🎯 Sarkasmus-Modus bei verpassten Trainingstagen
-- ⚖️ Individuelles Gewicht für Kalorienberechnung
 
 ```bash
-# Aktivität hinzufügen
 python3 scripts/sports_tracker.py --add "5 km Spazieren"
-
-# P90X als erledigt markieren
-python3 scripts/sports_tracker.py --done
-
-# Wochenbericht
-python3 scripts/sports_tracker.py --week
+python3 scripts/sports_tracker.py --done     # P90X erledigt
+python3 scripts/sports_tracker.py --week     # Wochenbericht
 ```
 
 → [Details ansehen](sports-tracker/README.md)
+</details>
+
+<details id="github-manager">
+<summary><b>🐙 github-manager</b> – Skills auf GitHub veröffentlichen</summary>
+
+- Repositories anlegen
+- Einzelne oder alle Skills synchronisieren
+- README automatisch erzeugen, GitHub Actions
+
+```bash
+python3 scripts/github_publish.py --skill image-generation --repo openclaw-skills
+```
+
+→ [Details ansehen](github-manager/README.md)
+</details>
+
+<details id="mammouth-coding">
+<summary><b>💻 mammouth-coding</b> – Code-Generierung über Mammouth.ai</summary>
+
+- Nur für Code-Generierung gedacht
+- Wiederholversuche mit Exponential Backoff
+- Saubere Fehlerbehandlung
+
+```bash
+python3 scripts/mammouth_coder.py "Erstelle eine Python-Klasse für..."
+```
+
+→ [Details ansehen](mammouth-coding/README.md)
+</details>
+
+<details id="wordpress-manager">
+<summary><b>📝 wordpress-manager</b> – WordPress per REST API</summary>
+
+- Beiträge erstellen, bearbeiten, löschen
+- Kategorien und Tags
+- Cloudflare-kompatibel, mit Retry-Logik
+
+```bash
+python3 wordpress_manager.py --create "Titel" "HTML-Inhalt"
+```
+
+→ [Details ansehen](wordpress-manager/README.md)
+</details>
+
+<details id="mega-filehoster">
+<summary><b>☁️ mega-filehoster</b> – MEGA.nz verwalten</summary>
+
+- Dateien hoch- und herunterladen
+- Ordner auflisten, Share-Links erzeugen
+- Freien Speicher prüfen
+
+```bash
+python3 scripts/mega_manager.py upload /pfad/zur/datei.txt
+```
+
+→ [Details ansehen](mega-filehoster/README.md)
+</details>
+
+<details id="backup-manager">
+<summary><b>💾 backup-manager</b> – Git- und SQLite-Backups des Workspace</summary>
+
+- Git-Commit aller Änderungen, automatisch nach Bereich sortiert (agents, scripts, skills, docs …)
+- SQLite-Backups mit Zeitstempel, behält die letzten 7
+- Einmalig, als Daemon oder täglich per Cron (03:00 Uhr), optional mit Push
+
+```bash
+python3 scripts/git_backup.py --once           # Git + SQLite
+python3 scripts/git_backup.py --once --push    # mit Push zum Remote
+python3 scripts/git_backup.py --status
+```
+
+→ [Details ansehen](backup-manager/README.md)
+</details>
 
 ---
 
 ## ⚙️ Konfiguration
 
-### .env Variablen
-
-Die meisten Skills benötigen eine `.env` Datei im OpenClaw-Workspace:
-
-```bash
-# OpenClaw Workspace Root
-~/.openclaw/workspace/.env
-```
-
-Siehe die einzelnen Skill-READMEs für die benötigten Variablen.
-
-### Ordnerstruktur
+Die 🔑-Skills lesen ihre Keys aus einer `.env` im OpenClaw-Workspace. Welche Variablen ein Skill braucht, steht in seiner `SKILL.md` bzw. `README.md`.
 
 ```
 ~/.openclaw/workspace/
-├── .env                          # API-Keys und Konfiguration
+├── .env              # API-Keys und Zugangsdaten (nie committen)
 ├── skills/
 │   ├── audio-transcription/
-│   ├── crypto-tracker/
 │   ├── package-tracking/
-│   ├── ...
-│   ├── vodafone-sender-monitor/
-│   └── wordpress-manager/
-├── scripts/                      # Skill-Scripts
-└── data/                         # Datenbanken, Caches
+│   └── ...
+├── scripts/          # Skill-Skripte
+└── data/             # Datenbanken, Caches
 ```
+
+> [!IMPORTANT]
+> `.env`, Datenbanken (`*.db`), Logs und `memory/` stehen in der `.gitignore`. Bitte keine Keys in Skripte oder READMEs schreiben.
 
 ---
 
 ## 🤝 Mitwirken
 
-Skills werden fortlaufend erweitert. Vorschläge und Pull Requests sind willkommen!
-
----
+Die Sammlung wächst laufend. Ideen, Fehlermeldungen und Pull Requests sind willkommen: einfach ein [Issue](https://github.com/James-Butler2026/openclaw-skills/issues) aufmachen.
 
 ## 📜 Lizenz
 
-Alle Skills sind unter MIT-Lizenz veröffentlicht.
+Alle Skills sind unter der MIT-Lizenz veröffentlicht.
+
+<div align="center">
+<sub>Gebaut mit 🦞 OpenClaw und viel ☕</sub>
+</div>
